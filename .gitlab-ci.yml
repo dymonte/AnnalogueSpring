@@ -1,15 +1,71 @@
-image: maven:3.9-eclipse-temurin-17
+image: maven:3.9-eclipse-temurin-25
 
 stages:
   - build
   - test
+  - deploy
 
 build:
   stage: build
+
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push'
+      when: always
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: always
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: always
+    - if: '$CI_COMMIT_TAG'
+      when: always
+    - when: never
+
   script:
+    - mvn clean package -DskipTests
     - mvn clean compile
 
 test:
   stage: test
+  image: mcr.microsoft.com/playwright/java:v1.62.0-noble
+  allow_failure: false
+
+  # Run the tests
   script:
-    - mvn test
+    - echo "Executing BDD scenarios with maven"
+    - mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install-deps"
+    - mvn site
+
+  # Store artifacts
+  artifacts:
+    when: always
+    name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"
+    paths:
+      - target/site
+
+# ============================================================
+# DEPLOY PROD
+# ============================================================
+
+deploy-prod:
+  stage: deploy-prod
+  image: alpine:latest
+
+  dependencies:
+    - test
+
+  before_script:
+    - apk add --no-cache openssh-client rsync
+    - eval $(ssh-agent -s)
+    - echo -e "$SSH_PRIVATE_KEY" | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $IP_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - rsync -av target/site/ $SSH_USER@$IP_SERVER:$DEST_DIR
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: manual # Control
+    - when: never
+
