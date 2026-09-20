@@ -47,8 +47,8 @@ test:
 # DEPLOY PROD
 # ============================================================
 
-deploy-prod:
-  stage: deploy-prod
+deploy:
+  stage: deploy
   image: alpine:latest
 
   dependencies:
