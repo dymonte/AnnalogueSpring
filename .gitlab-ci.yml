@@ -3,7 +3,9 @@ image: maven:3.9-eclipse-temurin-25
 stages:
   - build
   - test
+  - analysis
   - deploy
+
 
 build:
   stage: build
@@ -43,6 +45,34 @@ test:
     name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"
     paths:
       - target/site
+
+
+# ============================================================
+# SONARQUBE
+# ============================================================
+
+sonar-analysis-job:
+  stage: analysis
+
+  tags:
+    - com.annalogue:m2
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'push'
+      when: on_success
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+      when: on_success
+    - if: $CI_COMMIT_BRANCH == 'dev'
+      when: on_success
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
+    - when: never
+  script:
+    - mvn clean verify
+    - mvn sonar:sonar
+      -Dsonar.projectKey=com.annalogue:m2
+      -Dsonar.projectName=M2group5
+      -Dsonar.host.url=https://disc.univ-fcomte.fr/cr700-sonarqube
+      -Dsonar.token=$SONAR_TOKEN
 
 # ============================================================
 # DEPLOY PROD
