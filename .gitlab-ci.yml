@@ -25,7 +25,6 @@ build:
 
   script:
     - mvn clean package -DskipTests
-    - mvn clean compile
 
 test:
   stage: test
@@ -35,7 +34,6 @@ test:
   # Run the tests
   script:
     - echo "Executing BDD scenarios with maven"
-    - mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install-deps"
     - mvn verify
     - mvn site
 
@@ -45,6 +43,8 @@ test:
     name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"
     paths:
       - target/site
+      - target/surefire-reports
+      - target/failsafe-reports
 
 
 # ============================================================
@@ -54,8 +54,9 @@ test:
 sonar-analysis-job:
   stage: analysis
 
-  tags:
-    - com.annalogue:m2
+  variables:
+      GIT_DEPTH: "0"
+
   rules:
     - if: $CI_PIPELINE_SOURCE == 'push'
       when: on_success
