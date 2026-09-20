@@ -34,6 +34,7 @@ test:
   script:
     - echo "Executing BDD scenarios with maven"
     - mvn exec:java -e -D exec.mainClass=com.microsoft.playwright.CLI -D exec.args="install-deps"
+    - mvn verify
     - mvn site
 
   # Store artifacts
