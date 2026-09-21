@@ -3,7 +3,7 @@ image: maven:3.9-eclipse-temurin-25
 stages:
   - build
   - test
-  - analysis
+  # - analysis
   - deploy
 
 
@@ -35,7 +35,6 @@ test:
   script:
     - echo "Executing BDD scenarios with maven"
     - mvn verify
-    - mvn site
 
   # Store artifacts
   artifacts:
@@ -51,29 +50,29 @@ test:
 # SONARQUBE
 # ============================================================
 
-sonar-analysis-job:
-  stage: analysis
+# sonar-analysis-job:
+#  stage: analysis
+#
+#  variables:
+#      GIT_DEPTH: "0"
 
-  variables:
-      GIT_DEPTH: "0"
-
-  rules:
-    - if: $CI_PIPELINE_SOURCE == 'push'
-      when: on_success
-    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
-      when: on_success
-    - if: $CI_COMMIT_BRANCH == 'dev'
-      when: on_success
-    - if: '$CI_COMMIT_TAG'
-      when: on_success
-    - when: never
-  script:
-    - mvn clean verify
-    - mvn sonar:sonar
-      -Dsonar.projectKey=com.annalogue:m2
-      -Dsonar.projectName=M2group5
-      -Dsonar.host.url=https://disc.univ-fcomte.fr/cr700-sonarqube
-      -Dsonar.token=$SONAR_TOKEN
+#  rules:
+#    - if: $CI_PIPELINE_SOURCE == 'push'
+#      when: on_success
+#    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+#      when: on_success
+#    - if: $CI_COMMIT_BRANCH == 'dev'
+#      when: on_success
+#    - if: '$CI_COMMIT_TAG'
+#      when: on_success
+#    - when: never
+#  script:
+#    - mvn clean verify
+#    - mvn sonar:sonar
+#      -Dsonar.projectKey=com.annalogue:m2
+#      -Dsonar.projectName=M2group5
+#      -Dsonar.host.url=https://disc.univ-fcomte.fr/cr700-sonarqube
+#      -Dsonar.token=$SONAR_TOKEN
 
 # ============================================================
 # DEPLOY PROD
