@@ -1,6 +1,5 @@
 package com.annalogue.m2.services;
 
-
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -9,34 +8,37 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @InjectMocks
-    private UserService userService;
+        @InjectMocks
+        private UserService userService;
 
-    @Test
-    void shouldFindUserByEmail() {
+        @Test
+        void shouldFindUserByEmail() {
 
-        UserEntity user = mock(UserEntity.class);
+                // Given
+                UserEntity user = mock(UserEntity.class);
 
-        when(userRepository.findByEmail("test@test.com"))
-                .thenReturn(user);
+                when(userRepository.findByEmail("test@test.com"))
+                                .thenReturn(Optional.of(user));
 
-        UserEntity result =
-                userService.findByEmail("test@test.com");
+                // When
+                Optional<UserEntity> result = userService.findByEmail("test@test.com");
 
-        assertNotNull(result);
-        assertEquals(user, result);
+                // Then
+                assertTrue(result.isPresent());
+                assertEquals(user, result.get());
 
-        verify(userRepository)
-                .findByEmail("test@test.com");
-    }
+                verify(userRepository)
+                                .findByEmail("test@test.com");
+        }
 }

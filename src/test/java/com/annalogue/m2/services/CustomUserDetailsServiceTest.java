@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,11 +10,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class CustomUserDetailsServiceTest {
+class CustomUserDetailsServiceTest {
 
     @Mock
     private UserService userService;
@@ -22,22 +25,31 @@ public class CustomUserDetailsServiceTest {
     private CustomUserDetailsService customUserDetailsService;
 
     @Test
-    public void shouldLoadUserByEmail() {
+    void shouldLoadUserByEmail() {
 
         // Given
-        UserEntity userEntity = new UserEntity("test@test.com", "password");
+        UserEntity userEntity = new UserEntity(
+                "test@test.com",
+                "fake-hash",
+                "test",
+                Role.ETUDIANT,
+                2026,
+                "G1");
 
-        when(userService.findByEmail("test@test.com")).thenReturn(userEntity);
+        when(userService.findByEmail("test@test.com"))
+                .thenReturn(Optional.of(userEntity));
 
         // When
         UserDetails result = customUserDetailsService.loadUserByUsername("test@test.com");
 
         // Then
         assertNotNull(result);
+
         assertEquals("test@test.com", result.getUsername());
-        assertEquals("password", result.getPassword());
+        assertEquals("fake-hash", result.getPassword());
+
         assertTrue(result.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_USER")));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ETUDIANT")));
 
         verify(userService).findByEmail("test@test.com");
     }
@@ -45,10 +57,15 @@ public class CustomUserDetailsServiceTest {
     @Test
     void shouldThrowExceptionWhenUserDoesNotExist() {
 
-        when(userService.findByEmail("unknown@test.com")).thenReturn(null);
+        // Given
+        when(userService.findByEmail("unknown@test.com"))
+                .thenReturn(Optional.empty());
 
-        assertThrows(UsernameNotFoundException.class,
-                () -> customUserDetailsService.loadUserByUsername("unknown@test.com"));
+        // When & Then
+        assertThrows(
+                UsernameNotFoundException.class,
+                () -> customUserDetailsService
+                        .loadUserByUsername("unknown@test.com"));
 
         verify(userService).findByEmail("unknown@test.com");
     }
