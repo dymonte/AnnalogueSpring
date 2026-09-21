@@ -42,7 +42,7 @@ test:
   # Run the tests
   script:
     - echo "Executing BDD scenarios with maven"
-    - $MAVEN_CLI_OPTS verify
+    - mvn $MAVEN_CLI_OPTS verify
 
   # Store artifacts
   artifacts:
