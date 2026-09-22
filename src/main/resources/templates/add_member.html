@@ -20,11 +20,11 @@
         <input type="email" id="email" name="email">
 
         <label for="role">Role</label>
-        <select id="role" name="role">
-            <option value="">Select a role</option>
-            <option value="ADMIN">Administrator</option>
-            <option value="PROF">Professor</option>
-            <option value="ETUDIANT">Student</option>
+        <select id="role" name="role" required>
+            <option value="" selected disabled>Select a role</option>
+
+            <option th:each="role : ${roles}" th:value="${role.name()}" th:text="${role.value}">
+            </option>
         </select>
 
         <button type="submit">Add Member</button>
