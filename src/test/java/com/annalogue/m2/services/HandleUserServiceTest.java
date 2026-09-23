@@ -1,5 +1,8 @@
 package com.annalogue.m2;
+
 import com.annalogue.m2.models.Role;
+import com.annalogue.m2.services.HandleUserService;
+import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -8,10 +11,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
-import com.annalogue.m2.services.HandleUserService;
-import com.annalogue.m2.services.UserService;
 
 @ExtendWith(MockitoExtension.class)
 class HandleUserServiceTest {
@@ -34,11 +36,15 @@ class HandleUserServiceTest {
                 RuntimeException.class,
                 () -> handleUserService.addUser(
                         "test@example.com",
-                        Role.ETUDIANT)
+                        Role.ETUDIANT,
+                        2026,
+                        "Groupe 1")
         );
 
-        assert exception.getMessage()
-                .equals("This email already exists");
+        assertEquals(
+                "Account with this email already exists",
+                exception.getMessage()
+        );
     }
 
     @Test
@@ -49,7 +55,9 @@ class HandleUserServiceTest {
         assertDoesNotThrow(() ->
                 handleUserService.addUser(
                         "new@example.com",
-                        Role.ETUDIANT)
+                        Role.ETUDIANT,
+                        2026,
+                        "Groupe 1")
         );
     }
 }

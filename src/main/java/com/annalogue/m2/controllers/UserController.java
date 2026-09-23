@@ -25,12 +25,17 @@ public class UserController {
         model.addAttribute("roles", roleService.getRoles());
         return "add_member";
     }
-    @PostMapping("/members")   
-    public String addMember(
-            @RequestParam String email,   
-            @RequestParam Role role) {
+    @PostMapping("/members")
+    public String addMember(@RequestParam String email,
+                            @RequestParam Role role,
+                            @RequestParam(required = false) Integer annee,
+                            @RequestParam(required = false) String groupe) {
 
-        handleUserService.addUser(email, role);  
+        String temporaryPassword = handleUserService.addUser(email, role, annee, groupe);
+
+        // temporary: to test the login until the email is sent from the backend to the user
+        System.out.println("Temporary password for " + email + " : " + temporaryPassword);
+
         return "redirect:/members";
     }
 }
