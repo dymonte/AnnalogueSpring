@@ -1,13 +1,23 @@
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.models.Role;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class HandleUserService {
 
-    public void addUser(String email, Role role) {
-        // Implementation for adding a user with the given email and role and all logic to activate via link
+    private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
 
+    public HandleUserService(UserService userService, PasswordEncoder passwordEncoder) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public void addUser(String email, Role role) {
+        if (userService.existsByEmail(email)) {
+            throw new RuntimeException("This email already exists");
+        }
     }
 }
