@@ -5,8 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class AnnalogueApplication {
-
-    static void main(String[] args) {
+    public static void main(String[] args) {
 		SpringApplication.run(AnnalogueApplication.class, args);
 	}
 }

@@ -13,10 +13,17 @@ public class UserEntity {
     private long userId;
 
     @Column(name = "email")
-    String email;
+    private String email;
 
     @Column(name = "password")
-    String password;
+    private String password;
+
+    public UserEntity() {}
+
+    public UserEntity(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
 
     public Long getUserId() {
         return userId;
