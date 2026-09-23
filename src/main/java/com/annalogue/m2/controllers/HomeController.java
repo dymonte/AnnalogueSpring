@@ -12,15 +12,15 @@ import java.security.Principal;
 @Controller
 public class HomeController {
 
-    String username = "";
-
-    @GetMapping("/home")
+    @GetMapping(value = {"/home", "/"})
     public String home(Principal principal, Model model) {
 
+        String login = "";
+
         if (principal != null) {
-            username = principal.getName();
+            login = principal.getName();
         }
-        model.addAttribute("username", username);
+        model.addAttribute("login", login);
         return "home";
     }
 }
