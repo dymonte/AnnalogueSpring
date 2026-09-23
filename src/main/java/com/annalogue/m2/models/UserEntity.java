@@ -13,10 +13,10 @@ public class UserEntity {
     private long userId;
 
     @Column(name = "email")
-    String email;
+    private String email;
 
     @Column(name = "password")
-    String password;
+    private String password;
 
     public Long getUserId() {
         return userId;
@@ -28,5 +28,13 @@ public class UserEntity {
 
     public String getPassword() {
         return password;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }
