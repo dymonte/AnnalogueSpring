@@ -31,7 +31,7 @@ public class UserController {
     @PostMapping("/members")
     public String addMember(@RequestParam String email,
                             @RequestParam Role role,
-                            @RequestParam(required = false) String annee,
+                            @RequestParam(required = false) Integer annee,
                             @RequestParam(required = false) String groupe,
                             Model model,
                             RedirectAttributes redirectAttributes) {

@@ -1,11 +1,11 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.stereotype.Service;
-import com.annalogue.m2.models.Role;
-import java.util.List;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,9 +33,10 @@ public class UserService {
         return userRepository.save(user);
     }
     public List<UserEntity> findByRole(Role role) {
-    return userRepository.findAll()
-            .stream()
-            .filter(user -> user.getRole() == role)
-            .toList();
-}
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getRole() == role)
+                .toList();
+    }
+
 }

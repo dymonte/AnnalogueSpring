@@ -37,7 +37,7 @@ class HandleUserServiceTest {
                 () -> handleUserService.addUser(
                         "test@example.com",
                         Role.ETUDIANT,
-                        "M2",
+                        2026,
                         "A")
         );
 
@@ -56,7 +56,7 @@ class HandleUserServiceTest {
                 handleUserService.addUser(
                         "new@example.com",
                         Role.ETUDIANT,
-                        "M2",
+                        2026,
                         "A")
         );
     }

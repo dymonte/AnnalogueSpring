@@ -23,7 +23,7 @@ public class UserEntity {
     private Role role;
 
     @Column(name = "annee")
-    private String annee;
+    private Integer annee;
 
     @Column(name = "groupe", length = 100)
     private String groupe;
@@ -33,7 +33,7 @@ public class UserEntity {
     }
 
     public UserEntity(String email, String hashMdp, String identifiant,
-            Role role, String annee, String groupe) {
+            Role role, Integer annee, String groupe) {
         this.email = email;
         this.hashMdp = hashMdp;
         this.identifiant = identifiant;
@@ -78,11 +78,11 @@ public class UserEntity {
         this.role = role;
     }
 
-    public String getAnnee() {
+    public Integer getAnnee() {
         return annee;
     }
 
-    public void setAnnee(String annee) {
+    public void setAnnee(Integer annee) {
         this.annee = annee;
     }
 

@@ -19,7 +19,7 @@ public class HandleUserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String addUser(String email, Role role, String annee, String groupe) {
+    public String addUser(String email, Role role, Integer  annee, String groupe) {
         if (userService.existsByEmail(email)) {
             throw new EmailAlreadyExistsException("Account with this email already exists");
         }
