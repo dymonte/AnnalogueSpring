@@ -16,21 +16,18 @@ public class CustomUserDetailsService implements UserDetailsService {
         this.userService = userService;
     }
 
-
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        UserEntity user = userService.findByEmail(email);
+    public UserDetails loadUserByUsername(String email)
+            throws UsernameNotFoundException {
 
-        if (user == null) {
-            throw new UsernameNotFoundException(
-                    "Utilisateur introuvable : " + email
-            );
-        }
+        UserEntity user = userService.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "Utilisateur introuvable : " + email));
 
-        return User
-                .withUsername(user.getEmail())
-                .password(user.getPassword())
-                .roles("USER")
+        return User.builder()
+                .username(user.getEmail())
+                .password(user.getHashMdp())
+                .roles(user.getRole().name())
                 .build();
     }
 }
