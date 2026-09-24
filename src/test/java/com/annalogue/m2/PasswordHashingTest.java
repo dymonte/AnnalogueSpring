@@ -4,35 +4,46 @@ import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
 import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
-@SpringBootTest
-public class PasswordHashingTest {
+@ExtendWith(MockitoExtension.class)
+class PasswordHashingTest {
+
+    @Mock
+    UserRepository userRepository;
+
     @Test
-    public void passwordHashingTest(){
-        UserRepository userRepository = mock(UserRepository.class);
+    void passwordHashingTest() {
 
-        PasswordEncoder passwordEncoder =new BCryptPasswordEncoder();
+        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-        UserService userService =new UserService(userRepository,passwordEncoder);
+        UserService userService =
+                new UserService(userRepository, passwordEncoder);
 
         UserEntity user = new UserEntity();
+
         user.setEmail("fadila@ufr");
         user.setHashMdp("123456");
 
-        when(userRepository.findByEmail("fadila@ufr"))
-                .thenReturn(null);
-
         userService.save(user);
+
         assertNotEquals("123456", user.getHashMdp());
-        assertTrue(passwordEncoder.matches("123456", user.getHashMdp()));
+
+        assertTrue(
+                passwordEncoder.matches(
+                        "123456",
+                        user.getHashMdp()
+                )
+        );
+
+        verify(userRepository).save(user);
     }
 }
