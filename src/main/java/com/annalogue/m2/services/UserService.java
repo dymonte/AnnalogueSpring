@@ -18,14 +18,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String addUser(UserEntity user){
-        if(userRepository.findByEmail(user.getEmail()) !=null){
-            return "email_existe";
-        }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return "saved";
-    }
 
     public Optional<UserEntity> findByEmail(String email) {
         return userRepository.findByEmail(email);
@@ -40,6 +32,7 @@ public class UserService {
     }
 
     public UserEntity save(UserEntity user) {
+        user.setHashMdp(passwordEncoder.encode(user.getHashMdp()));
         return userRepository.save(user);
     }
 }

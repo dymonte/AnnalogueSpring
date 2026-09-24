@@ -26,13 +26,13 @@ public class PasswordHashingTest {
 
         UserEntity user = new UserEntity();
         user.setEmail("fadila@ufr");
-        user.setPassword("123456");
+        user.setHashMdp("123456");
 
         when(userRepository.findByEmail("fadila@ufr"))
                 .thenReturn(null);
 
-        String msg = userService.addUser(user);
-        assertNotEquals("123456", user.getPassword());
-        assertTrue(passwordEncoder.matches("123456", user.getPassword()));
+        userService.save(user);
+        assertNotEquals("123456", user.getHashMdp());
+        assertTrue(passwordEncoder.matches("123456", user.getHashMdp()));
     }
 }
