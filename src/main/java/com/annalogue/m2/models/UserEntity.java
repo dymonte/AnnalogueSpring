@@ -78,11 +78,11 @@ public class UserEntity {
         this.role = role;
     }
 
-    public Integer getAnnee() {
+    public String getAnnee() {
         return annee;
     }
 
-    public void setAnnee(Integer annee) {
+    public void setAnnee(String annee) {
         this.annee = annee;
     }
 

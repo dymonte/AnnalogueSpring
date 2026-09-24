@@ -37,8 +37,8 @@ class HandleUserServiceTest {
                 () -> handleUserService.addUser(
                         "test@example.com",
                         Role.ETUDIANT,
-                        2026,
-                        "Groupe 1")
+                        "M2",
+                        "A")
         );
 
         assertEquals(
@@ -56,8 +56,8 @@ class HandleUserServiceTest {
                 handleUserService.addUser(
                         "new@example.com",
                         Role.ETUDIANT,
-                        2026,
-                        "Groupe 1")
+                        "M2",
+                        "A")
         );
     }
 }
