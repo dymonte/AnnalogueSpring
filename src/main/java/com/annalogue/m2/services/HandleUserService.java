@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +21,7 @@ public class HandleUserService {
 
     public String addUser(String email, Role role, String annee, String groupe) {
         if (userService.existsByEmail(email)) {
-            throw new RuntimeException("Account with this email already exists");
+            throw new EmailAlreadyExistsException("Account with this email already exists");
         }
 
         String temporaryPassword = generateTemporaryPassword();
@@ -30,7 +31,7 @@ public class HandleUserService {
         UserEntity user = new UserEntity(email, hashMdp, identifiant, role, annee, groupe);
         userService.save(user);
         // Here you would typically call the EmailService to send the welcome email
-        
+
 
         return temporaryPassword;
     }
