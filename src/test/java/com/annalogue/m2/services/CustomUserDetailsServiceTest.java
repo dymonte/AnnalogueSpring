@@ -27,11 +27,10 @@ class CustomUserDetailsServiceTest {
     @Test
     void shouldLoadUserByEmail() {
 
-        // Given
         UserEntity userEntity = new UserEntity(
                 "test@test.com",
                 "fake-hash",
-                "test",
+                "test123",
                 Role.ETUDIANT,
                 2026,
                 "G1");
@@ -39,34 +38,86 @@ class CustomUserDetailsServiceTest {
         when(userService.findByEmail("test@test.com"))
                 .thenReturn(Optional.of(userEntity));
 
-        // When
-        UserDetails result = customUserDetailsService.loadUserByUsername("test@test.com");
+        UserDetails result = customUserDetailsService
+                .loadUserByUsername("test@test.com");
 
-        // Then
         assertNotNull(result);
 
-        assertEquals("test@test.com", result.getUsername());
-        assertEquals("fake-hash", result.getPassword());
+        assertEquals(
+                "test@test.com",
+                result.getUsername());
 
-        assertTrue(result.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ROLE_ETUDIANT")));
+        assertEquals(
+                "fake-hash",
+                result.getPassword());
 
-        verify(userService).findByEmail("test@test.com");
+        assertTrue(
+                result.getAuthorities().stream()
+                        .anyMatch(authority -> authority.getAuthority()
+                                .equals("ROLE_ETUDIANT")));
+
+        verify(userService)
+                .findByEmail("test@test.com");
     }
 
     @Test
     void shouldThrowExceptionWhenUserDoesNotExist() {
 
-        // Given
         when(userService.findByEmail("unknown@test.com"))
                 .thenReturn(Optional.empty());
 
-        // When & Then
         assertThrows(
                 UsernameNotFoundException.class,
                 () -> customUserDetailsService
                         .loadUserByUsername("unknown@test.com"));
 
-        verify(userService).findByEmail("unknown@test.com");
+        verify(userService)
+                .findByEmail("unknown@test.com");
+    }
+
+    @Test
+    void shouldUseAdminRole() {
+
+        UserEntity user = new UserEntity(
+                "admin@test.com",
+                "admin-hash",
+                "admin123",
+                Role.ADMIN,
+                null,
+                null);
+
+        when(userService.findByEmail("admin@test.com"))
+                .thenReturn(Optional.of(user));
+
+        UserDetails result = customUserDetailsService
+                .loadUserByUsername("admin@test.com");
+
+        assertTrue(
+                result.getAuthorities().stream()
+                        .anyMatch(authority -> authority.getAuthority()
+                                .equals("ROLE_ADMIN")));
+    }
+
+    @Test
+    void shouldUseProfessorRole() {
+
+        UserEntity user = new UserEntity(
+                "prof@test.com",
+                "prof-hash",
+                "prof123",
+                Role.PROF,
+                null,
+                null);
+
+        when(userService.findByEmail("prof@test.com"))
+                .thenReturn(Optional.of(user));
+
+        UserDetails result = customUserDetailsService
+                .loadUserByUsername("prof@test.com");
+
+        assertTrue(
+                result.getAuthorities().stream()
+                        .anyMatch(authority -> authority.getAuthority()
+                                .equals("ROLE_PROF")));
     }
 }
