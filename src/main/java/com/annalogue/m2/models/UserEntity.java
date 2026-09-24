@@ -23,7 +23,7 @@ public class UserEntity {
     private Role role;
 
     @Column(name = "annee")
-    private Integer annee;
+    private String annee;
 
     @Column(name = "groupe", length = 100)
     private String groupe;
@@ -33,7 +33,7 @@ public class UserEntity {
     }
 
     public UserEntity(String email, String hashMdp, String identifiant,
-            Role role, Integer annee, String groupe) {
+            Role role, String annee, String groupe) {
         this.email = email;
         this.hashMdp = hashMdp;
         this.identifiant = identifiant;

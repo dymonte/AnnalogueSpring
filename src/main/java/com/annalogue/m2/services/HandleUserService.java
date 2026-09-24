@@ -18,7 +18,7 @@ public class HandleUserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public String addUser(String email, Role role, Integer annee, String groupe) {
+    public String addUser(String email, Role role, String annee, String groupe) {
         if (userService.existsByEmail(email)) {
             throw new RuntimeException("Account with this email already exists");
         }
@@ -29,6 +29,8 @@ public class HandleUserService {
 
         UserEntity user = new UserEntity(email, hashMdp, identifiant, role, annee, groupe);
         userService.save(user);
+        // Here you would typically call the EmailService to send the welcome email
+        
 
         return temporaryPassword;
     }

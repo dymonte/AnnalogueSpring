@@ -40,11 +40,26 @@ I assume that the admin has already verified that the student's email address is
                 </option>
             </select>
 
-            <label for="annee">Year</label>
-            <input type="number" id="annee" name="annee">
+        <label for="annee">Year</label>
+        <select id="annee" name="annee" required>
+            <option value="" selected disabled>Select a year</option>
+            <option value="L1">Licence 1</option>
+            <option value="L2">Licence 2</option>
+            <option value="L3">Licence 3</option>
+            <option value="M1">Master 1</option>
+            <option value="M2">Master 2</option>
+        </select>
 
-            <label for="groupe">Group</label>
-            <input type="text" id="groupe" name="groupe">
+        <label for="groupe">Group</label>
+        <select id="groupe" name="groupe" required>
+            <option value="" selected disabled>Select a group</option>
+            <option value="A">Group A</option>
+            <option value="B">Group B</option>
+            <option value="C">Group C</option>
+            <option value="D">Group D</option>
+        </select>
+
+
 
             <button type="submit">Add Member</button>
 

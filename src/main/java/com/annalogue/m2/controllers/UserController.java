@@ -28,7 +28,7 @@ public class UserController {
     @PostMapping("/members")
     public String addMember(@RequestParam String email,
                             @RequestParam Role role,
-                            @RequestParam(required = false) Integer annee,
+                            @RequestParam(required = false) String annee,
                             @RequestParam(required = false) String groupe) {
 
         String temporaryPassword = handleUserService.addUser(email, role, annee, groupe);
