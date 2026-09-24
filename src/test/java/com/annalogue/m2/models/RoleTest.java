@@ -1,0 +1,29 @@
+package com.annalogue.m2.models;
+
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class RoleTest {
+
+    @Test
+    void shouldHaveCorrectValues() {
+        assertEquals("admin", Role.ADMIN.getValue());
+        assertEquals("prof", Role.PROF.getValue());
+        assertEquals("étudiant", Role.ETUDIANT.getValue());
+    }
+
+    @Test
+    void shouldContainAllExpectedRoles() {
+        assertEquals(3, Role.values().length);
+
+        assertTrue(java.util.Arrays.asList(Role.values())
+                .contains(Role.ADMIN));
+
+        assertTrue(java.util.Arrays.asList(Role.values())
+                .contains(Role.PROF));
+
+        assertTrue(java.util.Arrays.asList(Role.values())
+                .contains(Role.ETUDIANT));
+    }
+}
