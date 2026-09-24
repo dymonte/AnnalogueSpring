@@ -23,7 +23,7 @@ public class UserController {
     @GetMapping("/members")
     public String showForm(Model model) {
         model.addAttribute("roles", roleService.getRoles());
-        return "add_member";
+        return "admin/add_member";
     }
     @PostMapping("/members")
     public String addMember(@RequestParam String email,

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Members</title>
+    <link rel="stylesheet" href="/css/form.css">
+</head>
+
+<!-- use css for now -->
+<!-- The admin directly chooses the group and year.
+The identifier or username is generated in the same way as the username in Moodle.
+I take the first letter of the first name and combine it with the last name.
+This information is extracted from the email address provided by the admin.
+I assume that the admin has already verified that the student's email address is active. -->
+
+
+<body>
+
+    <div class="container">
+
+        <h1>Add a New Member</h1>
+
+        <form th:action="@{/members}" method="post">
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="identifiant">Username</label>
+            <input type="text" id="identifiant" name="identifiant" readonly>
+
+            <label for="role">Role</label>
+            <select id="role" name="role" required>
+                <option value="" selected disabled>Select a role</option>
+
+                <option th:each="role : ${roles}" th:value="${role.name()}" th:text="${role.value}">
+                </option>
+            </select>
+
+        <label for="annee">Year</label>
+        <select id="annee" name="annee" required>
+            <option value="" selected disabled>Select a year</option>
+            <option value="L1">Licence 1</option>
+            <option value="L2">Licence 2</option>
+            <option value="L3">Licence 3</option>
+            <option value="M1">Master 1</option>
+            <option value="M2">Master 2</option>
+        </select>
+
+        <label for="groupe">Group</label>
+        <select id="groupe" name="groupe" required>
+            <option value="" selected disabled>Select a group</option>
+            <option value="A">Group A</option>
+            <option value="B">Group B</option>
+            <option value="C">Group C</option>
+            <option value="D">Group D</option>
+        </select>
+
+
+
+            <button type="submit">Add Member</button>
+
+        </form>
+
+    </div>
+
+    <script src="/js/handle-user.js"></script>
+
+</body>
+
+</html>
