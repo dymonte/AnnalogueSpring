@@ -4,7 +4,6 @@ import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -18,11 +17,9 @@ public class HandleUserService {
     private static final int MAX_YEAR = 2100;
 
     private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
 
-    public HandleUserService(UserService userService, PasswordEncoder passwordEncoder) {
+    public HandleUserService(UserService userService) {
         this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
     }
 
     public String addUser(String email, Role role, String username, Integer year, String group) {
@@ -35,11 +32,10 @@ public class HandleUserService {
         }
 
         String temporaryPassword = generateTemporaryPassword();
-        String passwordHash = passwordEncoder.encode(temporaryPassword);
 
         UserEntity user = new UserEntity(
                 normalizedEmail,
-                passwordHash,
+                temporaryPassword,
                 generateUsername(normalizedEmail),
                 role,
                 year,
