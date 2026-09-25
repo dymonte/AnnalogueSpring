@@ -1,5 +1,6 @@
 package com.annalogue.m2.repositories;
 
+import com.annalogue.m2.models.UserEntity;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
