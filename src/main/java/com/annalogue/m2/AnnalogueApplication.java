@@ -8,8 +8,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @EnableWebSecurity
 @SpringBootApplication
 public class AnnalogueApplication {
-
-    static void main(String[] args) {
+    public static void main(String[] args) {
 		SpringApplication.run(AnnalogueApplication.class, args);
 	}
 }

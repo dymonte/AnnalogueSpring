@@ -93,4 +93,44 @@ public class UserEntity {
     public void setGroupe(String groupe) {
         this.groupe = groupe;
     }
+
+    public String getHashMdp() {
+        return hashMdp;
+    }
+
+    public void setHashMdp(String hashMdp) {
+        this.hashMdp = hashMdp;
+    }
+
+    public String getIdentifiant() {
+        return identifiant;
+    }
+
+    public void setIdentifiant(String identifiant) {
+        this.identifiant = identifiant;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public Integer getAnnee() {
+        return annee;
+    }
+
+    public void setAnnee(Integer annee) {
+        this.annee = annee;
+    }
+
+    public String getGroupe() {
+        return groupe;
+    }
+
+    public void setGroupe(String groupe) {
+        this.groupe = groupe;
+    }
 }
