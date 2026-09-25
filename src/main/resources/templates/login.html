@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Title</title>
+</head>
+<body>
+
+    <form th:action="@{/login}" method="post">
+        <h2>Connexion</h2>
+
+        <div>
+            <label for="username">Adresse email :</label>
+            <input type="username" id="username" name="username" required autocomplete="email">
+        </div>
+
+        <div>
+            <label for="password">Mot de passe :</label>
+            <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+
+
+        <button type="submit">Se connecter</button>
+    </form>
+</body>
+</html>
