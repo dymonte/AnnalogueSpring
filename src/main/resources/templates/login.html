@@ -11,16 +11,15 @@
 
         <div>
             <label for="username">Adresse email :</label>
-            <input type="username" id="username" name="username" required autocomplete="email">
+            <input type="email" id="username" name="username" required autocomplete="email">
         </div>
 
         <div>
             <label for="password">Mot de passe :</label>
             <input type="password" id="password" name="password" required autocomplete="current-password">
         </div>
-
         <div th:if="${param.error}">
-            <p style="color: red;">Mot de passe ou email incorrect</p>
+            <p style="color: red;" th:text="${error}"></p>
         </div>
 
         <div th:if="${param.logout}">
