@@ -23,6 +23,6 @@ public class RoleService {
                 .filter(r -> r.name().equalsIgnoreCase(role))
                 .findFirst()
                 .orElseThrow(() ->
-                        new IllegalArgumentException("Rôle inconnu : " + role));
+                        new IllegalArgumentException("Role not found : " + role));
     }
 }
