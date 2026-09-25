@@ -18,7 +18,6 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-
     public Optional<UserEntity> findByEmail(String email) {
         return userRepository.findByEmail(email);
     }

@@ -1,0 +1,13 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error</title> <title th:text="${error_code}"></title>
+</head>
+<body>
+    <h1>Something went wrong !</h1>
+    <p th:text="${error_code}"></p>
+    <p th:text="${error_message}"></p>
+    <a href="/"><button>Home</button></a>
+</body>
+</html>

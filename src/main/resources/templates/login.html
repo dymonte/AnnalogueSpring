@@ -19,7 +19,18 @@
             <input type="password" id="password" name="password" required autocomplete="current-password">
         </div>
 
+        <div th:if="${param.error}">
+            <p style="color: red;">Mot de passe ou email incorrect</p>
+        </div>
 
+        <div th:if="${param.logout}">
+            <p style="color: green;">Disconnected successfully</p>
+        </div>
+
+        <input
+                type="hidden"
+                th:name="${_csrf.parameterName}"
+                th:value="${_csrf.token}">
         <button type="submit">Se connecter</button>
     </form>
 </body>
