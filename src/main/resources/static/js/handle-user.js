@@ -1,22 +1,22 @@
 const emailInput = document.getElementById("email");
-const usernameInput = document.getElementById("identifiant");
+const usernameInput = document.getElementById("username");
 
 function updateUsername() {
-    const email = emailInput.value;
+  const email = emailInput.value.trim().toLowerCase();
 
-    if (!email.includes("@")) {
-        usernameInput.value = "";
-        return;
-    }
+  if (!email.includes("@")) {
+    usernameInput.value = "";
+    return;
+  }
 
-    const name = email.substring(0, email.indexOf("@"));
+  const name = email.substring(0, email.indexOf("@"));
 
-    if (name.includes(".")) {
-        const parts = name.split(".");
-        usernameInput.value = (parts[0].charAt(0) + parts[1]).toLowerCase();
-    } else {
-        usernameInput.value = name.toLowerCase();
-    }
+  if (name.includes(".")) {
+    const parts = name.split(".");
+    usernameInput.value = parts[0].charAt(0) + parts[1];
+  } else {
+    usernameInput.value = name;
+  }
 }
 
 emailInput.addEventListener("input", updateUsername);

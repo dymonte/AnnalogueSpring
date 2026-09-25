@@ -20,7 +20,7 @@ class MessagesTest {
     }
 
     private String message(String key) {
-        return messageSource.getMessage(key, null, Locale.FRENCH);
+        return messageSource.getMessage(key, null, Locale.ENGLISH);
     }
 
     @Test
@@ -32,13 +32,29 @@ class MessagesTest {
 
     @Test
     void shouldContainAddMemberMessages() {
-        assertFalse(message("error.member.email.exists").isBlank());
         assertFalse(message("success.member.added").isBlank());
+        assertFalse(message("error.member.email.exists").isBlank());
     }
 
     @Test
-    void shouldContainServerErrorMessage() {
+    void shouldContainFieldValidationMessages() {
+        assertFalse(message("error.user.email.null").isBlank());
+        assertFalse(message("error.user.email.empty").isBlank());
+        assertFalse(message("error.user.email.invalid").isBlank());
+        assertFalse(message("error.user.role.empty").isBlank());
+        assertFalse(message("error.user.role.invalid").isBlank());
+        assertFalse(message("error.user.username.empty").isBlank());
+        assertFalse(message("error.user.username.mismatch").isBlank());
+        assertFalse(message("error.user.year.empty").isBlank());
+        assertFalse(message("error.user.year.invalid").isBlank());
+        assertFalse(message("error.user.group.empty").isBlank());
+        assertFalse(message("error.user.group.invalid").isBlank());
+    }
+
+    @Test
+    void shouldContainServerErrorMessages() {
         assertFalse(message("error.server").isBlank());
+        assertFalse(message("error.database").isBlank());
     }
 
     @Test
@@ -46,7 +62,7 @@ class MessagesTest {
         String text = messageSource.getMessage(
                 "success.member.added",
                 new Object[]{"new@test.com"},
-                Locale.FRENCH);
+                Locale.ENGLISH);
 
         assertTrue(text.contains("new@test.com"));
     }

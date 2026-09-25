@@ -21,8 +21,8 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<UserEntity> findByIdentifiant(String identifiant) {
-        return userRepository.findByIdentifiant(identifiant);
+    public Optional<UserEntity> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
 
     public boolean existsByEmail(String email) {
@@ -38,5 +38,4 @@ public class UserService {
                 .filter(user -> user.getRole() == role)
                 .toList();
     }
-
 }

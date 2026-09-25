@@ -52,34 +52,34 @@ class UserServiceTest {
         }
 
         @Test
-        void shouldFindUserByIdentifiant() {
+        void shouldFindUserByUsername() {
 
                 UserEntity user = mock(UserEntity.class);
 
-                when(userRepository.findByIdentifiant("student123"))
+                when(userRepository.findByUsername("student123"))
                                 .thenReturn(Optional.of(user));
 
-                Optional<UserEntity> result = userService.findByIdentifiant("student123");
+                Optional<UserEntity> result = userService.findByUsername("student123");
 
                 assertTrue(result.isPresent());
                 assertEquals(user, result.get());
 
                 verify(userRepository)
-                                .findByIdentifiant("student123");
+                                .findByUsername("student123");
         }
 
         @Test
-        void shouldReturnEmptyWhenIdentifiantDoesNotExist() {
+        void shouldReturnEmptyWhenUsernameDoesNotExist() {
 
-                when(userRepository.findByIdentifiant("unknown"))
+                when(userRepository.findByUsername("unknown"))
                                 .thenReturn(Optional.empty());
 
-                Optional<UserEntity> result = userService.findByIdentifiant("unknown");
+                Optional<UserEntity> result = userService.findByUsername("unknown");
 
                 assertTrue(result.isEmpty());
 
                 verify(userRepository)
-                                .findByIdentifiant("unknown");
+                                .findByUsername("unknown");
         }
 
         @Test
