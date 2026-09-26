@@ -1,4 +1,4 @@
-package com.annalogue.m2;
+package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
@@ -27,181 +27,218 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class HandleUserServiceTest {
 
-    @Mock
-    private UserService userService;
+        @Mock
+        private UserService userService;
 
+        @Mock
+        private MailService mailService;
 
-    @InjectMocks
-    private HandleUserService handleUserService;
+        @InjectMocks
+        private HandleUserService handleUserService;
 
-    @Test
-    void shouldRejectExistingEmail() {
-        when(userService.existsByEmail("test@example.com"))
-                .thenReturn(true);
+        @Test
+        void shouldRejectExistingEmail() {
+                when(userService.existsByEmail("test@example.com"))
+                                .thenReturn(true);
 
-        RuntimeException exception = assertThrows(
-                RuntimeException.class,
-                () -> handleUserService.addUser(
-                        "test@example.com",
-                        Role.ETUDIANT,
-                        "test",
-                        2026,
-                        "A")
-        );
+                RuntimeException exception = assertThrows(
+                                RuntimeException.class,
+                                () -> handleUserService.addUser(
+                                                "test@example.com",
+                                                Role.ETUDIANT,
+                                                "test",
+                                                2026,
+                                                "A"));
 
-        assertEquals(
-                "Account with this email already exists",
-                exception.getMessage()
-        );
-    }
+                assertEquals(
+                                "Account with this email already exists",
+                                exception.getMessage());
+        }
 
-    @Test
-    void shouldAcceptNewEmail() {
-        when(userService.existsByEmail("new@example.com"))
-                .thenReturn(false);
+        @Test
+        void shouldAcceptNewEmail() {
+                when(userService.existsByEmail("new@example.com"))
+                                .thenReturn(false);
 
-        assertDoesNotThrow(() ->
-                handleUserService.addUser(
-                        "new@example.com",
-                        Role.ETUDIANT,
-                        "new",
-                        2026,
-                        "A")
-        );
-    }
+                assertDoesNotThrow(() -> handleUserService.addUser(
+                                "new@example.com",
+                                Role.ETUDIANT,
+                                "new",
+                                2026,
+                                "A"));
+        }
 
-    @Test
-    void shouldNotSaveUserWhenEmailExists() {
-        when(userService.existsByEmail("test@example.com"))
-                .thenReturn(true);
+        @Test
+        void shouldNotSaveUserWhenEmailExists() {
+                when(userService.existsByEmail("test@example.com"))
+                                .thenReturn(true);
 
-        assertThrows(
-                RuntimeException.class,
-                () -> handleUserService.addUser("test@example.com", Role.ETUDIANT, "test", 2026, "A")
-        );
+                assertThrows(
+                                RuntimeException.class,
+                                () -> handleUserService.addUser("test@example.com", Role.ETUDIANT, "test", 2026, "A"));
 
-        verify(userService, never()).save(any());
-    }
+                verify(userService, never()).save(any());
+        }
 
-    @Test
-    void shouldGiveTemporaryPasswordToUserServiceForHashing() {
-        when(userService.existsByEmail("jean.dupont@univ.fr"))
-                .thenReturn(false);
+        @Test
+        void shouldGiveTemporaryPasswordToUserServiceForHashing() {
+                when(userService.existsByEmail("jean.dupont@univ.fr"))
+                                .thenReturn(false);
 
-        String temporaryPassword = handleUserService.addUser(
-                "jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "A");
+                String temporaryPassword = handleUserService.addUser(
+                                "jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "A");
 
-        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(userService).save(captor.capture());
+                ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+                verify(userService).save(captor.capture());
 
-        // the plain password is sent; UserService.save() hashes it
-        assertEquals(temporaryPassword, captor.getValue().getPasswordHash());
-    }
+                // the plain password is sent; UserService.save() hashes it
+                assertEquals(temporaryPassword, captor.getValue().getPasswordHash());
+        }
 
-    @Test
-    void shouldSaveAllFields() {
-        when(userService.existsByEmail("jean.dupont@univ.fr"))
-                .thenReturn(false);
+        @Test
+        void shouldSaveAllFields() {
+                when(userService.existsByEmail("jean.dupont@univ.fr"))
+                                .thenReturn(false);
 
-        handleUserService.addUser("jean.dupont@univ.fr", Role.PROF, "jdupont", 2026, "B");
+                handleUserService.addUser("jean.dupont@univ.fr", Role.PROF, "jdupont", 2026, "B");
 
-        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(userService).save(captor.capture());
-        UserEntity saved = captor.getValue();
+                ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+                verify(userService).save(captor.capture());
+                UserEntity saved = captor.getValue();
 
-        assertEquals("jean.dupont@univ.fr", saved.getEmail());
-        assertEquals("jdupont", saved.getUsername());
-        assertEquals(Role.PROF, saved.getRole());
-        assertEquals(2026, saved.getYear());
-        assertEquals("B", saved.getGroupName());
-    }
+                assertEquals("jean.dupont@univ.fr", saved.getEmail());
+                assertEquals("jdupont", saved.getUsername());
+                assertEquals(Role.PROF, saved.getRole());
+                assertEquals(2026, saved.getYear());
+                assertEquals("B", saved.getGroupName());
+        }
 
-    @Test
-    void shouldGenerateUsernameFromEmailWithDot() {
-        assertEquals("jdupont", handleUserService.generateUsername("jean.dupont@univ.fr"));
-    }
+        @Test
+        void shouldGenerateUsernameFromEmailWithDot() {
+                assertEquals("jdupont", handleUserService.generateUsername("jean.dupont@univ.fr"));
+        }
 
-    @Test
-    void shouldGenerateUsernameFromEmailWithoutDot() {
-        assertEquals("jdupont", handleUserService.generateUsername("jdupont@univ.fr"));
-    }
+        @Test
+        void shouldGenerateUsernameFromEmailWithoutDot() {
+                assertEquals("jdupont", handleUserService.generateUsername("jdupont@univ.fr"));
+        }
 
-    @Test
-    void shouldReturnTemporaryPassword() {
-        when(userService.existsByEmail("new@example.com"))
-                .thenReturn(false);
+        @Test
+        void shouldReturnTemporaryPassword() {
+                when(userService.existsByEmail("new@example.com"))
+                                .thenReturn(false);
 
-        String temporaryPassword = handleUserService.addUser(
-                "new@example.com", Role.ETUDIANT, "new", 2026, "A");
+                String temporaryPassword = handleUserService.addUser(
+                                "new@example.com", Role.ETUDIANT, "new", 2026, "A");
 
-        assertNotNull(temporaryPassword);
-        assertFalse(temporaryPassword.isBlank());
-    }
+                assertNotNull(temporaryPassword);
+                assertFalse(temporaryPassword.isBlank());
+        }
 
-    // ===== Validation =====
+        // ===== Validation =====
 
-    private void assertInvalid(String field, String key,
-                               String email, Role role, String username, Integer year, String group) {
-        InvalidUserDataException exception = assertThrows(
-                InvalidUserDataException.class,
-                () -> handleUserService.addUser(email, role, username, year, group));
+        private void assertInvalid(String field, String key,
+                        String email, Role role, String username, Integer year, String group) {
+                InvalidUserDataException exception = assertThrows(
+                                InvalidUserDataException.class,
+                                () -> handleUserService.addUser(email, role, username, year, group));
 
-        assertEquals(field, exception.getField());
-        assertEquals(key, exception.getMessageKey());
-        verify(userService, never()).save(any());
-    }
+                assertEquals(field, exception.getField());
+                assertEquals(key, exception.getMessageKey());
+                verify(userService, never()).save(any());
+        }
 
-    @Test
-    void shouldRejectNullEmail() {
-        assertInvalid("email", "error.user.email.null",
-                null, Role.ETUDIANT, "new", 2026, "A");
-    }
+        @Test
+        void shouldRejectNullEmail() {
+                assertInvalid("email", "error.user.email.null",
+                                null, Role.ETUDIANT, "new", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectEmptyEmail() {
-        assertInvalid("email", "error.user.email.empty",
-                "  ", Role.ETUDIANT, "new", 2026, "A");
-    }
+        @Test
+        void shouldRejectEmptyEmail() {
+                assertInvalid("email", "error.user.email.empty",
+                                "  ", Role.ETUDIANT, "new", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectInvalidEmailFormat() {
-        assertInvalid("email", "error.user.email.invalid",
-                "not-an-email", Role.ETUDIANT, "new", 2026, "A");
-    }
+        @Test
+        void shouldRejectInvalidEmailFormat() {
+                assertInvalid("email", "error.user.email.invalid",
+                                "not-an-email", Role.ETUDIANT, "new", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectMissingRole() {
-        assertInvalid("role", "error.user.role.empty",
-                "new@example.com", null, "new", 2026, "A");
-    }
+        @Test
+        void shouldRejectMissingRole() {
+                assertInvalid("role", "error.user.role.empty",
+                                "new@example.com", null, "new", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectEmptyUsername() {
-        assertInvalid("username", "error.user.username.empty",
-                "new@example.com", Role.ETUDIANT, "", 2026, "A");
-    }
+        @Test
+        void shouldRejectEmptyUsername() {
+                assertInvalid("username", "error.user.username.empty",
+                                "new@example.com", Role.ETUDIANT, "", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectUsernameThatDoesNotMatchEmail() {
-        assertInvalid("username", "error.user.username.mismatch",
-                "jean.dupont@univ.fr", Role.ETUDIANT, "hacker", 2026, "A");
-    }
+        @Test
+        void shouldRejectUsernameThatDoesNotMatchEmail() {
+                assertInvalid("username", "error.user.username.mismatch",
+                                "jean.dupont@univ.fr", Role.ETUDIANT, "hacker", 2026, "A");
+        }
 
-    @Test
-    void shouldRejectMissingYear() {
-        assertInvalid("year", "error.user.year.empty",
-                "new@example.com", Role.ETUDIANT, "new", null, "A");
-    }
+        @Test
+        void shouldRejectMissingYear() {
+                assertInvalid("year", "error.user.year.empty",
+                                "new@example.com", Role.ETUDIANT, "new", null, "A");
+        }
 
-    @Test
-    void shouldRejectYearOutOfRange() {
-        assertInvalid("year", "error.user.year.invalid",
-                "new@example.com", Role.ETUDIANT, "new", 1990, "A");
-    }
+        @Test
+        void shouldRejectYearOutOfRange() {
+                assertInvalid("year", "error.user.year.invalid",
+                                "new@example.com", Role.ETUDIANT, "new", 1990, "A");
+        }
 
-    @Test
-    void shouldRejectEmptyGroup() {
-        assertInvalid("group", "error.user.group.empty",
-                "new@example.com", Role.ETUDIANT, "new", 2026, " ");
-    }
+        @Test
+        void shouldRejectEmptyGroup() {
+                assertInvalid("group", "error.user.group.empty",
+                                "new@example.com", Role.ETUDIANT, "new", 2026, " ");
+        }
+
+        // email sending tests
+        @Test
+        void shouldSendCredentialsAfterSavingUser() {
+                when(userService.existsByEmail("jean.dupont@univ.fr"))
+                                .thenReturn(false);
+
+                String temporaryPassword = handleUserService.addUser(
+                                "jean.dupont@univ.fr",
+                                Role.ETUDIANT,
+                                "jdupont",
+                                2026,
+                                "A");
+
+                org.mockito.InOrder order = org.mockito.Mockito.inOrder(userService, mailService);
+
+                order.verify(userService).save(any(UserEntity.class));
+                order.verify(mailService).sendCredentials(
+                                "jean.dupont@univ.fr",
+                                "jdupont",
+                                temporaryPassword);
+        }
+
+        @Test
+        void shouldNotSendEmailWhenUserAlreadyExists() {
+                when(userService.existsByEmail("test@example.com"))
+                                .thenReturn(true);
+
+                assertThrows(
+                                RuntimeException.class,
+                                () -> handleUserService.addUser(
+                                                "test@example.com",
+                                                Role.ETUDIANT,
+                                                "test",
+                                                2026,
+                                                "A"));
+
+                verify(mailService, never())
+                                .sendCredentials(anyString(), anyString(), anyString());
+        }
 }
