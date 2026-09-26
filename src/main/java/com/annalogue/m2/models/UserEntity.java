@@ -13,33 +13,33 @@ public class UserEntity {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "hash_mdp", nullable = false)
-    private String hashMdp;
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
 
-    @Column(name = "identifiant", length = 100)
-    private String identifiant;
+    @Column(name = "username", length = 100)
+    private String username;
 
     @Column(name = "role", nullable = false)
     private Role role;
 
-    @Column(name = "annee")
-    private Integer annee;
+    @Column(name = "year")
+    private Integer year;
 
-    @Column(name = "groupe", length = 100)
-    private String groupe;
+    @Column(name = "group_name", length = 100)
+    private String groupName;
 
-    // Constructeur JPA
+    // JPA constructor
     public UserEntity() {
     }
 
-    public UserEntity(String email, String hashMdp, String identifiant,
-            Role role, Integer annee, String groupe) {
+    public UserEntity(String email, String passwordHash, String username,
+            Role role, Integer year, String groupName) {
         this.email = email;
-        this.hashMdp = hashMdp;
-        this.identifiant = identifiant;
+        this.passwordHash = passwordHash;
+        this.username = username;
         this.role = role;
-        this.annee = annee;
-        this.groupe = groupe;
+        this.year = year;
+        this.groupName = groupName;
     }
 
     public Long getId() {
@@ -54,20 +54,20 @@ public class UserEntity {
         this.email = email;
     }
 
-    public String getHashMdp() {
-        return hashMdp;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setHashMdp(String hashMdp) {
-        this.hashMdp = hashMdp;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
-    public String getIdentifiant() {
-        return identifiant;
+    public String getUsername() {
+        return username;
     }
 
-    public void setIdentifiant(String identifiant) {
-        this.identifiant = identifiant;
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public Role getRole() {
@@ -78,19 +78,19 @@ public class UserEntity {
         this.role = role;
     }
 
-    public Integer getAnnee() {
-        return annee;
+    public Integer getYear() {
+        return year;
     }
 
-    public void setAnnee(Integer annee) {
-        this.annee = annee;
+    public void setYear(Integer year) {
+        this.year = year;
     }
 
-    public String getGroupe() {
-        return groupe;
+    public String getGroupName() {
+        return groupName;
     }
 
-    public void setGroupe(String groupe) {
-        this.groupe = groupe;
+    public void setGroupName(String groupName) {
+        this.groupName = groupName;
     }
 }
