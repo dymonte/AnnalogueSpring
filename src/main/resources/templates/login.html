@@ -28,7 +28,7 @@
                             <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
                         </div>
 
-                        <div th:if="${param.error}" class="alert alert-danger mb-3" role="alert">
+                        <div id="error" th:if="${param.error}" class="alert alert-danger mb-3" role="alert">
                             Mot de passe ou email incorrect
                         </div>
 
@@ -40,7 +40,7 @@
                                 type="hidden"
                                 th:name="${_csrf.parameterName}"
                                 th:value="${_csrf.token}">
-                        <button type="submit" class="btn btn-primary w-100">Se connecter</button>
+                        <button type="submit" id="login-btn" class="btn btn-primary w-100">Se connecter</button>
                     </form>
                 </div>
             </div>
