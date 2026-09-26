@@ -22,11 +22,11 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         UserEntity user = userService.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "Utilisateur introuvable : " + email));
+                        "User not found : " + email));
 
         return User.builder()
                 .username(user.getEmail())
-                .password(user.getHashMdp())
+                .password(user.getPasswordHash())
                 .roles(user.getRole().name())
                 .build();
     }
