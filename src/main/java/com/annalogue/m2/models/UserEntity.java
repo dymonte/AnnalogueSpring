@@ -3,7 +3,7 @@ package com.annalogue.m2.models;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "user")
+@Table(name = "users")
 public class UserEntity {
 
     @Id
@@ -22,7 +22,7 @@ public class UserEntity {
     @Column(name = "role", nullable = false)
     private Role role;
 
-    @Column(name = "year")
+    @Column(name = "year_level")
     private Integer year;
 
     @Column(name = "group_name", length = 100)
