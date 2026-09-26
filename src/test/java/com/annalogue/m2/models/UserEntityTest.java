@@ -18,11 +18,11 @@ class UserEntityTest {
                 "G1");
 
         assertEquals("test@test.com", user.getEmail());
-        assertEquals("fake-hash", user.getHashMdp());
-        assertEquals("test123", user.getIdentifiant());
+        assertEquals("fake-hash", user.getPasswordHash());
+        assertEquals("test123", user.getUsername());
         assertEquals(Role.ETUDIANT, user.getRole());
-        assertEquals(2026, user.getAnnee());
-        assertEquals("G1", user.getGroupe());
+        assertEquals(2026, user.getYear());
+        assertEquals("G1", user.getGroupName());
     }
 
     @Test
@@ -31,17 +31,17 @@ class UserEntityTest {
         UserEntity user = new UserEntity();
 
         user.setEmail("new@test.com");
-        user.setHashMdp("new-hash");
-        user.setIdentifiant("new-id");
+        user.setPasswordHash("new-hash");
+        user.setUsername("new-id");
         user.setRole(Role.PROF);
-        user.setAnnee(2025);
-        user.setGroupe("G2");
+        user.setYear(2025);
+        user.setGroupName("G2");
 
         assertEquals("new@test.com", user.getEmail());
-        assertEquals("new-hash", user.getHashMdp());
-        assertEquals("new-id", user.getIdentifiant());
+        assertEquals("new-hash", user.getPasswordHash());
+        assertEquals("new-id", user.getUsername());
         assertEquals(Role.PROF, user.getRole());
-        assertEquals(2025, user.getAnnee());
-        assertEquals("G2", user.getGroupe());
+        assertEquals(2025, user.getYear());
+        assertEquals("G2", user.getGroupName());
     }
 }

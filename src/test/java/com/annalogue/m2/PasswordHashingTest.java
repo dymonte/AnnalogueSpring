@@ -31,16 +31,16 @@ class PasswordHashingTest {
         UserEntity user = new UserEntity();
 
         user.setEmail("fadila@ufr");
-        user.setHashMdp("123456");
+        user.setPasswordHash("123456");
 
         userService.save(user);
 
-        assertNotEquals("123456", user.getHashMdp());
+        assertNotEquals("123456", user.getPasswordHash());
 
         assertTrue(
                 passwordEncoder.matches(
                         "123456",
-                        user.getHashMdp()
+                        user.getPasswordHash()
                 )
         );
 
