@@ -31,4 +31,10 @@ class NotifyServiceTest {
 
         assertTrue(message.contains("new@test.com"));
     }
+
+    @Test
+    void shouldReturnServerErrorForUnknownKey() {
+        assertEquals("An error occurred. Please try again later.",
+                notifyService.getMessage("this.key.does.not.exist"));
+    }
 }
