@@ -15,7 +15,7 @@ Fonctionnalité: Authentification
     
   Scénario: Connexion sans compte
     Soit L'utilisateur "ToTo" n'existe pas 
-    Quand je m'authentifie avec l'identifiant "ToTo"
+    Quand je m'authentifie avec l'identifiant "ToTo" et le mot de passe "titi"
     Alors j'ai un message d'erreur
     
     
