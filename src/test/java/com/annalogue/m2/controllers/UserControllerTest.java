@@ -5,10 +5,12 @@ import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.services.HandleUserService;
 import com.annalogue.m2.services.RoleService;
+import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -16,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 
 import java.util.Arrays;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
@@ -35,7 +38,11 @@ class UserControllerTest {
 
     @MockitoBean
     private HandleUserService handleUserService;
+    @MockitoBean
+    private UserService userService;
 
+    @MockitoBean
+    private PasswordEncoder passwordEncoder;
     // tells the RoleService mock that this role exists
     private void mockValidRole(String roleName, Role role) {
         when(roleService.exists(roleName)).thenReturn(true);
@@ -276,4 +283,6 @@ class UserControllerTest {
                 .andExpect(model().attribute("errorKey", "error.database"))
                 .andExpect(content().string(containsString("alert-danger")));
     }
+
+
 }
