@@ -9,8 +9,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -133,5 +133,60 @@ class SecurityIntegrationTest {
                 .andExpect(redirectedUrl("/members/add"));
 
         verify(handleUserService).addUser("new@test.com", Role.ETUDIANT, "new", 2026, "A");
+    }
+
+    @Test
+    void authenticatedUserShouldBeAbleToLogout() throws Exception {
+
+        mockMvc.perform(
+                        post("/logout")
+                                .with(user("test@test.com"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?logout"));
+    }
+
+
+    @Test
+    void logoutShouldInvalidateSession() throws Exception {
+
+        MockHttpSession session = new MockHttpSession();
+
+        // Given : User is authenticated
+        mockMvc.perform(
+                        get("/home")
+                                .session(session)
+                                .with(user("test@test.com"))
+                )
+                .andExpect(status().isOk());
+
+        // Logout
+        mockMvc.perform(
+                        post("/logout")
+                                .session(session)
+                                .with(user("test@test.com"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login?logout"));
+
+        // Session must be not usefully like authenticated session anymore
+        mockMvc.perform(
+                        get("/home")
+                                .session(session)
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void logoutShouldRequireCsrf() throws Exception {
+
+        mockMvc.perform(
+                        post("/logout")
+                                .with(user("test@test.com"))
+                )
+                .andExpect(status().isForbidden());
     }
 }
