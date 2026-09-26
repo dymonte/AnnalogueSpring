@@ -28,7 +28,7 @@ public class HomeController {
 
         if(authentication != null) {
             userService.findByEmail(authentication.getName()).ifPresent(
-                    userEntity ->  model.addAttribute("username", userEntity.getIdentifiant())
+                    userEntity ->  model.addAttribute("username", userEntity.getUsername())
             );
         }
 
