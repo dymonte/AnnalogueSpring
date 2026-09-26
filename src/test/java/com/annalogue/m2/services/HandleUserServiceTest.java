@@ -11,7 +11,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,8 +30,6 @@ class HandleUserServiceTest {
     @Mock
     private UserService userService;
 
-    @Mock
-    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private HandleUserService handleUserService;
@@ -87,23 +84,18 @@ class HandleUserServiceTest {
     }
 
     @Test
-    void shouldSaveUserWithHashedPassword() {
+    void shouldGiveTemporaryPasswordToUserServiceForHashing() {
         when(userService.existsByEmail("jean.dupont@univ.fr"))
                 .thenReturn(false);
-        when(passwordEncoder.encode(anyString()))
-                .thenReturn("hashed-password");
 
         String temporaryPassword = handleUserService.addUser(
                 "jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "A");
 
         ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
         verify(userService).save(captor.capture());
-        UserEntity saved = captor.getValue();
 
-        assertEquals("hashed-password", saved.getPasswordHash());
-        assertNotEquals(temporaryPassword, saved.getPasswordHash());
-
-        verify(passwordEncoder).encode(temporaryPassword);
+        // the plain password is sent; UserService.save() hashes it
+        assertEquals(temporaryPassword, captor.getValue().getPasswordHash());
     }
 
     @Test
