@@ -1,3 +1,4 @@
+
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
@@ -17,35 +18,54 @@ public class HandleUserService {
     private static final int MAX_YEAR = 2100;
 
     private final UserService userService;
+    private final MailService mailService;
 
-    public HandleUserService(UserService userService) {
+    public HandleUserService(
+            UserService userService,
+            MailService mailService) {
         this.userService = userService;
+        this.mailService = mailService;
     }
 
-    public String addUser(String email, Role role, String username, Integer year, String group) {
+    public String addUser(
+            String email,
+            Role role,
+            String username,
+            Integer year,
+            String group) {
+
         validate(email, role, username, year, group);
 
         String normalizedEmail = email.trim().toLowerCase();
 
         if (userService.existsByEmail(normalizedEmail)) {
-            throw new EmailAlreadyExistsException("Account with this email already exists");
+            throw new EmailAlreadyExistsException(
+                    "Account with this email already exists");
         }
 
         String temporaryPassword = generateTemporaryPassword();
+        String generatedUsername = generateUsername(normalizedEmail);
 
         UserEntity user = new UserEntity(
                 normalizedEmail,
                 temporaryPassword,
-                generateUsername(normalizedEmail),
+                generatedUsername,
                 role,
                 year,
                 group.trim());
+
+        // UserService encode le mot de passe avant l'enregistrement.
         userService.save(user);
+
+        // On envoie le mot de passe temporaire original,
+        // pas sa version hashée.
+        mailService.sendCredentials(
+                normalizedEmail,
+                generatedUsername,
+                temporaryPassword);
 
         return temporaryPassword;
     }
-
-    // abdelmadjid.kahoul@univ.fr -> akahoul (same rule as handle-user.js) its for the back side to check so !!
 
     public String generateUsername(String email) {
         String name = email.trim().toLowerCase();
@@ -59,37 +79,52 @@ public class HandleUserService {
         return name;
     }
 
-    private void validate(String email, Role role, String username, Integer year, String group) {
+    private void validate(
+            String email,
+            Role role,
+            String username,
+            Integer year,
+            String group) {
+
         if (email == null) {
-            throw new InvalidUserDataException("email", "error.user.email.null");
+            throw new InvalidUserDataException(
+                    "email", "error.user.email.null");
         }
         if (email.isBlank()) {
-            throw new InvalidUserDataException("email", "error.user.email.empty");
+            throw new InvalidUserDataException(
+                    "email", "error.user.email.empty");
         }
         if (!email.trim().matches(EMAIL_PATTERN)) {
-            throw new InvalidUserDataException("email", "error.user.email.invalid");
+            throw new InvalidUserDataException(
+                    "email", "error.user.email.invalid");
         }
         if (role == null) {
-            throw new InvalidUserDataException("role", "error.user.role.empty");
+            throw new InvalidUserDataException(
+                    "role", "error.user.role.empty");
         }
         if (username == null || username.isBlank()) {
-            throw new InvalidUserDataException("username", "error.user.username.empty");
+            throw new InvalidUserDataException(
+                    "username", "error.user.username.empty");
         }
-        // the username sent by the front must be the one the backend generates
         if (!username.trim().equals(generateUsername(email))) {
-            throw new InvalidUserDataException("username", "error.user.username.mismatch");
+            throw new InvalidUserDataException(
+                    "username", "error.user.username.mismatch");
         }
         if (year == null) {
-            throw new InvalidUserDataException("year", "error.user.year.empty");
+            throw new InvalidUserDataException(
+                    "year", "error.user.year.empty");
         }
         if (year < MIN_YEAR || year > MAX_YEAR) {
-            throw new InvalidUserDataException("year", "error.user.year.invalid");
+            throw new InvalidUserDataException(
+                    "year", "error.user.year.invalid");
         }
         if (group == null || group.isBlank()) {
-            throw new InvalidUserDataException("group", "error.user.group.empty");
+            throw new InvalidUserDataException(
+                    "group", "error.user.group.empty");
         }
         if (!group.trim().matches(GROUP_PATTERN)) {
-            throw new InvalidUserDataException("group", "error.user.group.invalid");
+            throw new InvalidUserDataException(
+                    "group", "error.user.group.invalid");
         }
     }
 
