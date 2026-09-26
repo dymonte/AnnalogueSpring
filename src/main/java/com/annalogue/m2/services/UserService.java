@@ -42,4 +42,8 @@ public class UserService {
                 .filter(user -> user.getRole() == role)
                 .toList();
     }
+
+    public void deleteAll() {
+        userRepository.deleteAll();
+    }
 }

@@ -34,7 +34,7 @@
         <java.version>25</java.version>
         <maven.compiler.release>25</maven.compiler.release>
         <playwright.version>1.62.0</playwright.version>
-        <cucumber.version>7.1.0</cucumber.version>
+        <cucumber.version>7.18.0</cucumber.version>
     </properties>
 
     <dependencies>
@@ -120,6 +120,15 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>io.cucumber</groupId>
+            <artifactId>cucumber-spring</artifactId>
+            <version>${cucumber.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
+
         <!--  Test Spring  -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -144,6 +153,20 @@
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+
+        <!-- H2 database -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- Junit Platform-->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <scope>test</scope>
         </dependency>
 
     </dependencies>
