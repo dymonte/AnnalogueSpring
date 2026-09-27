@@ -11,18 +11,14 @@ import io.cucumber.java.BeforeAll;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Quand;
 import io.cucumber.java.fr.Soit;
-import io.cucumber.spring.CucumberContextConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ActiveProfiles("test")
 public class AuthenticationAcceptanceTest {
 
 	@Autowired
@@ -78,6 +74,8 @@ public class AuthenticationAcceptanceTest {
 					.setPath(Paths.get("trace.zip")));
 			context.close();
 		}
+		// delete all users
+		userService.deleteAll();
 	}
 
 
