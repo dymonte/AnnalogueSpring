@@ -6,7 +6,7 @@ services:
       MYSQL_ROOT_PASSWORD: annaloguepw
       MYSQL_DATABASE: annalogue
     ports:
-      - "3306:3306"
+      - "8191:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
@@ -20,7 +20,7 @@ services:
       dockerfile: Dockerfile
     container_name: annalogue-app
     ports:
-      - "8080:8080"
+      - "8190:8190"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/annalogue
       SPRING_DATASOURCE_USERNAME: root
