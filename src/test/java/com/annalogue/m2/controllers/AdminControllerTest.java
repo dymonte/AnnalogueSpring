@@ -1,9 +1,15 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.ldap.SecurityConfig;
+import com.annalogue.m2.services.CustomUserDetailsService;
+import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
@@ -11,13 +17,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-
-@SpringBootTest
+@WebMvcTest(AdminController.class)
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Import(SecurityConfig.class)
 public class AdminControllerTest {
 
 	@Autowired
 	private MockMvc mockMvc;
+
+	@MockitoBean
+	private CustomUserDetailsService customUserDetailsService;
+
+	@MockitoBean
+	private UserService userService;
 
 	@Test
 	void adminAuthenticatedAdminShouldReturnAdminPage() throws Exception {
