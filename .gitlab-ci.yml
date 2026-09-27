@@ -106,7 +106,7 @@ deploy:
     - ssh $SSH_USER@$IP_SERVER "cd $DEST_DIR && docker compose down && docker compose up --build -d"
 
   rules:
-    - if: $CI_COMMIT_BRANCH == 'docker-deploy'
-      when: always # Control
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: manual # Control
     - when: never
 
