@@ -14,8 +14,9 @@
 
     <h1>Welcome <span th:text="${username}"></span></h1>
 
+    <a href="/change-password" class="btn btn-primary">Changer le mot de passe</a>
 
-
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
 </body>
 

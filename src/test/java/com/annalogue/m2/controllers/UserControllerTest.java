@@ -16,6 +16,7 @@ import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequ
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import com.annalogue.m2.services.HandPasswordService;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -38,6 +39,10 @@ class UserControllerTest {
 
     @MockitoBean
     private HandleUserService handleUserService;
+
+    @MockitoBean
+    private HandPasswordService handPasswordService;
+
     @MockitoBean
     private UserService userService;
 

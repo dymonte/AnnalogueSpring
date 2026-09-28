@@ -33,7 +33,6 @@ public class UserService {
     }
 
     public UserEntity save(UserEntity user) {
-        user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
         return userRepository.save(user);
     }
 
