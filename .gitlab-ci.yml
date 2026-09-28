@@ -5,6 +5,7 @@ stages:
   - test
   # - analysis
   - deploy
+  - deployment
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
@@ -108,3 +109,17 @@ deploy:
       when: manual # Control
     - when: never
 
+deployment:
+  stage: deployment
+  image: docker:24
+  services:
+    - docker:24-dind
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY
+  script:
+    - docker build -t $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - ssh $SSH_USER@$IP_SERVER "docker pull $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA && docker-compose up -d"
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'docker-deploy'
+      when: manual
