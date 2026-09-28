@@ -18,7 +18,7 @@
                     <a th:attr="class=${isAdmin ? 'nav-link' : 'nav-link disabled'}" href="/admin">Admin Dashboard</a>
                 </li>
                 <li class="nav-item accordion">
-                    <p class="nav-link mb-0">Welcome, <span th:text="${login}"></span>!</p>
+                    <p class="nav-link mb-0">Welcome, <span id="email" th:text="${login}"></span>!</p>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="#" onclick="document.getElementById('logoutForm').submit()">Logout</a>
