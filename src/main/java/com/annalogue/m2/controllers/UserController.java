@@ -1,14 +1,12 @@
 package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.exceptions.*;
-import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.HandleUserService;
 import com.annalogue.m2.services.RoleService;
 import com.annalogue.m2.services.UserService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import com.annalogue.m2.services.HandPasswordService;
 
 import java.util.Optional;
 
@@ -24,13 +23,15 @@ public class UserController {
 
     private final RoleService roleService;
     private final HandleUserService handleUserService;
-    private final UserService userService;
-    private final PasswordEncoder passwordEncoder;
-    public UserController(RoleService roleService, HandleUserService handleUserService, UserService userService, PasswordEncoder passwordEncoder) {
+    private final HandPasswordService handPasswordService;
+
+    public UserController(
+            RoleService roleService,
+            HandleUserService handleUserService,
+            HandPasswordService handPasswordService) {
         this.roleService = roleService;
         this.handleUserService = handleUserService;
-        this.userService = userService;
-        this.passwordEncoder = passwordEncoder;
+        this.handPasswordService = handPasswordService;
     }
 
     @GetMapping("/members/add")
@@ -41,12 +42,12 @@ public class UserController {
 
     @PostMapping("/members/add")
     public String addMember(@RequestParam(required = false) String email,
-                            @RequestParam(required = false) String role,
-                            @RequestParam(required = false) String username,
-                            @RequestParam(required = false) Integer year,
-                            @RequestParam(required = false) String group,
-                            Model model,
-                            RedirectAttributes redirectAttributes) {
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String group,
+            Model model,
+            RedirectAttributes redirectAttributes) {
 
         // role: required and must exist (RoleService, TFAN26-11)
         if (role == null || role.isBlank()) {
@@ -81,7 +82,7 @@ public class UserController {
 
     // shows the form again with what the admin typed
     private String showFormAgain(Model model, String email, String role,
-                                 String username, Integer year, String group) {
+            String username, Integer year, String group) {
         model.addAttribute("roles", roleService.getRoles());
         model.addAttribute("email", email);
         model.addAttribute("selectedRole", role);
@@ -91,8 +92,12 @@ public class UserController {
         return "admin/add_member";
     }
 
-
-
+    @GetMapping("/change-password")
+    public String showChangePasswordForm(Authentication auth, Model model) {
+        model.addAttribute("isAdmin", auth != null && auth.getAuthorities() != null && auth.getAuthorities().stream()
+                .anyMatch(role -> java.util.Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
+        return "change_password";
+    }
 
     @PostMapping("/change-password")
     public String changePassword(
@@ -101,77 +106,40 @@ public class UserController {
             @RequestParam String newPassword,
             @RequestParam String confirmPassword,
             Model model,
-            RedirectAttributes redirectAttributes
-    ) {
-
-        String email = auth.getName();
-
+            RedirectAttributes redirectAttributes) {
         try {
-            UserEntity user = userService.findByEmail(email)
-                    .orElseThrow(() ->
-                            new UsernameNotFoundException("Utilisateur introuvable")
-                    );
-
-            if (!passwordEncoder.matches(
+            handPasswordService.changePassword(
+                    auth.getName(),
                     currentPassword,
-                    user.getPasswordHash()
-            )) {
-                throw new InvalidPasswordException();
-            }
-
-            if (!newPassword.equals(confirmPassword)) {
-                throw new PasswordMismatchException();
-            }
-
-            if (!newPassword.matches(
-                    "^(?=.*[A-Za-z])(?=.*\\d)(?=.*[^A-Za-z0-9]).{8,}$"
-            )) {
-                throw new WeakPasswordException();
-            }
-
-            user.setPasswordHash(
-                    passwordEncoder.encode(newPassword)
-            );
-
-            userService.save(user);
+                    newPassword,
+                    confirmPassword);
 
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Mot de passe modifié"
-            );
+                    "Mot de passe modifié");
 
-            return "redirect:/change-password";
+            return "redirect:/home";
 
         } catch (UsernameNotFoundException e) {
-
             model.addAttribute("error", e.getMessage());
-            return "change_password";
 
         } catch (InvalidPasswordException e) {
-
             model.addAttribute(
                     "currentPasswordError",
-                    e.getMessage()
-            );
-            return "change_password";
+                    e.getMessage());
 
         } catch (PasswordMismatchException e) {
-
             model.addAttribute(
                     "confirmPasswordError",
-                    e.getMessage()
-            );
-            return "change_password";
+                    e.getMessage());
 
         } catch (WeakPasswordException e) {
-
             model.addAttribute(
                     "newPasswordError",
-                    e.getMessage()
-            );
-            return "change_password";
+                    e.getMessage());
         }
-    }
 
+        return "change_password";
+    }
 
 }

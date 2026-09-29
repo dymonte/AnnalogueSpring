@@ -56,7 +56,7 @@ public class AuthenticationAcceptanceTest {
 
 	@Before
 	public void setupScenario() {
-		context = browser.newContext(new Browser.NewContextOptions().setLocale("fr-FR")); //en-US
+		context = browser.newContext(new Browser.NewContextOptions().setLocale("fr-FR")); // en-US
 		context.tracing().start(new Tracing.StartOptions()
 				.setScreenshots(true)
 				.setSnapshots(true)
@@ -78,7 +78,6 @@ public class AuthenticationAcceptanceTest {
 		userService.deleteAll();
 	}
 
-
 	@Soit("L'utilisateur \"ToTo\" possède un compte {string} ayant comme mot de passe \"titi\"")
 	public void l_utilisateur_possede_un_compte_ayant_comme_mot_de_passe(String role) {
 		Role r = switch (role.toLowerCase()) {
@@ -90,19 +89,19 @@ public class AuthenticationAcceptanceTest {
 
 		// create user
 		UserEntity user = new UserEntity(
-			"toto@example.com",
-			"titi",
-			"ToTo",
-			r,
-			0,
-			"g"
-		);
+				"toto@example.com",
+				passwordEncoder.encode("titi"),
+				"ToTo",
+				r,
+				0,
+				"g");
 		userService.save(user);
 
 		// check user informations in db
 		assertTrue(userService.findByEmail("toto@example.com").isPresent());
 		assertEquals(userService.findByEmail("toto@example.com").get().getRole(), r);
-		assertTrue(passwordEncoder.matches("titi", userService.findByEmail("toto@example.com").get().getPasswordHash()));
+		assertTrue(
+				passwordEncoder.matches("titi", userService.findByEmail("toto@example.com").get().getPasswordHash()));
 		assertEquals("ToTo", userService.findByEmail("toto@example.com").get().getUsername());
 	}
 
@@ -128,13 +127,11 @@ public class AuthenticationAcceptanceTest {
 		assertEquals("toto@example.com", email);
 
 		// check role
-		if (role.equals("Administrateur")){
+		if (role.equals("Administrateur")) {
 			assertEquals(200, page.navigate("http://localhost:" + port + "/admin").status());
-		}
-		else {
+		} else {
 			assertEquals(403, page.navigate("http://localhost:" + port + "/admin").status());
 		}
-
 
 	}
 
@@ -152,6 +149,3 @@ public class AuthenticationAcceptanceTest {
 	}
 
 }
-
-
-
