@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import com.annalogue.m2.services.HandPasswordService;
 
 import java.util.Arrays;
 
@@ -39,6 +40,10 @@ class UserControllerTest {
 
     @MockitoBean
     private HandleUserService handleUserService;
+
+    @MockitoBean
+    private HandPasswordService handPasswordService;
+
     @MockitoBean
     private UserService userService;
 

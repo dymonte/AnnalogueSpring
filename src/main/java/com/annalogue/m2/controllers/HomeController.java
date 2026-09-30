@@ -19,17 +19,18 @@ public class HomeController {
     @Autowired
     private UserService userService;
 
-    @GetMapping(value = {"/home", "/"})
+    @GetMapping(value = { "/home", "/" })
     public String home(Authentication authentication, Model model) {
 
         model.addAttribute("login", authentication != null ? authentication.getName() : "");
-        model.addAttribute("isAdmin", authentication != null && authentication.getAuthorities().stream()
-                .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
+        model.addAttribute("isAdmin",
+                authentication != null && authentication.getAuthorities() != null
+                        && authentication.getAuthorities().stream()
+                                .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
 
-        if(authentication != null) {
+        if (authentication != null) {
             userService.findByEmail(authentication.getName()).ifPresent(
-                    userEntity ->  model.addAttribute("username", userEntity.getUsername())
-            );
+                    userEntity -> model.addAttribute("username", userEntity.getUsername()));
         }
 
         return "home";

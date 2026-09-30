@@ -1,18 +1,20 @@
 services:
   mysql:
-    image: mysql:8.0
+    image: mariadb:10.11
     container_name: annalogue-mysql
     environment:
-      MYSQL_ROOT_PASSWORD: annaloguepw
-      MYSQL_DATABASE: annalogue
+      MARIADB_ROOT_PASSWORD: annaloguepw
+      MARIADB_DATABASE: annalogue
     ports:
       - "3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
+    networks:
+      - app-network
 
   app:
     build:
@@ -31,6 +33,11 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+    networks:
+      - app-network
 
 volumes:
   mysql-data:
+
+networks:
+  app-network:
