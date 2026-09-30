@@ -1,0 +1,43 @@
+services:
+  mysql:
+    image: mariadb:10.11
+    container_name: annalogue-mysql
+    environment:
+      MARIADB_ROOT_PASSWORD: annaloguepw
+      MARIADB_DATABASE: annalogue
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mariadb-admin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - app-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: annalogue-app
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./target/classes:/app/target/classes
+      - ./pom.xml:/app/pom.xml
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/annalogue
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: annaloguepw
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - app-network
+
+volumes:
+  mysql-data:
+
+networks:
+  app-network:
