@@ -17,33 +17,31 @@ import static org.mockito.Mockito.verify;
 @ExtendWith(MockitoExtension.class)
 class PasswordHashingTest {
 
-    @Mock
-    UserRepository userRepository;
+        @Mock
+        UserRepository userRepository;
 
-    @Test
-    void passwordHashingTest() {
+        @Test
+        void passwordHashingTest() {
 
-        PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+                PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-        UserService userService =
-                new UserService(userRepository, passwordEncoder);
+                UserService userService = new UserService(userRepository, passwordEncoder);
 
-        UserEntity user = new UserEntity();
+                UserEntity user = new UserEntity();
 
-        user.setEmail("fadila@ufr");
-        user.setPasswordHash("123456");
+                user.setEmail("fadila@ufr");
+                user.setPasswordHash(passwordEncoder.encode("123456"));
 
-        userService.save(user);
+                userService.save(user);
 
-        assertNotEquals("123456", user.getPasswordHash());
+                assertTrue(
+                                user.getPasswordHash().startsWith("$2a$"));
 
-        assertTrue(
-                passwordEncoder.matches(
-                        "123456",
-                        user.getPasswordHash()
-                )
-        );
+                assertTrue(
+                                passwordEncoder.matches(
+                                                "123456",
+                                                user.getPasswordHash()));
 
-        verify(userRepository).save(user);
-    }
+                verify(userRepository).save(user);
+        }
 }
