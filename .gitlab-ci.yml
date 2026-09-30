@@ -102,9 +102,10 @@ deploy:
     - ssh-keyscan $IP_SERVER >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - rsync -av target/site/ $SSH_USER@$IP_SERVER:$DEST_DIR
+    - rsync -av --exclude '.git' --exclude 'target' ./ $SSH_USER@$IP_SERVER:$DEST_DIR
+    - ssh $SSH_USER@$IP_SERVER "cd $DEST_DIR && docker compose down && docker compose up --build -d"
+
   rules:
     - if: $CI_COMMIT_BRANCH == 'main'
       when: manual # Control
     - when: never
-
