@@ -140,7 +140,7 @@ class HandleUserServiceTest {
                 when(userService.existsByEmail("jean.dupont@univ.fr"))
                                 .thenReturn(false);
 
-                handleUserService.addUser("jean.dupont@univ.fr", Role.PROF, "jdupont", 2026, "B");
+                handleUserService.addUser("jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "B");
 
                 ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
                 verify(userService).save(captor.capture());
@@ -148,7 +148,7 @@ class HandleUserServiceTest {
 
                 assertEquals("jean.dupont@univ.fr", saved.getEmail());
                 assertEquals("jdupont", saved.getUsername());
-                assertEquals(Role.PROF, saved.getRole());
+                assertEquals(Role.ETUDIANT, saved.getRole());
                 assertEquals(2026, saved.getYear());
                 assertEquals("B", saved.getGroupName());
         }
