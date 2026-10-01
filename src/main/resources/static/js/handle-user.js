@@ -1,6 +1,10 @@
 const emailInput = document.getElementById("email");
 const usernameInput = document.getElementById("username");
+const roleSelect = document.getElementById("role");
+const groupSelect = document.getElementById("group");
 
+// ===== Username generated from the email =====
+// jean.dupont@univ.fr -> jdupont (same rule as HandleUserService.generateUsername)
 function updateUsername() {
   const email = emailInput.value.trim().toLowerCase();
 
@@ -19,8 +23,22 @@ function updateUsername() {
   }
 }
 
-emailInput.addEventListener("input", updateUsername);
+// ===== Group disabled for professors =====
+function updateGroup() {
+  const ishavegroup =
+    roleSelect.value === "PROF" || roleSelect.value === "ADMIN";
+  
+  groupSelect.disabled = ishavegroup;
 
-// Generate the username if the email is already filled
-// after the form is shown again following an error
+  if (ishavegroup) {
+    // clear the choice: a disabled field is not sent with the form
+    groupSelect.value = "";
+  }
+}
+
+emailInput.addEventListener("input", updateUsername);
+roleSelect.addEventListener("change", updateGroup);
+
+// when the form is shown again after an error, the fields are already filled
 updateUsername();
+updateGroup();

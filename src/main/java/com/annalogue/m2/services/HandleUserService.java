@@ -1,11 +1,13 @@
-
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
 
@@ -19,14 +21,17 @@ public class HandleUserService {
 
     private final UserService userService;
     private final MailService mailService;
+    private final PasswordEncoder passwordEncoder;
 
     public HandleUserService(
             UserService userService,
-            MailService mailService) {
+            MailService mailService,
+            PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.mailService = mailService;
+        this.passwordEncoder = passwordEncoder;
     }
-
+    @Transactional
     public String addUser(
             String email,
             Role role,
@@ -44,21 +49,26 @@ public class HandleUserService {
         }
 
         String temporaryPassword = generateTemporaryPassword();
+
+        // the password is hashed here, once (UserService.save() no longer hashes)
+        String hashedPassword = passwordEncoder.encode(temporaryPassword);
+
         String generatedUsername = generateUsername(normalizedEmail);
+
+        // only students belong to a group
+        String groupToSave = (role == Role.ETUDIANT) ? group.trim() : null;
 
         UserEntity user = new UserEntity(
                 normalizedEmail,
-                temporaryPassword,
+                hashedPassword,
                 generatedUsername,
                 role,
                 year,
-                group.trim());
+                groupToSave);
 
-        // UserService encode le mot de passe avant l'enregistrement.
         userService.save(user);
 
-        // On envoie le mot de passe temporaire original,
-        // pas sa version hashée.
+        // the original temporary password is sent, not the hashed one
         mailService.sendCredentials(
                 normalizedEmail,
                 generatedUsername,
@@ -67,6 +77,7 @@ public class HandleUserService {
         return temporaryPassword;
     }
 
+    // jean.dupont@univ.fr -> jdupont (same rule as handle-user.js)
     public String generateUsername(String email) {
         String name = email.trim().toLowerCase();
         name = name.substring(0, name.indexOf("@"));
@@ -87,44 +98,38 @@ public class HandleUserService {
             String group) {
 
         if (email == null) {
-            throw new InvalidUserDataException(
-                    "email", "error.user.email.null");
+            throw new InvalidUserDataException("email", "error.user.email.null");
         }
         if (email.isBlank()) {
-            throw new InvalidUserDataException(
-                    "email", "error.user.email.empty");
+            throw new InvalidUserDataException("email", "error.user.email.empty");
         }
         if (!email.trim().matches(EMAIL_PATTERN)) {
-            throw new InvalidUserDataException(
-                    "email", "error.user.email.invalid");
+            throw new InvalidUserDataException("email", "error.user.email.invalid");
         }
         if (role == null) {
-            throw new InvalidUserDataException(
-                    "role", "error.user.role.empty");
+            throw new InvalidUserDataException("role", "error.user.role.empty");
         }
         if (username == null || username.isBlank()) {
-            throw new InvalidUserDataException(
-                    "username", "error.user.username.empty");
+            throw new InvalidUserDataException("username", "error.user.username.empty");
         }
+        // the username sent by the front must be the one the backend generates
         if (!username.trim().equals(generateUsername(email))) {
-            throw new InvalidUserDataException(
-                    "username", "error.user.username.mismatch");
+            throw new InvalidUserDataException("username", "error.user.username.mismatch");
         }
         if (year == null) {
-            throw new InvalidUserDataException(
-                    "year", "error.user.year.empty");
+            throw new InvalidUserDataException("year", "error.user.year.empty");
         }
         if (year < MIN_YEAR || year > MAX_YEAR) {
-            throw new InvalidUserDataException(
-                    "year", "error.user.year.invalid");
+            throw new InvalidUserDataException("year", "error.user.year.invalid");
         }
-        if (group == null || group.isBlank()) {
-            throw new InvalidUserDataException(
-                    "group", "error.user.group.empty");
-        }
-        if (!group.trim().matches(GROUP_PATTERN)) {
-            throw new InvalidUserDataException(
-                    "group", "error.user.group.invalid");
+        // the group is required only for students (disabled in the form for the other roles)
+        if (role == Role.ETUDIANT) {
+            if (group == null || group.isBlank()) {
+                throw new InvalidUserDataException("group", "error.user.group.empty");
+            }
+            if (!group.trim().matches(GROUP_PATTERN)) {
+                throw new InvalidUserDataException("group", "error.user.group.invalid");
+            }
         }
     }
 

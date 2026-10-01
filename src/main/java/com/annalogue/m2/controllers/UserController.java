@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.annalogue.m2.services.HandPasswordService;
 
+import org.springframework.mail.MailException;
+
 import java.util.Optional;
 
 @Controller
@@ -75,6 +77,8 @@ public class UserController {
 
         } catch (DataAccessException e) {
             model.addAttribute("errorKey", "error.database");
+        } catch (MailException e) {
+            model.addAttribute("errorKey", "error.mail.send");
         }
 
         return showFormAgain(model, email, role, username, year, group);
