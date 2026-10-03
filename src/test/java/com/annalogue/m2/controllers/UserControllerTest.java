@@ -26,11 +26,14 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.util.List;
+import static org.hamcrest.Matchers.not;
 
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 class UserControllerTest {
+        private static final List<Role> ASSIGNABLE_ROLES = List.of(Role.PROF, Role.ETUDIANT);
 
     @Autowired
     private MockMvc mockMvc;
@@ -53,7 +56,7 @@ class UserControllerTest {
     private void mockValidRole(String roleName, Role role) {
         when(roleService.exists(roleName)).thenReturn(true);
         when(roleService.fromString(roleName)).thenReturn(role);
-        when(roleService.getRoles()).thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles()).thenReturn(ASSIGNABLE_ROLES);
     }
 
     // ===== GET /members/add =====
@@ -61,8 +64,8 @@ class UserControllerTest {
     @Test
     @WithMockUser
     void addMemberPageShouldReturnAddMemberView() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -70,14 +73,14 @@ class UserControllerTest {
         )
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/add_member"))
-                .andExpect(model().attribute("roles", Arrays.asList(Role.values())));
+                .andExpect(model().attribute("roles", ASSIGNABLE_ROLES));
     }
 
     @Test
     @WithMockUser
     void formShouldContainAllFieldsRolesAndGroups() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -88,7 +91,7 @@ class UserControllerTest {
                 .andExpect(content().string(containsString("name=\"username\"")))
                 .andExpect(content().string(containsString("name=\"year\"")))
                 .andExpect(content().string(containsString("name=\"group\"")))
-                .andExpect(content().string(containsString("value=\"ADMIN\"")))
+                .andExpect(content().string(not(containsString("value=\"ADMIN\""))))
                 .andExpect(content().string(containsString("value=\"PROF\"")))
                 .andExpect(content().string(containsString("value=\"ETUDIANT\"")))
                 .andExpect(content().string(containsString("value=\"A\"")))
@@ -124,8 +127,8 @@ class UserControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldDisplaySuccessAlertAfterRedirect() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -211,8 +214,8 @@ class UserControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldShowRoleErrorWhenRoleIsEmpty() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 post("/members/add")
@@ -233,8 +236,8 @@ class UserControllerTest {
     @WithMockUser(roles = "ADMIN")
     void shouldShowRoleErrorWhenRoleIsUnknown() throws Exception {
         when(roleService.exists("DIRECTEUR")).thenReturn(false);
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 post("/members/add")
@@ -290,5 +293,25 @@ class UserControllerTest {
                 .andExpect(content().string(containsString("alert-danger")));
     }
 
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowErrorWhenTryingToCreateAnAdmin() throws Exception {
+        mockValidRole("ADMIN", Role.ADMIN);
+        when(handleUserService.addUser("admin2@test.com", Role.ADMIN, "admin2", 2026, "A"))
+                .thenThrow(new InvalidUserDataException("role", "error.user.role.admin.forbidden"));
 
+        mockMvc.perform(
+                post("/members/add")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("email", "admin2@test.com")
+                        .param("role", "ADMIN")
+                        .param("username", "admin2")
+                        .param("year", "2026")
+                        .param("group", "A")
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/add_member"))
+                .andExpect(model().attribute("roleErrorKey", "error.user.role.admin.forbidden"))
+                .andExpect(content().string(containsString("is-invalid")));
+    }
 }

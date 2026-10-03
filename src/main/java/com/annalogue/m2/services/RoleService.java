@@ -25,4 +25,11 @@ public class RoleService {
                 .orElseThrow(() ->
                         new IllegalArgumentException("Role not found : " + role));
     }
+
+   // roles the admin is allowed to give: everything except ADMIN
+    public List<Role> getAssignableRoles() {
+        return Arrays.stream(Role.values())
+                .filter(role -> role != Role.ADMIN)
+                .toList();
+    }
 }

@@ -116,20 +116,25 @@ public class HandleUserService {
         if (!username.trim().equals(generateUsername(email))) {
             throw new InvalidUserDataException("username", "error.user.username.mismatch");
         }
-        if (year == null) {
-            throw new InvalidUserDataException("year", "error.user.year.empty");
-        }
-        if (year < MIN_YEAR || year > MAX_YEAR) {
-            throw new InvalidUserDataException("year", "error.user.year.invalid");
-        }
-        // the group is required only for students (disabled in the form for the other roles)
         if (role == Role.ETUDIANT) {
+            if (year == null) {
+                throw new InvalidUserDataException("year", "error.user.year.empty");
+            }
+            if (year < MIN_YEAR || year > MAX_YEAR) {
+                throw new InvalidUserDataException("year", "error.user.year.invalid");
+            }
+        // the group is required only for students (disabled in the form for the other roles)
+   
             if (group == null || group.isBlank()) {
                 throw new InvalidUserDataException("group", "error.user.group.empty");
             }
             if (!group.trim().matches(GROUP_PATTERN)) {
                 throw new InvalidUserDataException("group", "error.user.group.invalid");
             }
+        }
+        // only one administrator: the admin cannot create another one
+        if (role == Role.ADMIN) {
+            throw new InvalidUserDataException("role", "error.user.role.admin.forbidden");
         }
     }
 

@@ -281,4 +281,9 @@ class HandleUserServiceTest {
                 verify(mailService, never())
                                 .sendCredentials(anyString(), anyString(), anyString());
         }
+        @Test
+        void shouldRejectAdminRole() {
+                assertInvalid("role", "error.user.role.admin.forbidden",
+                                "new@example.com", Role.ADMIN, "new", 2026, "A");
+        }
 }

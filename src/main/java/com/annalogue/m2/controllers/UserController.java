@@ -38,7 +38,7 @@ public class UserController {
 
     @GetMapping("/members/add")
     public String showForm(Model model) {
-        model.addAttribute("roles", roleService.getRoles());
+        model.addAttribute("roles", roleService.getAssignableRoles());
         return "admin/add_member";
     }
 
@@ -87,7 +87,7 @@ public class UserController {
     // shows the form again with what the admin typed
     private String showFormAgain(Model model, String email, String role,
             String username, Integer year, String group) {
-        model.addAttribute("roles", roleService.getRoles());
+        model.addAttribute("roles", roleService.getAssignableRoles());
         model.addAttribute("email", email);
         model.addAttribute("selectedRole", role);
         model.addAttribute("username", username);
