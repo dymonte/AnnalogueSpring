@@ -24,6 +24,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.anyString;
+
+
 @ExtendWith(MockitoExtension.class)
 class HandleUserServiceTest {
 
@@ -32,6 +38,9 @@ class HandleUserServiceTest {
 
         @Mock
         private MailService mailService;
+
+        @Mock
+        private PasswordEncoder passwordEncoder;
 
         @InjectMocks
         private HandleUserService handleUserService;
@@ -81,9 +90,11 @@ class HandleUserServiceTest {
         }
 
         @Test
-        void shouldGiveTemporaryPasswordToUserServiceForHashing() {
+        void shouldSaveHashedPasswordAndEmailThePlainOne() {
                 when(userService.existsByEmail("jean.dupont@univ.fr"))
                                 .thenReturn(false);
+                when(passwordEncoder.encode(anyString()))
+                                .thenReturn("hashed-password");
 
                 String temporaryPassword = handleUserService.addUser(
                                 "jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "A");
@@ -91,8 +102,37 @@ class HandleUserServiceTest {
                 ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
                 verify(userService).save(captor.capture());
 
-                // the plain password is sent; UserService.save() hashes it
-                assertEquals(temporaryPassword, captor.getValue().getPasswordHash());
+                // the database gets the hash
+                assertEquals("hashed-password", captor.getValue().getPasswordHash());
+                // the hash is made from the password that is emailed
+                verify(passwordEncoder).encode(temporaryPassword);
+                verify(mailService).sendCredentials("jean.dupont@univ.fr", "jdupont", temporaryPassword);
+        }
+
+        @Test
+        void shouldAcceptProfessorWithoutGroup() {
+                when(userService.existsByEmail("prof@univ.fr"))
+                                .thenReturn(false);
+
+                handleUserService.addUser("prof@univ.fr", Role.PROF, "prof", 2026, null);
+
+                ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+                verify(userService).save(captor.capture());
+
+                assertNull(captor.getValue().getGroupName());
+        }
+
+        @Test
+        void shouldIgnoreGroupSentForProfessor() {
+                when(userService.existsByEmail("prof@univ.fr"))
+                                .thenReturn(false);
+
+                handleUserService.addUser("prof@univ.fr", Role.PROF, "prof", 2026, "A");
+
+                ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+                verify(userService).save(captor.capture());
+
+                assertNull(captor.getValue().getGroupName());
         }
 
         @Test
@@ -100,7 +140,7 @@ class HandleUserServiceTest {
                 when(userService.existsByEmail("jean.dupont@univ.fr"))
                                 .thenReturn(false);
 
-                handleUserService.addUser("jean.dupont@univ.fr", Role.PROF, "jdupont", 2026, "B");
+                handleUserService.addUser("jean.dupont@univ.fr", Role.ETUDIANT, "jdupont", 2026, "B");
 
                 ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
                 verify(userService).save(captor.capture());
@@ -108,7 +148,7 @@ class HandleUserServiceTest {
 
                 assertEquals("jean.dupont@univ.fr", saved.getEmail());
                 assertEquals("jdupont", saved.getUsername());
-                assertEquals(Role.PROF, saved.getRole());
+                assertEquals(Role.ETUDIANT, saved.getRole());
                 assertEquals(2026, saved.getYear());
                 assertEquals("B", saved.getGroupName());
         }
@@ -240,5 +280,10 @@ class HandleUserServiceTest {
 
                 verify(mailService, never())
                                 .sendCredentials(anyString(), anyString(), anyString());
+        }
+        @Test
+        void shouldRejectAdminRole() {
+                assertInvalid("role", "error.user.role.admin.forbidden",
+                                "new@example.com", Role.ADMIN, "new", 2026, "A");
         }
 }

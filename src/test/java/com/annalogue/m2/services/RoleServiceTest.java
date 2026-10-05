@@ -51,4 +51,14 @@ class RoleServiceTest {
                 IllegalArgumentException.class,
                 () -> roleService.fromString("directeur"));
     }
+    @Test
+    void assignableRolesShouldNotContainAdmin() {
+
+        List<Role> roles = roleService.getAssignableRoles();
+
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(Role.PROF));
+        assertTrue(roles.contains(Role.ETUDIANT));
+        assertFalse(roles.contains(Role.ADMIN));
+    }
 }

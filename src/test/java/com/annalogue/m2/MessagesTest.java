@@ -49,6 +49,7 @@ class MessagesTest {
         assertFalse(message("error.user.year.invalid").isBlank());
         assertFalse(message("error.user.group.empty").isBlank());
         assertFalse(message("error.user.group.invalid").isBlank());
+        assertFalse(message("error.user.role.admin.forbidden").isBlank());
     }
 
     @Test
