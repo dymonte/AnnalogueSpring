@@ -44,4 +44,13 @@ class UserEntityTest {
         assertEquals(2025, user.getYear());
         assertEquals("G2", user.getGroupName());
     }
+
+        @Test
+    void shouldSetAndGetLevel() {
+
+        UserEntity user = new UserEntity();
+        user.setLevel(StudyLevel.M1);
+
+        assertEquals(StudyLevel.M1, user.getLevel());
+    }
 }

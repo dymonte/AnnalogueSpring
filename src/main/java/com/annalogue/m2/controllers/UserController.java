@@ -20,6 +20,14 @@ import org.springframework.mail.MailException;
 
 import java.util.Optional;
 
+import com.annalogue.m2.dto.UsernameCheckResponse;
+import com.annalogue.m2.models.StudyLevel;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.time.Year;
+import java.util.List;
+import java.util.stream.IntStream;
+
 @Controller
 public class UserController {
 
@@ -38,7 +46,7 @@ public class UserController {
 
     @GetMapping("/members/add")
     public String showForm(Model model) {
-        model.addAttribute("roles", roleService.getAssignableRoles());
+        addFormLists(model);
         return "admin/add_member";
     }
 
@@ -47,6 +55,7 @@ public class UserController {
             @RequestParam(required = false) String role,
             @RequestParam(required = false) String username,
             @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String level,
             @RequestParam(required = false) String group,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -54,15 +63,15 @@ public class UserController {
         // role: required and must exist (RoleService, TFAN26-11)
         if (role == null || role.isBlank()) {
             model.addAttribute("roleErrorKey", "error.user.role.empty");
-            return showFormAgain(model, email, role, username, year, group);
+            return showFormAgain(model, email, role, username, year, level, group);
         }
         if (!roleService.exists(role)) {
             model.addAttribute("roleErrorKey", "error.user.role.invalid");
-            return showFormAgain(model, email, role, username, year, group);
+            return showFormAgain(model, email, role, username, year, level, group);
         }
 
         try {
-            handleUserService.addUser(email, roleService.fromString(role), username, year, group);
+            handleUserService.addUser(email, roleService.fromString(role), username, year, level, group);
 
             redirectAttributes.addFlashAttribute("successKey", "success.member.added");
             redirectAttributes.addFlashAttribute("addedEmail", email);
@@ -81,21 +90,47 @@ public class UserController {
             model.addAttribute("errorKey", "error.mail.send");
         }
 
-        return showFormAgain(model, email, role, username, year, group);
+        return showFormAgain(model, email, role, username, year, level, group);
     }
 
     // shows the form again with what the admin typed
     private String showFormAgain(Model model, String email, String role,
-            String username, Integer year, String group) {
-        model.addAttribute("roles", roleService.getAssignableRoles());
+            String username, Integer year, String level, String group) {
+        addFormLists(model);
         model.addAttribute("email", email);
         model.addAttribute("selectedRole", role);
         model.addAttribute("username", username);
         model.addAttribute("year", year);
+        model.addAttribute("selectedLevel", level);
         model.addAttribute("group", group);
         return "admin/add_member";
     }
+    // lists shown in the form's dropdowns
+    private void addFormLists(Model model) {
+        model.addAttribute("roles", roleService.getAssignableRoles());
+        model.addAttribute("academicYears", academicYears());
+        model.addAttribute("levels", StudyLevel.values());
+    }
 
+    // start years offered: 5 years back to 5 years ahead
+    // (2026 is displayed as "2026-2027" in the form)
+    private List<Integer> academicYears() {
+        int currentYear = Year.now().getValue();
+        return IntStream.rangeClosed(currentYear - 5, currentYear + 5)
+                .boxed()
+                .toList();
+    }
+
+    // instant check while the admin types the username (called by handle-user.js)
+    @GetMapping("/members/username-check")
+    @ResponseBody
+    public UsernameCheckResponse checkUsername(@RequestParam String username) {
+        boolean available = handleUserService.isUsernameAvailable(username);
+        String suggestion = available ? username.trim() : handleUserService.suggestUsername(username);
+        return new UsernameCheckResponse(available, suggestion);
+    }
+
+    
     @GetMapping("/change-password")
     public String showChangePasswordForm(Authentication auth, Model model) {
         model.addAttribute("isAdmin", auth != null && auth.getAuthorities() != null && auth.getAuthorities().stream()
