@@ -98,13 +98,13 @@ class SecurityIntegrationTest {
                                 .param("email", "new@test.com")
                                 .param("role", "ADMIN")
                                 .param("username", "new")
-                                .param("year", "2026")
+                                .param("year", "2026").param("level", "M1")
                                 .param("group", "A")
                 )
                 .andExpect(status().isForbidden());
 
         // the service must never be called
-        verify(handleUserService, never()).addUser(any(), any(), any(), any(), any());
+        verify(handleUserService, never()).addUser(any(), any(), any(),any(), any(), any());
     }
 
     @Test
@@ -128,13 +128,13 @@ class SecurityIntegrationTest {
                                 .param("email", "new@test.com")
                                 .param("role", "ETUDIANT")
                                 .param("username", "new")
-                                .param("year", "2026")
+                                .param("year", "2026").param("level", "M1")
                                 .param("group", "A")
                 )
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/members/add"));
 
-        verify(handleUserService).addUser("new@test.com", Role.ETUDIANT, "new", 2026, "A");
+        verify(handleUserService).addUser("new@test.com", Role.ETUDIANT, "new", 2026, "M1", "A");
     }
 
     @Test

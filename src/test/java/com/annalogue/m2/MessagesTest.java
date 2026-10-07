@@ -44,7 +44,9 @@ class MessagesTest {
         assertFalse(message("error.user.role.empty").isBlank());
         assertFalse(message("error.user.role.invalid").isBlank());
         assertFalse(message("error.user.username.empty").isBlank());
-        assertFalse(message("error.user.username.mismatch").isBlank());
+        assertFalse(message("error.user.username.invalid").isBlank());
+        assertFalse(message("error.user.level.empty").isBlank());
+        assertFalse(message("error.user.level.invalid").isBlank());
         assertFalse(message("error.user.year.empty").isBlank());
         assertFalse(message("error.user.year.invalid").isBlank());
         assertFalse(message("error.user.group.empty").isBlank());

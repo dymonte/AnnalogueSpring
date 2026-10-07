@@ -52,13 +52,18 @@ The admin has already verified that the student's email address is active.
                     <!-- Username -->
                     <div class="mb-3">
                         <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" readonly
-                            th:value="${username}" th:classappend="${usernameErrorKey != null} ? 'is-invalid'" required>
-
+                        <input type="text" id="username" name="username" class="form-control" th:value="${username}" maxlength="50"
+                            pattern="[a-zA-Z0-9._\-]{3,50}" title="3 to 50 characters: letters, digits, dot, dash, underscore"
+                            th:classappend="${usernameErrorKey != null} ? 'is-invalid'" required>
+                    
                         <div class="form-text">
-                            Generated automatically from the email address.
+                            Suggested from the email address. You can change it.
                         </div>
-
+                    
+                        <!-- filled by handle-user.js while typing -->
+                        <div id="username-feedback" class="small"></div>
+                    
+                        <!-- error from the server after submit -->
                         <div class="invalid-feedback" th:if="${usernameErrorKey}" th:text="#{${usernameErrorKey}}">
                         </div>
                     </div>
@@ -84,54 +89,73 @@ The admin has already verified that the student's email address is active.
                         </div>
                     </div>
 
-                    <!-- Year and group -->
+                    <!-- Academic year, level and group (students only) -->
                     <div class="row">
-
-                        <!-- Year -->
-                        <div class="col-md-6 mb-3">
-                            <label for="year" class="form-label">Year</label>
-
-                            <input type="number" id="year" name="year" class="form-control" min="2000" max="2100"
-                                placeholder="2026" th:value="${year}"
-                                th:classappend="${yearErrorKey != null} ? 'is-invalid'" required>
-
+                    
+                        <!-- Academic year: value 2026, displayed 2026-2027 -->
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label">Academic year</label>
+                    
+                            <select id="year" name="year" class="form-select" th:classappend="${yearErrorKey != null} ? 'is-invalid'"
+                                required>
+                    
+                                <option value="" disabled th:selected="${year == null}">
+                                    Select a year
+                                </option>
+                    
+                                <option th:each="y : ${academicYears}" th:value="${y}" th:text="${y} + '-' + ${y + 1}"
+                                    th:selected="${y == year}">
+                                </option>
+                    
+                            </select>
+                    
                             <div class="invalid-feedback" th:if="${yearErrorKey}" th:text="#{${yearErrorKey}}">
                             </div>
                         </div>
-
+                    
+                        <!-- Level: L1, L2, L3, M1, M2 -->
+                        <div class="col-md-4 mb-3">
+                            <label for="level" class="form-label">Level</label>
+                    
+                            <select id="level" name="level" class="form-select" th:classappend="${levelErrorKey != null} ? 'is-invalid'"
+                                required>
+                    
+                                <option value="" disabled th:selected="${selectedLevel == null}">
+                                    Select a level
+                                </option>
+                    
+                                <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.name()}"
+                                    th:selected="${l.name() == selectedLevel}">
+                                </option>
+                    
+                            </select>
+                    
+                            <div class="invalid-feedback" th:if="${levelErrorKey}" th:text="#{${levelErrorKey}}">
+                            </div>
+                        </div>
+                    
                         <!-- Group -->
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-4 mb-3">
                             <label for="group" class="form-label">Group</label>
-
-                            <select id="group" name="group" class="form-select"
-                                th:classappend="${groupErrorKey != null} ? 'is-invalid'" required>
-
+                    
+                            <select id="group" name="group" class="form-select" th:classappend="${groupErrorKey != null} ? 'is-invalid'"
+                                required>
+                    
                                 <option value="" disabled th:selected="${group == null}">
                                     Select a group
                                 </option>
-
-                                <option value="A" th:selected="${group == 'A'}">
-                                    Group A
-                                </option>
-
-                                <option value="B" th:selected="${group == 'B'}">
-                                    Group B
-                                </option>
-
-                                <option value="C" th:selected="${group == 'C'}">
-                                    Group C
-                                </option>
-
-                                <option value="D" th:selected="${group == 'D'}">
-                                    Group D
-                                </option>
-
+                    
+                                <option value="A" th:selected="${group == 'A'}">Group A</option>
+                                <option value="B" th:selected="${group == 'B'}">Group B</option>
+                                <option value="C" th:selected="${group == 'C'}">Group C</option>
+                                <option value="D" th:selected="${group == 'D'}">Group D</option>
+                    
                             </select>
-
+                    
                             <div class="invalid-feedback" th:if="${groupErrorKey}" th:text="#{${groupErrorKey}}">
                             </div>
                         </div>
-
+                    
                     </div>
 
                     <button type="submit" class="btn btn-primary w-100">

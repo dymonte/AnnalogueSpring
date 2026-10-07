@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import com.annalogue.m2.models.StudyLevel;
 
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -47,6 +48,7 @@ public class DataInitializer implements CommandLineRunner {
             user1.setUsername("user1");
             user1.setRole(Role.ETUDIANT);
             user1.setYear(2024);
+            user1.setLevel(StudyLevel.L1);
             user1.setGroupName("A");
             userRepository.save(user1);
 
