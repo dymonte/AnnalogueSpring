@@ -28,20 +28,26 @@ import java.time.Year;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import com.annalogue.m2.services.NotifyService;
+
 @Controller
 public class UserController {
 
     private final RoleService roleService;
     private final HandleUserService handleUserService;
     private final HandPasswordService handPasswordService;
+    private final NotifyService notifyService;
+
 
     public UserController(
             RoleService roleService,
             HandleUserService handleUserService,
-            HandPasswordService handPasswordService) {
+            HandPasswordService handPasswordService,
+            NotifyService notifyService) {
         this.roleService = roleService;
         this.handleUserService = handleUserService;
         this.handPasswordService = handPasswordService;
+        this.notifyService = notifyService;
     }
 
     @GetMapping("/members/add")
@@ -155,27 +161,22 @@ public class UserController {
 
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Mot de passe modifié");
+                    notifyService.getMessage("success.password.changed"));
 
             return "redirect:/home";
 
         } catch (UsernameNotFoundException e) {
-            model.addAttribute("error", e.getMessage());
+            // the exception messages are keys of messages.properties
+            model.addAttribute("error", notifyService.getMessage(e.getMessage()));
 
         } catch (InvalidPasswordException e) {
-            model.addAttribute(
-                    "currentPasswordError",
-                    e.getMessage());
+            model.addAttribute("currentPasswordError", notifyService.getMessage(e.getMessage()));
 
         } catch (PasswordMismatchException e) {
-            model.addAttribute(
-                    "confirmPasswordError",
-                    e.getMessage());
+            model.addAttribute("confirmPasswordError", notifyService.getMessage(e.getMessage()));
 
         } catch (WeakPasswordException e) {
-            model.addAttribute(
-                    "newPasswordError",
-                    e.getMessage());
+            model.addAttribute("newPasswordError", notifyService.getMessage(e.getMessage()));
         }
 
         return "change_password";
