@@ -23,9 +23,10 @@ Fonctionnalité: Administrateur - Déconnexion
     Quand Je me déconnecte
     Et Je supprime <login> du site
     Alors Je reçoit un message d'erreur
-    | login       | role                  |
-    | "RespMod"   | "Responsable Module"  |
-    | "memb"      | "Membre"              |
+    Exemples:
+      | login       | role                  |
+      | "RespMod"   | "Responsable Module"  |
+      | "memb"      | "Membre"              |
 
   Plan du Scénario: Administrateur changement de roles non connecté
     Soit Je suis connecté en tant que "Administrateur"
