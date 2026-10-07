@@ -86,4 +86,16 @@ class MessagesTest {
         assertFalse(message("action.user.username.use").isBlank());
         assertFalse(message("mail.credentials.subject").isBlank());
     }
+
+        @Test
+    void shouldContainPageTexts() {
+        assertFalse(message("nav.home").isBlank());
+        assertFalse(message("role.TEACHER").isBlank());
+        assertFalse(message("role.STUDENT").isBlank());
+        assertFalse(message("login.submit").isBlank());
+        assertFalse(message("home.change.password").isBlank());
+        assertFalse(message("password.submit").isBlank());
+        assertFalse(message("member.submit").isBlank());
+        assertFalse(message("error.page.heading").isBlank());
+    }
 }
