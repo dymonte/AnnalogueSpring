@@ -60,9 +60,11 @@ The admin has already verified that the student's email address is active.
                             Suggested from the email address. You can change it.
                         </div>
                     
-                        <!-- filled by handle-user.js while typing -->
-                        <div id="username-feedback" class="small"></div>
-                    
+                        <!-- filled by handle-user.js while typing , the texts come from messages.properties -->
+                        <div id="username-feedback" class="small" th:attr="data-available=#{info.user.username.available},
+                                                              data-taken=#{warning.user.username.taken},
+                                                              data-use=#{action.user.username.use}">
+                        </div>
                         <!-- error from the server after submit -->
                         <div class="invalid-feedback" th:if="${usernameErrorKey}" th:text="#{${usernameErrorKey}}">
                         </div>

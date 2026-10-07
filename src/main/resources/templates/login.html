@@ -28,12 +28,10 @@
                             <input type="password" class="form-control" id="password" name="password" required autocomplete="current-password">
                         </div>
 
-                        <div id="error" th:if="${param.error}" class="alert alert-danger mb-3" role="alert">
-                            Mot de passe ou email incorrect
+                        <div id="error" th:if="${param.error}" class="alert alert-danger mb-3" role="alert" th:text="${error}">
                         </div>
 
-                        <div th:if="${param.logout}" class="alert alert-success mb-3" role="alert">
-                            Déconnexion réussie
+                        <div th:if="${param.logout}" class="alert alert-success mb-3" role="alert" th:text="#{success.logout}">
                         </div>
 
                         <input
