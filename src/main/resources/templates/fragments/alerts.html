@@ -5,12 +5,12 @@
 
     <div th:fragment="success(message)" class="alert alert-success alert-dismissible fade show" role="alert">
         <span th:text="${message}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{action.close}"></button>
     </div>
 
     <div th:fragment="error(message)" class="alert alert-danger alert-dismissible fade show" role="alert">
         <span th:text="${message}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" th:aria-label="#{action.close}"></button>
     </div>
 
 </body>
