@@ -15,22 +15,28 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <h2 class="card-title mb-4 text-center">Deleted a user for the module</h2>
+                    <h2 class="card-title mb-4 text-center">Delete a user from the module</h2>
                     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-                    <form th:action="@{/change-password}" method="post" class="needs-validation" novalidate>
+                    <form th:action="@{/module/users/delete}" method="post"
+                          onsubmit="return confirm('Are you sure you want to delete this user?');">
                         <div class="mb-3">
-
-                            <!-- Deleted a user based on their email address -->
+                            <!-- Delete a user based on their email address -->
                             <label for="emailUser" class="form-label fw-bold">User's email</label>
-                            <input type="email" class="form-control" id="emailUser" name="emailUser" autocomplete="email" required>
+                            <input type="email"
+                                   class="form-control"
+                                   id="emailUser"
+                                   name="emailUser"
+                                   th:value="${emailUser}"
+                                   autocomplete="off"
+                                   required>
 
-                            <p class="text-danger small" th:if="${userNotAlreadyRegisterError}"
-                               th:text="${userNotAlreadyRegisterError}"></p>
+                            <p class="text-danger small mt-1" th:if="${userNotRegisteredError}"
+                               th:text="${userNotRegisteredError}"></p>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                        <button type="submit" class="btn btn-danger w-100">Delete</button>
                     </form>
                 </div>
             </div>

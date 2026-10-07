@@ -15,18 +15,24 @@
         <div class="col-md-6 col-lg-5">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
-                    <h2 class="card-title mb-4 text-center">Register a new user for the module</h2>
+                    <h2 class="card-title mb-4 text-center">Register a user for the module</h2>
+
                     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-                    <form th:action="@{/change-password}" method="post" class="needs-validation" novalidate>
+                    <form th:action="@{/module/users/register}" method="post">
                         <div class="mb-3">
-
                             <!-- Register a user based on their email address -->
                             <label for="emailUser" class="form-label fw-bold">User's email</label>
-                            <input type="email" class="form-control" id="emailUser" name="emailUser" autocomplete="email" required>
+                            <input type="email"
+                                   class="form-control"
+                                   id="emailUser"
+                                   name="emailUser"
+                                   th:value="${emailUser}"
+                                   autocomplete="off"
+                                   required>
 
-                            <p class="text-danger small" th:if="${userAlreadyRegisterError}"
+                            <p class="text-danger small mt-1" th:if="${userAlreadyRegisterError}"
                                th:text="${userAlreadyRegisterError}"></p>
                         </div>
 
