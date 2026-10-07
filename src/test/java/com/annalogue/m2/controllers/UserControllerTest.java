@@ -29,9 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import static org.hamcrest.Matchers.not;
 
+import com.annalogue.m2.services.NotifyService;
+import org.springframework.context.annotation.Import;
+
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Import(NotifyService.class)
 class UserControllerTest {
         private static final List<Role> ASSIGNABLE_ROLES = List.of(Role.PROF, Role.ETUDIANT);
 
