@@ -23,6 +23,7 @@ Fonctionnalité: Administrateur - Déconnexion
     Quand Je me déconnecte
     Et Je supprime <login> du site
     Alors Je reçoit un message d'erreur
+    Exemples:
     | login       | role                  |
     | "RespMod"   | "Responsable Module"  |
     | "memb"      | "Membre"              |
