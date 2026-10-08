@@ -11,7 +11,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.authentication.DisabledException;
 
 @Service
-public class NotifyService {
+public class NotifyService implements INotifyService{
 
     public static final String DEFAULT_ERROR_KEY = "error.server";
     public static final String LOGIN_GENERIC_KEY = "error.login.generic";

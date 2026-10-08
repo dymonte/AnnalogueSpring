@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add a New Member</title>
+    <title th:text="#{member.add.title}">Add a New Member</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 
@@ -19,10 +19,10 @@ The admin has already verified that the student's email address is active.
 <body class="bg-light">
 
     <div class="container py-5">
-        <div class="card shadow-sm mx-auto" style="max-width: 600px;">
+        <div class="card shadow-sm mx-auto" style="max-width: 700px;">
             <div class="card-body p-4">
 
-                <h1 class="h3 mb-4">Add a New Member</h1>
+                <h1 class="h3 mb-4" th:text="#{member.add.title}">Add a New Member</h1>
 
                 <!-- Success message -->
                 <th:block th:if="${successKey}">
@@ -41,7 +41,7 @@ The admin has already verified that the student's email address is active.
 
                     <!-- Email -->
                     <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
+                        <label for="email" class="form-label" th:text="#{member.email}">Email</label>
                         <input type="email" id="email" name="email" class="form-control" th:value="${email}"
                             th:classappend="${emailErrorKey != null} ? 'is-invalid'" required>
 
@@ -51,12 +51,17 @@ The admin has already verified that the student's email address is active.
 
                     <!-- Username -->
                     <div class="mb-3">
-                        <label for="username" class="form-label">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" readonly
-                            th:value="${username}" th:classappend="${usernameErrorKey != null} ? 'is-invalid'" required>
+                        <label for="username" class="form-label" th:text="#{member.username}">Username</label>
+                        <input type="text" id="username" name="username" class="form-control" th:value="${username}"
+                            maxlength="50" pattern="[a-zA-Z0-9._\-]{3,50}" th:title="#{error.user.username.invalid}"
+                            th:classappend="${usernameErrorKey != null} ? 'is-invalid'" required>
 
-                        <div class="form-text">
-                            Generated automatically from the email address.
+                        <div class="form-text" th:text="#{member.username.hint}"></div>
+
+                        <!-- filled by handle-user.js; the texts come from messages.properties -->
+                        <div id="username-feedback" class="small" th:attr="data-available=#{info.user.username.available},
+                                      data-taken=#{warning.user.username.taken},
+                                      data-use=#{action.user.username.use}">
                         </div>
 
                         <div class="invalid-feedback" th:if="${usernameErrorKey}" th:text="#{${usernameErrorKey}}">
@@ -65,16 +70,15 @@ The admin has already verified that the student's email address is active.
 
                     <!-- Role -->
                     <div class="mb-3">
-                        <label for="role" class="form-label">Role</label>
+                        <label for="role" class="form-label" th:text="#{member.role}">Role</label>
 
                         <select id="role" name="role" class="form-select"
                             th:classappend="${roleErrorKey != null} ? 'is-invalid'" required>
 
-                            <option value="" disabled th:selected="${selectedRole == null}">
-                                Select a role
-                            </option>
+                            <option value="" disabled th:selected="${selectedRole == null}"
+                                th:text="#{member.role.select}">Select a role</option>
 
-                            <option th:each="role : ${roles}" th:value="${role.name()}" th:text="${role.value}"
+                            <option th:each="role : ${roles}" th:value="${role.name()}" th:text="#{${'role.' + role.name()}}"
                                 th:selected="${role.name() == selectedRole}">
                             </option>
 
@@ -84,47 +88,67 @@ The admin has already verified that the student's email address is active.
                         </div>
                     </div>
 
-                    <!-- Year and group -->
+                    <!-- Academic year, level and group (students only) -->
                     <div class="row">
 
-                        <!-- Year -->
-                        <div class="col-md-6 mb-3">
-                            <label for="year" class="form-label">Year</label>
+                        <!-- Academic year: value 2026, displayed 2026-2027 -->
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label" th:text="#{member.year}">Academic year</label>
 
-                            <input type="number" id="year" name="year" class="form-control" min="2000" max="2100"
-                                placeholder="2026" th:value="${year}"
+                            <select id="year" name="year" class="form-select"
                                 th:classappend="${yearErrorKey != null} ? 'is-invalid'" required>
+
+                                <option value="" disabled th:selected="${year == null}" th:text="#{member.year.select}">
+                                    Select a year</option>
+
+                                <option th:each="y : ${academicYears}" th:value="${y}" th:text="${y} + '-' + ${y + 1}"
+                                    th:selected="${y == year}">
+                                </option>
+
+                            </select>
 
                             <div class="invalid-feedback" th:if="${yearErrorKey}" th:text="#{${yearErrorKey}}">
                             </div>
                         </div>
 
+                        <!-- Level: L1, L2, L3, M1, M2 -->
+                        <div class="col-md-4 mb-3">
+                            <label for="level" class="form-label" th:text="#{member.level}">Level</label>
+
+                            <select id="level" name="level" class="form-select"
+                                th:classappend="${levelErrorKey != null} ? 'is-invalid'" required>
+
+                                <option value="" disabled th:selected="${selectedLevel == null}"
+                                    th:text="#{member.level.select}">Select a level</option>
+
+                                <option th:each="l : ${levels}" th:value="${l.name()}" th:text="${l.name()}"
+                                    th:selected="${l.name() == selectedLevel}">
+                                </option>
+
+                            </select>
+
+                            <div class="invalid-feedback" th:if="${levelErrorKey}" th:text="#{${levelErrorKey}}">
+                            </div>
+                        </div>
+
                         <!-- Group -->
-                        <div class="col-md-6 mb-3">
-                            <label for="group" class="form-label">Group</label>
+                        <div class="col-md-4 mb-3">
+                            <label for="group" class="form-label" th:text="#{member.group}">Group</label>
 
                             <select id="group" name="group" class="form-select"
                                 th:classappend="${groupErrorKey != null} ? 'is-invalid'" required>
 
-                                <option value="" disabled th:selected="${group == null}">
-                                    Select a group
-                                </option>
+                                <option value="" disabled th:selected="${group == null}"
+                                    th:text="#{member.group.select}">Select a group</option>
 
-                                <option value="A" th:selected="${group == 'A'}">
-                                    Group A
-                                </option>
-
-                                <option value="B" th:selected="${group == 'B'}">
-                                    Group B
-                                </option>
-
-                                <option value="C" th:selected="${group == 'C'}">
-                                    Group C
-                                </option>
-
-                                <option value="D" th:selected="${group == 'D'}">
-                                    Group D
-                                </option>
+                                <option value="A" th:selected="${group == 'A'}" th:text="#{member.group.option('A')}">
+                                    Group A</option>
+                                <option value="B" th:selected="${group == 'B'}" th:text="#{member.group.option('B')}">
+                                    Group B</option>
+                                <option value="C" th:selected="${group == 'C'}" th:text="#{member.group.option('C')}">
+                                    Group C</option>
+                                <option value="D" th:selected="${group == 'D'}" th:text="#{member.group.option('D')}">
+                                    Group D</option>
 
                             </select>
 
@@ -134,7 +158,7 @@ The admin has already verified that the student's email address is active.
 
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">
+                    <button type="submit" class="btn btn-primary w-100" th:text="#{member.submit}">
                         Add Member
                     </button>
 

@@ -25,6 +25,11 @@ public class UserEntity {
     @Column(name = "year_level")
     private Integer year;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "study_level", length = 2)
+    private StudyLevel level;
+
     @Column(name = "group_name", length = 100)
     private String groupName;
 
@@ -84,6 +89,14 @@ public class UserEntity {
 
     public void setYear(Integer year) {
         this.year = year;
+    }
+
+    public StudyLevel getLevel() {
+        return level;
+    }
+
+    public void setLevel(StudyLevel level) {
+        this.level = level;
     }
 
     public String getGroupName() {

@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -45,5 +45,8 @@ public class UserService {
 
     public void deleteAll() {
         userRepository.deleteAll();
+    }
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 }

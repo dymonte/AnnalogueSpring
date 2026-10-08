@@ -3,10 +3,10 @@ package com.annalogue.m2.services;
 import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
+import com.annalogue.m2.models.StudyLevel;
 import com.annalogue.m2.models.UserEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
@@ -15,6 +15,8 @@ import java.util.UUID;
 public class HandleUserService {
 
     private static final String EMAIL_PATTERN = "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$";
+    // letters, digits, dot, dash, underscore - 3 to 50 characters
+    private static final String USERNAME_PATTERN = "^[a-zA-Z0-9._-]{3,50}$";
     private static final String GROUP_PATTERN = "^[\\p{L}0-9 _-]{1,100}$";
     private static final int MIN_YEAR = 2000;
     private static final int MAX_YEAR = 2100;
@@ -31,48 +33,48 @@ public class HandleUserService {
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
     }
+
+    // year = start of the academic year (2026 for 2026-2027), level = L1, L2, L3, M1, M2
     @Transactional
     public String addUser(
             String email,
             Role role,
             String username,
             Integer year,
+            String level,
             String group) {
 
-        validate(email, role, username, year, group);
+        validate(email, role, username, year, level, group);
 
         String normalizedEmail = email.trim().toLowerCase();
+        // chosen (or edited) by the admin; a name already used is only a warning in the form
+        String chosenUsername = username.trim();
 
         if (userService.existsByEmail(normalizedEmail)) {
-            throw new EmailAlreadyExistsException(
-                    "Account with this email already exists");
+            throw new EmailAlreadyExistsException("Account with this email already exists");
         }
 
         String temporaryPassword = generateTemporaryPassword();
 
-        // the password is hashed here, once (UserService.save() no longer hashes)
+        // the password is hashed here, once (UserService.save() does not hash)
         String hashedPassword = passwordEncoder.encode(temporaryPassword);
 
-        String generatedUsername = generateUsername(normalizedEmail);
-
-        // only students belong to a group
-        String groupToSave = (role == Role.ETUDIANT) ? group.trim() : null;
+        // only students have an academic year, a level and a group
+        boolean isStudent = role == Role.ETUDIANT;
 
         UserEntity user = new UserEntity(
                 normalizedEmail,
                 hashedPassword,
-                generatedUsername,
+                chosenUsername,
                 role,
-                year,
-                groupToSave);
+                isStudent ? year : null,
+                isStudent ? group.trim() : null);
+        user.setLevel(isStudent ? StudyLevel.fromString(level) : null);
 
         userService.save(user);
 
         // the original temporary password is sent, not the hashed one
-        mailService.sendCredentials(
-                normalizedEmail,
-                generatedUsername,
-                temporaryPassword);
+        mailService.sendCredentials(normalizedEmail, chosenUsername, temporaryPassword);
 
         return temporaryPassword;
     }
@@ -90,11 +92,32 @@ public class HandleUserService {
         return name;
     }
 
+    // instant check from the form
+    public boolean isUsernameAvailable(String username) {
+        return !userService.existsByUsername(username.trim());
+    }
+
+    // jkamel taken -> jkamel1, jkamel1 taken too -> jkamel2, ...
+    public String suggestUsername(String username) {
+        String base = username.trim();
+
+        if (isUsernameAvailable(base)) {
+            return base;
+        }
+
+        int number = 1;
+        while (!isUsernameAvailable(base + number)) {
+            number++;
+        }
+        return base + number;
+    }
+
     private void validate(
             String email,
             Role role,
             String username,
             Integer year,
+            String level,
             String group) {
 
         if (email == null) {
@@ -109,13 +132,18 @@ public class HandleUserService {
         if (role == null) {
             throw new InvalidUserDataException("role", "error.user.role.empty");
         }
+        // only one administrator: the admin cannot create another one
+        if (role == Role.ADMIN) {
+            throw new InvalidUserDataException("role", "error.user.role.admin.forbidden");
+        }
         if (username == null || username.isBlank()) {
             throw new InvalidUserDataException("username", "error.user.username.empty");
         }
-        // the username sent by the front must be the one the backend generates
-        if (!username.trim().equals(generateUsername(email))) {
-            throw new InvalidUserDataException("username", "error.user.username.mismatch");
+        if (!username.trim().matches(USERNAME_PATTERN)) {
+            throw new InvalidUserDataException("username", "error.user.username.invalid");
         }
+        // academic year, level and group are required only for students
+        // (disabled in the form for the other roles)
         if (role == Role.ETUDIANT) {
             if (year == null) {
                 throw new InvalidUserDataException("year", "error.user.year.empty");
@@ -123,18 +151,18 @@ public class HandleUserService {
             if (year < MIN_YEAR || year > MAX_YEAR) {
                 throw new InvalidUserDataException("year", "error.user.year.invalid");
             }
-        // the group is required only for students (disabled in the form for the other roles)
-   
+            if (level == null || level.isBlank()) {
+                throw new InvalidUserDataException("level", "error.user.level.empty");
+            }
+            if (!StudyLevel.isValid(level)) {
+                throw new InvalidUserDataException("level", "error.user.level.invalid");
+            }
             if (group == null || group.isBlank()) {
                 throw new InvalidUserDataException("group", "error.user.group.empty");
             }
             if (!group.trim().matches(GROUP_PATTERN)) {
                 throw new InvalidUserDataException("group", "error.user.group.invalid");
             }
-        }
-        // only one administrator: the admin cannot create another one
-        if (role == Role.ADMIN) {
-            throw new InvalidUserDataException("role", "error.user.role.admin.forbidden");
         }
     }
 
