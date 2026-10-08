@@ -19,6 +19,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 
 import static org.mockito.ArgumentMatchers.any;
 import java.util.List;
+import java.util.Optional;
 
 class ModuleControllerTest {
 
@@ -130,5 +131,26 @@ class ModuleControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/list"))
                 .andExpect(model().attribute("modules", modules));
+    }
+
+        // ===== GET /modules/{id} =====
+
+    @Test
+    void shouldShowModulePage() throws Exception {
+        ModuleEntity module = new ModuleEntity("MOIA");
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+
+        mockMvc.perform(get("/modules/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("modules/detail"))
+                .andExpect(model().attribute("module", module));
+    }
+
+    @Test
+    void shouldReturn404WhenModuleDoesNotExist() throws Exception {
+        when(moduleService.findById(99L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/modules/99"))
+                .andExpect(status().isNotFound());
     }
 }

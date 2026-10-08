@@ -14,6 +14,11 @@ import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.ui.Model;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.server.ResponseStatusException;
+
+
 // all texts are message keys of messages.properties: the pages display them with #{${...}}
 @Controller
 @RequestMapping("/modules")
@@ -61,5 +66,17 @@ public class ModuleController {
         // show the form again with what the user typed
         model.addAttribute("name", name);
         return "modules/add";
+    }
+
+
+
+    // page of one module
+    @GetMapping("/{id}")
+    public String showModule(@PathVariable Long id, Model model) {
+        ModuleEntity module = moduleService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        model.addAttribute("module", module);
+        return "modules/detail";
     }
 }
