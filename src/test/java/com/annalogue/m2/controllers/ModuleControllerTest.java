@@ -18,6 +18,7 @@ import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import org.springframework.dao.DataAccessResourceFailureException;
 
 import static org.mockito.ArgumentMatchers.any;
+import java.util.List;
 
 class ModuleControllerTest {
 
@@ -115,5 +116,19 @@ class ModuleControllerTest {
                 .andExpect(view().name("modules/add"))
                 .andExpect(model().attribute("errorKey", "error.module.database"))
                 .andExpect(model().attribute("name", "MOIA"));
+    }
+
+
+        // ===== GET /modules =====
+
+    @Test
+    void shouldListModules() throws Exception {
+        List<ModuleEntity> modules = List.of(new ModuleEntity("MOIA"), new ModuleEntity("TF"));
+        when(moduleService.findAll()).thenReturn(modules);
+
+        mockMvc.perform(get("/modules"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("modules/list"))
+                .andExpect(model().attribute("modules", modules));
     }
 }

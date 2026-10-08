@@ -25,6 +25,12 @@ public class ModuleController {
         this.moduleService = moduleService;
     }
 
+        // list of all modules (catalogue)
+    @GetMapping
+    public String listModules(Model model) {
+        model.addAttribute("modules", moduleService.findAll());
+        return "modules/list";
+    }
     // empty creation form
     @GetMapping("/add")
     public String showAddForm() {

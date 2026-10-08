@@ -200,4 +200,11 @@ class SecurityIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
+    @Test
+    void modulesShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/modules"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
 }
