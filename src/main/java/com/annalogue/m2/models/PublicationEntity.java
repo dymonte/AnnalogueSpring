@@ -9,6 +9,18 @@ import java.time.LocalDateTime;
 @Table(name = "publications")
 public class PublicationEntity {
 
+	public PublicationEntity() {
+	}
+
+	public PublicationEntity(String name, String description, FileType fileType, ModuleEntity module, UserEntity author, String filePath) {
+		this.name = name;
+		this.description = description;
+		this.fileType = fileType;
+		this.module = module;
+		this.author = author;
+		this.filePath = filePath;
+	}
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
