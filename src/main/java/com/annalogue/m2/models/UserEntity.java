@@ -19,6 +19,7 @@ public class UserEntity {
     @Column(name = "username", length = 100)
     private String username;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private Role role;
 
