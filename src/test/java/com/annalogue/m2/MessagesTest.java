@@ -69,4 +69,34 @@ class MessagesTest {
 
         assertTrue(text.contains("new@test.com"));
     }
+
+    @Test
+    void shouldContainCentralizedMessagesForTfan2698() {
+        assertFalse(message("success.password.changed").isBlank());
+        assertFalse(message("error.password.user.notfound").isBlank());
+        assertFalse(message("error.password.current.invalid").isBlank());
+        assertFalse(message("error.password.mismatch").isBlank());
+        assertFalse(message("error.password.weak").isBlank());
+        assertFalse(message("success.logout").isBlank());
+        assertFalse(message("error.page.notfound").isBlank());
+        assertFalse(message("error.page.forbidden").isBlank());
+        assertFalse(message("error.page.server").isBlank());
+        assertFalse(message("info.user.username.available").isBlank());
+        assertFalse(message("warning.user.username.taken").isBlank());
+        assertFalse(message("action.user.username.use").isBlank());
+        assertFalse(message("mail.credentials.subject").isBlank());
+    }
+
+        @Test
+    void shouldContainPageTexts() {
+        assertFalse(message("nav.home").isBlank());
+        assertFalse(message("role.PROF").isBlank());
+        assertFalse(message("role.ETUDIANT").isBlank());
+        assertFalse(message("login.submit").isBlank());
+        assertFalse(message("home.change.password").isBlank());
+        assertFalse(message("password.submit").isBlank());
+        assertFalse(message("member.submit").isBlank());
+        assertFalse(message("error.page.heading").isBlank());
+        assertFalse(message("action.close").isBlank());
+    }
 }

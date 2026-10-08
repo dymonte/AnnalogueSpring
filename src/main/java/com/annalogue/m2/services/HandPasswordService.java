@@ -27,7 +27,7 @@ public class HandPasswordService {
             String newPassword,
             String confirmPassword) {
         UserEntity user = userService.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable"));
+                .orElseThrow(() -> new UsernameNotFoundException("error.password.user.notfound"));
 
         if (!passwordEncoder.matches(
                 currentPassword,

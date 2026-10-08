@@ -93,20 +93,19 @@ function showUsernameState(result) {
   if (result.available) {
     usernameInput.classList.add("is-valid");
     usernameFeedback.classList.add("text-success");
-    usernameFeedback.textContent = "This username is available.";
+    usernameFeedback.textContent = usernameFeedback.dataset.available;
     return;
   }
 
   // already used: warning + suggestion, but the form can still be submitted
   usernameInput.classList.add("border-warning");
   usernameFeedback.classList.add("text-warning-emphasis");
-  usernameFeedback.textContent =
-    "This username is already used. It is better to add a number at the end: ";
+  usernameFeedback.textContent = usernameFeedback.dataset.taken + " ";
 
   const suggestionButton = document.createElement("button");
   suggestionButton.type = "button";
   suggestionButton.className = "btn btn-link btn-sm p-0 align-baseline";
-  suggestionButton.textContent = "use " + result.suggestion;
+  suggestionButton.textContent = usernameFeedback.dataset.use + " " + result.suggestion;
   suggestionButton.addEventListener("click", function () {
     usernameInput.value = result.suggestion;
     usernameEditedByHand = true;

@@ -1,8 +1,10 @@
 package com.annalogue.m2.exceptions;
 
 public class PasswordMismatchException extends RuntimeException {
+
+    public static final String MESSAGE_KEY = "error.password.mismatch";
+
     public PasswordMismatchException() {
-        super(
-                "Les mots de passe sont différents ");
+        super(MESSAGE_KEY);
     }
 }
