@@ -15,4 +15,7 @@ public interface IUserService {
     public List<UserEntity> findByRole(Role role);
     public void deleteAll();
     public boolean existsByUsername(String username);
+    public List<UserEntity> findAll();
+    public Optional<UserEntity> findById(Long id);
+    public void delete(UserEntity user);
 }

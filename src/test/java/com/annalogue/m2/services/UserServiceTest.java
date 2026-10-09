@@ -122,4 +122,37 @@ class UserServiceTest {
 
                 verify(userRepository).save(user);
         }
+
+        @Test
+        void shouldReturnAllUsersSortedByUsername() {
+
+                List<UserEntity> users = List.of(mock(UserEntity.class));
+
+                when(userRepository.findAllByOrderByUsernameAsc())
+                                .thenReturn(users);
+
+                assertEquals(users, userService.findAll());
+        }
+
+        @Test
+        void shouldFindUserById() {
+
+                UserEntity user = mock(UserEntity.class);
+
+                when(userRepository.findById(5L))
+                                .thenReturn(Optional.of(user));
+
+                assertEquals(Optional.of(user), userService.findById(5L));
+        }
+
+        @Test
+        void shouldDeleteUserAndFlush() {
+
+                UserEntity user = mock(UserEntity.class);
+
+                userService.delete(user);
+
+                verify(userRepository).delete(user);
+                verify(userRepository).flush();
+        }
 }

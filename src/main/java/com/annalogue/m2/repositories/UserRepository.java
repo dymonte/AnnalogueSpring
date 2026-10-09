@@ -18,4 +18,6 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
     List<UserEntity> findByUsername(String username);
 
     boolean existsByUsername(String username);
+        // members list, sorted by username
+    List<UserEntity> findAllByOrderByUsernameAsc();
 }

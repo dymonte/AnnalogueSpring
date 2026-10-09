@@ -50,4 +50,19 @@ public class UserService implements IUserService {
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
+        // all users, sorted by username
+    public List<UserEntity> findAll() {
+        return userRepository.findAllByOrderByUsernameAsc();
+    }
+
+    public Optional<UserEntity> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public void delete(UserEntity user) {
+        userRepository.delete(user);
+        // send the DELETE now: if the user is still linked to another table,
+        // the database refuses it here, where HandleUserService can catch it
+        userRepository.flush();
+    }
 }
