@@ -31,7 +31,8 @@ import static org.hamcrest.Matchers.not;
 
 import com.annalogue.m2.services.NotifyService;
 import org.springframework.context.annotation.Import;
-
+import com.annalogue.m2.exceptions.UserDeletionException;
+import com.annalogue.m2.models.UserEntity;
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
@@ -369,5 +370,59 @@ class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.available").value(false))
                 .andExpect(jsonPath("$.suggestion").value("jkamel1"));
+    }
+
+        // ===== GET /members =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldListMembers() throws Exception {
+        UserEntity student = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, null, null);
+        when(handleUserService.findAllUsers()).thenReturn(List.of(student));
+
+        mockMvc.perform(get("/members").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/members"))
+                .andExpect(content().string(containsString("data-email=\"memb@example.com\"")))
+                .andExpect(content().string(containsString("Student")));
+    }
+
+    // ===== POST /members/{id}/delete =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldDeleteMemberAndRedirectWithSuccessMessage() throws Exception {
+        when(handleUserService.deleteUser(5L)).thenReturn("memb");
+
+        mockMvc.perform(post("/members/5/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"))
+                .andExpect(flash().attribute("successKey", "success.member.deleted"))
+                .andExpect(flash().attribute("deletedUsername", "memb"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRedirectWithErrorWhenUserCannotBeDeleted() throws Exception {
+        when(handleUserService.deleteUser(6L))
+                .thenThrow(new UserDeletionException("error.user.delete.linked"));
+
+        mockMvc.perform(post("/members/6/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"))
+                .andExpect(flash().attribute("errorKey", "error.user.delete.linked"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowDeleteSuccessMessageAfterRedirect() throws Exception {
+        when(handleUserService.findAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/members")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .flashAttr("successKey", "success.member.deleted")
+                        .flashAttr("deletedUsername", "memb"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("User memb was deleted.")));
     }
 }

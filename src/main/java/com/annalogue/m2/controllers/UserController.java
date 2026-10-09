@@ -28,7 +28,11 @@ import java.time.Year;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import com.annalogue.m2.exceptions.UserDeletionException;
+
 import com.annalogue.m2.services.NotifyService;
+
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class UserController {
@@ -110,6 +114,33 @@ public class UserController {
         model.addAttribute("selectedLevel", level);
         model.addAttribute("group", group);
         return "admin/add_member";
+    }
+        // members list with a delete button (admin only, see SecurityConfig: /members/**)
+    @GetMapping("/members")
+    public String listMembers(Model model) {
+        model.addAttribute("users", handleUserService.findAllUsers());
+        return "admin/members";
+    }
+
+    // the user is identified by his id (the username is not unique)
+    @PostMapping("/members/{id}/delete")
+    public String deleteMember(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            String deletedUsername = handleUserService.deleteUser(id);
+
+            redirectAttributes.addFlashAttribute("successKey", "success.member.deleted");
+            redirectAttributes.addFlashAttribute("deletedUsername", deletedUsername);
+
+        } catch (UserDeletionException e) {
+            // unknown user, admin, or user still linked to something
+            redirectAttributes.addFlashAttribute("errorKey", e.getMessageKey());
+
+        } catch (DataAccessException e) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.delete.database");
+        }
+
+        // back to the list in both cases, with the message
+        return "redirect:/members";
     }
     // lists shown in the form's dropdowns
     private void addFormLists(Model model) {
