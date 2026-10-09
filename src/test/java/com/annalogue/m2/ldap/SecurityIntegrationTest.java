@@ -191,7 +191,8 @@ class SecurityIntegrationTest {
                 )
                 .andExpect(status().isForbidden());
     }
-        // ===== Delete a member: admin only =====
+
+    // ===== Delete a member: admin only =====
 
     @Test
     void membersListShouldRequireAuthentication() throws Exception {
@@ -239,5 +240,23 @@ class SecurityIntegrationTest {
                 .andExpect(redirectedUrl("/members"));
 
         verify(handleUserService).deleteUser(1L);
+    }
+
+    // ===== TFAN26-117: module pages require authentication =====
+
+    @Test
+    void addModulePageShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/modules/add"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void modulesShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/modules"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
     }
 }

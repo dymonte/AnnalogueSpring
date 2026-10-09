@@ -110,4 +110,13 @@ class MessagesTest {
         assertFalse(message("error.user.delete.linked").isBlank());
         assertFalse(message("error.user.delete.database").isBlank());
     }
+
+    @Test
+    void shouldContainModuleControllerMessages() {
+        assertFalse(message("error.module.name.empty").isBlank());
+        assertFalse(message("error.module.name.tooLong").isBlank());
+        assertFalse(message("error.module.name.exists").isBlank());
+        assertFalse(message("error.module.database").isBlank());
+        assertFalse(message("success.module.created").isBlank());
+    }
 }
