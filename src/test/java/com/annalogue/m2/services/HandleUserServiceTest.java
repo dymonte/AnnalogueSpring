@@ -27,6 +27,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.annalogue.m2.exceptions.UserDeletionException;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.mockito.Mockito.doThrow;
+
 @ExtendWith(MockitoExtension.class)
 class HandleUserServiceTest {
 
@@ -289,5 +297,78 @@ class HandleUserServiceTest {
                 () -> handleUserService.addUser("test@example.com", Role.ETUDIANT, "test", 2026, "M1", "A"));
 
         verify(mailService, never()).sendCredentials(anyString(), anyString(), anyString());
+    }
+
+    // ===== delete user test =====
+    private UserEntity user(String username, Role role) {
+        return new UserEntity(username + "@example.com", "hash", username, role, null, null);
+    }
+
+    @Test
+    void shouldReturnAllUsers() {
+        List<UserEntity> users = List.of(user("memb", Role.ETUDIANT));
+        when(userService.findAll()).thenReturn(users);
+
+        assertEquals(users, handleUserService.findAllUsers());
+    }
+
+    @Test
+    void shouldDeleteStudentLinkedToNothing() {
+        UserEntity student = user("memb", Role.ETUDIANT);
+        when(userService.findById(5L)).thenReturn(Optional.of(student));
+
+        String deletedUsername = handleUserService.deleteUser(5L);
+
+        assertEquals("memb", deletedUsername);
+        verify(userService).delete(student);
+    }
+
+    @Test
+    void shouldDeleteTeacherLinkedToNothing() {
+        UserEntity teacher = user("respmod", Role.PROF);
+        when(userService.findById(6L)).thenReturn(Optional.of(teacher));
+
+        handleUserService.deleteUser(6L);
+
+        verify(userService).delete(teacher);
+    }
+
+    @Test
+    void shouldRefuseToDeleteUnknownUser() {
+        when(userService.findById(99L)).thenReturn(Optional.empty());
+
+        UserDeletionException exception = assertThrows(
+                UserDeletionException.class,
+                () -> handleUserService.deleteUser(99L));
+
+        assertEquals("error.user.delete.notfound", exception.getMessageKey());
+        verify(userService, never()).delete(any());
+    }
+
+    @Test
+    void shouldRefuseToDeleteAdmin() {
+        when(userService.findById(1L)).thenReturn(Optional.of(user("admin", Role.ADMIN)));
+
+        UserDeletionException exception = assertThrows(
+                UserDeletionException.class,
+                () -> handleUserService.deleteUser(1L));
+
+        assertEquals("error.user.delete.admin", exception.getMessageKey());
+        verify(userService, never()).delete(any());
+    }
+
+    @Test
+    void shouldRefuseToDeleteUserStillLinkedToSomething() {
+        UserEntity teacher = user("respmod", Role.PROF);
+        when(userService.findById(6L)).thenReturn(Optional.of(teacher));
+        // the database refuses: the user is still referenced (module, publication...)
+        doThrow(new DataIntegrityViolationException("foreign key"))
+                .when(userService).delete(teacher);
+
+        UserDeletionException exception = assertThrows(
+                UserDeletionException.class,
+                () -> handleUserService.deleteUser(6L));
+
+        assertEquals("error.user.delete.linked", exception.getMessageKey());
     }
 }
