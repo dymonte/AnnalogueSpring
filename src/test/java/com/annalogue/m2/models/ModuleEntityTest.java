@@ -2,8 +2,7 @@ package com.annalogue.m2.models;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 class ModuleEntityTest {
 
@@ -23,4 +22,25 @@ class ModuleEntityTest {
 
         assertEquals("TF", module.getName());
     }
+
+    @Test
+    public void shouldCreateModuleWithResponsable(){
+        UserEntity bfabrice = new UserEntity(
+                "fabrice.bouquet@ufc",
+                "fake-hash",
+                "bfabrice",
+                Role.PROF,
+                null,
+                null
+        );
+        ModuleEntity module = new ModuleEntity();
+        module.setName("TF");
+        module.setProf_responsable(bfabrice);
+
+        assertEquals("TF", module.getName());
+        assertEquals("bfabrice", module.getProf_responsable().getUsername());
+
+    }
+
+
 }

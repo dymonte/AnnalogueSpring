@@ -2,6 +2,8 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class UserEntity {
@@ -33,6 +35,9 @@ public class UserEntity {
 
     @Column(name = "group_name", length = 100)
     private String groupName;
+
+    @OneToMany(mappedBy = "prof_responsable")
+    private List<ModuleEntity> modulesResponsable;
 
     // JPA constructor
     public UserEntity() {
