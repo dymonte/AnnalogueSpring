@@ -191,4 +191,20 @@ class SecurityIntegrationTest {
                 )
                 .andExpect(status().isForbidden());
     }
+        // ===== TFAN26-117: module pages require authentication =====
+
+    @Test
+    void addModulePageShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/modules/add"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+    @Test
+    void modulesShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/modules"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
 }
