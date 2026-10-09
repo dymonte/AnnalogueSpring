@@ -23,6 +23,7 @@ services:
     container_name: annalogue-app
     ports:
       - "8080:8080"
+      - "35729:35729"
     volumes:
       - ./target/classes:/app/target/classes
       - ./pom.xml:/app/pom.xml
@@ -31,6 +32,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/annalogue
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: annaloguepw
+      SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "1s"
+      SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "500ms"
+      SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
     depends_on:
       mysql:
         condition: service_healthy

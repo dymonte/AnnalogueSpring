@@ -2,6 +2,7 @@ package com.annalogue.m2.repositories;
 
 import com.annalogue.m2.models.*;
 import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -19,6 +20,22 @@ class PublicationRepositoryTest {
     @Autowired
     private EntityManager entityManager;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private UserEntity bfabrice;
+    @BeforeEach
+    public void setUp(){
+        bfabrice= new UserEntity(
+                "fabrice.bouquet@ufc",
+                "fake-hash",
+                "bfabrice",
+                Role.PROF,
+                null,
+                null
+        );
+        userRepository.save(bfabrice);
+    }
     @Test
     void testFindByAuthor() {
         UserEntity author = new UserEntity(
@@ -36,7 +53,7 @@ class PublicationRepositoryTest {
                 publicationRepository.findByAuthor(author).size());
 
         ModuleEntity module = new ModuleEntity(
-                "ModuleName");
+                "ModuleName", bfabrice);
 
         entityManager.persist(module);
 
@@ -74,7 +91,7 @@ class PublicationRepositoryTest {
                 publicationRepository.findByAuthor(author).size());
 
         ModuleEntity module = new ModuleEntity(
-                "ModuleName");
+                "ModuleName",bfabrice);
 
         entityManager.persist(module);
 

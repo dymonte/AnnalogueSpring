@@ -87,7 +87,7 @@ class MessagesTest {
         assertFalse(message("mail.credentials.subject").isBlank());
     }
 
-        @Test
+    @Test
     void shouldContainPageTexts() {
         assertFalse(message("nav.home").isBlank());
         assertFalse(message("role.PROF").isBlank());
@@ -98,5 +98,14 @@ class MessagesTest {
         assertFalse(message("member.submit").isBlank());
         assertFalse(message("error.page.heading").isBlank());
         assertFalse(message("action.close").isBlank());
+    }
+
+    @Test
+    void shouldContainModuleControllerMessages() {
+        assertFalse(message("error.module.name.empty").isBlank());
+        assertFalse(message("error.module.name.tooLong").isBlank());
+        assertFalse(message("error.module.name.exists").isBlank());
+        assertFalse(message("error.module.database").isBlank());
+        assertFalse(message("success.module.created").isBlank());
     }
 }

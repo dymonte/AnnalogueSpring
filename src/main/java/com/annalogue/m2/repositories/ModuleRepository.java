@@ -17,4 +17,6 @@ public interface ModuleRepository extends JpaRepository<ModuleEntity, Long> {
 
     // modules sorted by name, for the lists
     List<ModuleEntity> findAllByOrderByNameAsc();
+
+
 }
