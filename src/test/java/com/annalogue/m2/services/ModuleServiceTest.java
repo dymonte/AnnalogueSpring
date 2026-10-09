@@ -2,13 +2,21 @@ package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.Role;
+import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
+import com.annalogue.m2.repositories.UserRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,10 +31,39 @@ class ModuleServiceTest {
     @Mock
     private ModuleRepository moduleRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private ModuleService moduleService;
 
     // ===== Creation =====
+
+    @BeforeEach
+    void userIsTeacher() {
+        UserEntity teacher = new UserEntity();
+        teacher.setEmail("prof@example.com");
+        teacher.setUsername("prof");
+        teacher.setRole(Role.PROF);
+
+        // Simulate connected user
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        "prof@example.com",
+                        "password",
+                        List.of(new SimpleGrantedAuthority("ROLE_PROF"))
+
+                )
+        );
+
+        lenient().when(userRepository.findByEmail("prof@example.com"))
+                .thenReturn(Optional.of(teacher));
+    }
+
+   @AfterEach
+   void clearSecurityContext() {
+        SecurityContextHolder.clearContext();
+   }
 
     @Test
     void shouldCreateModuleWithTrimmedName() {
@@ -98,4 +135,23 @@ class ModuleServiceTest {
         assertTrue(moduleService.existsByName(" MOIA "));
         assertFalse(moduleService.existsByName(null));
     }
+
+    // ===== Professor in charge of the module =====
+
+    @Test
+    void shouldModuleHaveTeacherInCharge() {
+        when(moduleRepository.save(any(ModuleEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ModuleEntity created = moduleService.createModule("MOIA");
+
+        ArgumentCaptor<ModuleEntity> captor = ArgumentCaptor.forClass(ModuleEntity.class);
+        verify(moduleRepository).save(captor.capture());
+
+        assertEquals("MOIA", captor.getValue().getName());
+        assertEquals("MOIA", created.getName());
+        assertEquals("prof@example.com", created.getProf_responsable().getEmail());
+    }
+
+
 }
