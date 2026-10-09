@@ -24,7 +24,8 @@ public class UserService implements IUserService {
         return userRepository.findByEmail(email);
     }
 
-    public Optional<UserEntity> findByUsername(String username) {
+    // several users can have the same username: use the email or the id to find one user
+    public List<UserEntity> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
 
