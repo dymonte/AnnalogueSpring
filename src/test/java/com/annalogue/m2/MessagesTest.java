@@ -99,6 +99,17 @@ class MessagesTest {
         assertFalse(message("error.page.heading").isBlank());
         assertFalse(message("action.close").isBlank());
     }
+    @Test
+    void shouldContainDeleteMemberMessages() {
+        assertFalse(message("members.title").isBlank());
+        assertFalse(message("members.delete").isBlank());
+        assertFalse(message("members.delete.confirm").isBlank());
+        assertFalse(message("success.member.deleted").isBlank());
+        assertFalse(message("error.user.delete.notfound").isBlank());
+        assertFalse(message("error.user.delete.admin").isBlank());
+        assertFalse(message("error.user.delete.linked").isBlank());
+        assertFalse(message("error.user.delete.database").isBlank());
+    }
 
     @Test
     void shouldContainModuleControllerMessages() {

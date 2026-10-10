@@ -21,9 +21,12 @@ public class UserEntity {
     @Column(name = "username", length = 100)
     private String username;
 
-    @Enumerated(EnumType.STRING)
+
+    @Convert(converter = RoleConverter.class)
     @Column(name = "role", nullable = false)
     private Role role;
+
+
 
     @Column(name = "year_level")
     private Integer year;
