@@ -10,33 +10,19 @@ public class ModuleEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // a module name is required and unique (e.g. "MOIA", "TF")
     @Column(name = "name", nullable = false, unique = true, length = 255)
     private String name;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "prof_responsable_id", nullable = false)
-    private UserEntity prof_responsable;
+    @JoinColumn(name = "responsible_id", nullable = false)
+    private UserEntity responsible;
 
-    public UserEntity getProf_responsable() {
-        return prof_responsable;
-    }
-
-    public void setProf_responsable(UserEntity prof_responsable) {
-        this.prof_responsable = prof_responsable;
-    }
-
-    // JPA constructor
     public ModuleEntity() {
     }
 
-    public ModuleEntity(String name) {
+    public ModuleEntity(String name, UserEntity responsible) {
         this.name = name;
-    }
-
-    public ModuleEntity(String name, UserEntity prof_responsable) {
-        this.name = name;
-        this.prof_responsable = prof_responsable;
+        this.responsible = responsible;
     }
 
     public Long getId() {
@@ -49,5 +35,13 @@ public class ModuleEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public UserEntity getResponsible() {
+        return responsible;
+    }
+
+    public void setResponsible(UserEntity responsible) {
+        this.responsible = responsible;
     }
 }

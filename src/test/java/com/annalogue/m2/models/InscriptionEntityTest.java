@@ -43,7 +43,7 @@ class InscriptionEntityTest {
         assertEquals(
                 "bfabrice",
                 inscription.getModule()
-                        .getProf_responsable()
+                        .getResponsible()
                         .getUsername()
         );
     }
@@ -85,7 +85,7 @@ class InscriptionEntityTest {
         assertEquals(
                 "bfabrice",
                 inscription.getModule()
-                        .getProf_responsable()
+                        .getResponsible()
                         .getUsername()
         );
 
