@@ -7,7 +7,6 @@ import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -37,36 +36,25 @@ class ModuleServiceTest {
     @InjectMocks
     private ModuleService moduleService;
 
-    // ===== Creation =====
+    private final UserEntity teacher =
+            new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
 
-    @BeforeEach
-    void userIsTeacher() {
-        UserEntity teacher = new UserEntity();
-        teacher.setEmail("prof@example.com");
-        teacher.setUsername("prof");
-        teacher.setRole(Role.PROF);
+    private void loggedInAs(UserEntity user) {
+        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
+                user.getEmail(), null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // Simulate connected user
-        SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken(
-                        "prof@example.com",
-                        "password",
-                        List.of(new SimpleGrantedAuthority("ROLE_PROF"))
-
-                )
-        );
-
-        lenient().when(userRepository.findByEmail("prof@example.com"))
-                .thenReturn(Optional.of(teacher));
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
     }
 
-   @AfterEach
-   void clearSecurityContext() {
+    @AfterEach
+    void logout() {
         SecurityContextHolder.clearContext();
-   }
+    }
 
     @Test
-    void shouldCreateModuleWithTrimmedName() {
+    void shouldCreateModuleWithTrimmedNameAndLoggedInUserAsResponsible() {
+        loggedInAs(teacher);
         when(moduleRepository.save(any(ModuleEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -76,7 +64,26 @@ class ModuleServiceTest {
         verify(moduleRepository).save(captor.capture());
 
         assertEquals("MOIA", captor.getValue().getName());
+        assertEquals(teacher, captor.getValue().getResponsible());
         assertEquals("MOIA", created.getName());
+    }
+
+    @Test
+    void shouldSaveTheModuleOnlyOnce() {
+        loggedInAs(teacher);
+        when(moduleRepository.save(any(ModuleEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        moduleService.createModule("MOIA");
+
+        verify(moduleRepository, times(1)).save(any(ModuleEntity.class));
+    }
+
+    @Test
+    void shouldRefuseWhenNobodyIsLoggedIn() {
+        assertThrows(IllegalStateException.class, () -> moduleService.createModule("MOIA"));
+
+        verify(moduleRepository, never()).save(any());
     }
 
     @Test
@@ -110,11 +117,11 @@ class ModuleServiceTest {
         verify(moduleRepository, never()).save(any());
     }
 
-    // ===== Reading =====
-
     @Test
     void shouldReturnModulesSortedByName() {
-        List<ModuleEntity> modules = List.of(new ModuleEntity("MOIA"), new ModuleEntity("TF"));
+        List<ModuleEntity> modules = List.of(
+                new ModuleEntity("MOIA", teacher),
+                new ModuleEntity("TF", teacher));
         when(moduleRepository.findAllByOrderByNameAsc()).thenReturn(modules);
 
         assertEquals(modules, moduleService.findAll());
@@ -122,7 +129,7 @@ class ModuleServiceTest {
 
     @Test
     void shouldFindModuleById() {
-        ModuleEntity module = new ModuleEntity("MOIA");
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
         when(moduleRepository.findById(1L)).thenReturn(Optional.of(module));
 
         assertEquals(Optional.of(module), moduleService.findById(1L));
@@ -135,23 +142,4 @@ class ModuleServiceTest {
         assertTrue(moduleService.existsByName(" MOIA "));
         assertFalse(moduleService.existsByName(null));
     }
-
-    // ===== Professor in charge of the module =====
-
-    @Test
-    void shouldModuleHaveTeacherInCharge() {
-        when(moduleRepository.save(any(ModuleEntity.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        ModuleEntity created = moduleService.createModule("MOIA");
-
-        ArgumentCaptor<ModuleEntity> captor = ArgumentCaptor.forClass(ModuleEntity.class);
-        verify(moduleRepository).save(captor.capture());
-
-        assertEquals("MOIA", captor.getValue().getName());
-        assertEquals("MOIA", created.getName());
-        assertEquals("prof@example.com", created.getProf_responsable().getEmail());
-    }
-
-
 }

@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -56,34 +57,27 @@ class UserServiceTest {
         }
 
         @Test
-        void shouldFindUserByUsername() {
+        void shouldFindAllUsersWithTheSameUsername() {
 
-                UserEntity user = mock(UserEntity.class);
+                UserEntity first = mock(UserEntity.class);
+                UserEntity second = mock(UserEntity.class);
 
-                when(userRepository.findByUsername("student123"))
-                                .thenReturn(Optional.of(user));
+                when(userRepository.findByUsername("jdupont"))
+                                .thenReturn(List.of(first, second));
 
-                Optional<UserEntity> result = userService.findByUsername("student123");
+                List<UserEntity> result = userService.findByUsername("jdupont");
 
-                assertTrue(result.isPresent());
-                assertEquals(user, result.get());
-
-                verify(userRepository)
-                                .findByUsername("student123");
+                assertEquals(2, result.size());
+                verify(userRepository).findByUsername("jdupont");
         }
 
         @Test
-        void shouldReturnEmptyWhenUsernameDoesNotExist() {
+        void shouldReturnEmptyListWhenUsernameDoesNotExist() {
 
                 when(userRepository.findByUsername("unknown"))
-                                .thenReturn(Optional.empty());
+                                .thenReturn(List.of());
 
-                Optional<UserEntity> result = userService.findByUsername("unknown");
-
-                assertTrue(result.isEmpty());
-
-                verify(userRepository)
-                                .findByUsername("unknown");
+                assertTrue(userService.findByUsername("unknown").isEmpty());
         }
 
         @Test
@@ -127,5 +121,38 @@ class UserServiceTest {
                 assertEquals(user, result);
 
                 verify(userRepository).save(user);
+        }
+
+        @Test
+        void shouldReturnAllUsersSortedByUsername() {
+
+                List<UserEntity> users = List.of(mock(UserEntity.class));
+
+                when(userRepository.findAllByOrderByUsernameAsc())
+                                .thenReturn(users);
+
+                assertEquals(users, userService.findAll());
+        }
+
+        @Test
+        void shouldFindUserById() {
+
+                UserEntity user = mock(UserEntity.class);
+
+                when(userRepository.findById(5L))
+                                .thenReturn(Optional.of(user));
+
+                assertEquals(Optional.of(user), userService.findById(5L));
+        }
+
+        @Test
+        void shouldDeleteUserAndFlush() {
+
+                UserEntity user = mock(UserEntity.class);
+
+                userService.delete(user);
+
+                verify(userRepository).delete(user);
+                verify(userRepository).flush();
         }
 }

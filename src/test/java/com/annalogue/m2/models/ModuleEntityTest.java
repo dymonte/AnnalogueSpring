@@ -2,16 +2,20 @@ package com.annalogue.m2.models;
 
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class ModuleEntityTest {
 
+    private final UserEntity teacher =
+            new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
+
     @Test
-    void shouldCreateModuleWithName() {
-        ModuleEntity module = new ModuleEntity("MOIA");
+    void shouldCreateModuleWithNameAndResponsible() {
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
 
         assertEquals("MOIA", module.getName());
-        // the id is given by the database when the module is saved
+        assertEquals(teacher, module.getResponsible());
         assertNull(module.getId());
     }
 
@@ -24,23 +28,13 @@ class ModuleEntityTest {
     }
 
     @Test
-    public void shouldCreateModuleWithResponsable(){
-        UserEntity bfabrice = new UserEntity(
-                "fabrice.bouquet@ufc",
-                "fake-hash",
-                "bfabrice",
-                Role.PROF,
-                null,
-                null
-        );
-        ModuleEntity module = new ModuleEntity();
-        module.setName("TF");
-        module.setProf_responsable(bfabrice);
+    void shouldChangeResponsible() {
+        UserEntity otherTeacher =
+                new UserEntity("claire@example.com", "hash", "claire", Role.PROF, null, null);
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
 
-        assertEquals("TF", module.getName());
-        assertEquals("bfabrice", module.getProf_responsable().getUsername());
+        module.setResponsible(otherTeacher);
 
+        assertEquals(otherTeacher, module.getResponsible());
     }
-
-
 }

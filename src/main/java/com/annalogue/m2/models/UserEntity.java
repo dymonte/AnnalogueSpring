@@ -22,9 +22,12 @@ public class UserEntity {
     @Column(name = "username", length = 100)
     private String username;
 
-    @Enumerated(EnumType.STRING)
+
+    @Convert(converter = RoleConverter.class)
     @Column(name = "role", nullable = false)
     private Role role;
+
+
 
     @Column(name = "year_level")
     private Integer year;
@@ -37,8 +40,8 @@ public class UserEntity {
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    @OneToMany(mappedBy = "prof_responsable")
-    private List<ModuleEntity> modulesResponsable;
+    @OneToMany(mappedBy = "responsible")
+    private List<ModuleEntity> responsibleModules;
 
     public List<ModuleEntity> getModulesResponsable() {
         return modulesResponsable;

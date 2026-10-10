@@ -9,6 +9,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.annalogue.m2.exceptions.UserDeletionException;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import java.util.List;
+
 import java.util.UUID;
 
 @Service
@@ -111,7 +116,35 @@ public class HandleUserService {
         }
         return base + number;
     }
+    public List<UserEntity> findAllUsers() {
+        return userService.findAll();
+    }
 
+    // deletes a user linked to nothing; returns his username for the success message.
+    // the user is found by id (the username is not unique)
+    @Transactional
+    public String deleteUser(Long id) {
+        UserEntity user = userService.findById(id)
+                .orElseThrow(() -> new UserDeletionException("error.user.delete.notfound"));
+
+        // the administrator account cannot be deleted
+        if (user.getRole() == Role.ADMIN) {
+            throw new UserDeletionException("error.user.delete.admin");
+        }
+
+        // TODO when Inscription is in dev: a user only enrolled in modules is deleted directly
+        // inscriptionRepository.deleteByUserId(id);
+
+        try {
+            userService.delete(user);
+        } catch (DataIntegrityViolationException e) {
+            // still referenced by another table (responsible of a module, author of a publication...):
+            // the database refuses, nothing is deleted
+            throw new UserDeletionException("error.user.delete.linked");
+        }
+
+        return user.getUsername();
+    }
     private void validate(
             String email,
             Role role,

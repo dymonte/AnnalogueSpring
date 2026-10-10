@@ -1,41 +1,40 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.exceptions.InvalidModuleDataException;
+import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.Role;
+import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.annalogue.m2.models.ModuleEntity;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
-import com.annalogue.m2.exceptions.InvalidModuleDataException;
-import org.springframework.dao.DataAccessResourceFailureException;
-
-import static org.mockito.ArgumentMatchers.any;
 import java.util.List;
 import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 class ModuleControllerTest {
 
     private final IModuleService moduleService = mock(IModuleService.class);
 
+    private final UserEntity teacher =
+            new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
+
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        // only the controller is started: no templates are needed (the pages are TFAN26-47/48)
         mockMvc = MockMvcBuilders
                 .standaloneSetup(new ModuleController(moduleService))
                 .build();
     }
-
-    // ===== GET /modules/add =====
 
     @Test
     void shouldShowAddForm() throws Exception {
@@ -44,11 +43,9 @@ class ModuleControllerTest {
                 .andExpect(view().name("modules/add"));
     }
 
-    // ===== POST /modules/add : success =====
-
     @Test
     void shouldAddModuleAndRedirectWithSuccessMessage() throws Exception {
-        when(moduleService.createModule("MOIA")).thenReturn(new ModuleEntity("MOIA"));
+        when(moduleService.createModule("MOIA")).thenReturn(new ModuleEntity("MOIA", teacher));
 
         mockMvc.perform(post("/modules/add").param("name", "MOIA"))
                 .andExpect(status().is3xxRedirection())
@@ -58,8 +55,6 @@ class ModuleControllerTest {
 
         verify(moduleService).createModule("MOIA");
     }
-
-        // ===== POST /modules/add : errors =====
 
     @Test
     void shouldShowErrorWhenNameIsEmpty() throws Exception {
@@ -119,12 +114,11 @@ class ModuleControllerTest {
                 .andExpect(model().attribute("name", "MOIA"));
     }
 
-
-        // ===== GET /modules =====
-
     @Test
     void shouldListModules() throws Exception {
-        List<ModuleEntity> modules = List.of(new ModuleEntity("MOIA"), new ModuleEntity("TF"));
+        List<ModuleEntity> modules = List.of(
+                new ModuleEntity("MOIA", teacher),
+                new ModuleEntity("TF", teacher));
         when(moduleService.findAll()).thenReturn(modules);
 
         mockMvc.perform(get("/modules"))
@@ -133,11 +127,9 @@ class ModuleControllerTest {
                 .andExpect(model().attribute("modules", modules));
     }
 
-        // ===== GET /modules/{id} =====
-
     @Test
     void shouldShowModulePage() throws Exception {
-        ModuleEntity module = new ModuleEntity("MOIA");
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
         when(moduleService.findById(1L)).thenReturn(Optional.of(module));
 
         mockMvc.perform(get("/modules/1"))
