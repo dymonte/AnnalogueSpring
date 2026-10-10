@@ -59,20 +59,19 @@ public class PublicationService implements IPublicationService {
 		String stringPath = publicationRepository.findById(id).map(PublicationEntity::getFilePath).orElse(null);
 		try {
 			if (stringPath == null) {
-				throw new StorageFileNotFoundException("Could not read file: publication not found");
+				throw new StorageFileNotFoundException();
 			}
 			Path file = Path.of(stringPath);
 			Resource resource = new FileSystemResource(file);
 			if (resource.exists() || resource.isReadable()) {
 				return resource;
 			} else {
-				throw new StorageFileNotFoundException(
-					"Could not read file: " + stringPath);
+				throw new StorageFileNotFoundException();
 
 			}
 		}
 		catch (MalformedURLException e) {
-			throw new StorageFileNotFoundException("Could not read file: " + stringPath);
+			throw new StorageFileNotFoundException();
 		}
 
 	}
@@ -83,21 +82,23 @@ public class PublicationService implements IPublicationService {
 
 	public void saveMultipartFile(MultipartFile file, String name, String description, Long moduleId, String authorEmail, FileType fileType) throws UploadFileException {
 
+		if (file.getSize() > 10 * 1024 * 1024)
+			throw new UploadFileException("error.upload.file.size");
 
 		//find the author and module
-		UserEntity author = userService.findByEmail(authorEmail).orElseThrow(() -> new UploadFileException("Failed to upload file : author not found"));
+		UserEntity author = userService.findByEmail(authorEmail).orElseThrow(() -> new UploadFileException("error.upload.author.notfound"));
 
-		ModuleEntity module = moduleService.findById(moduleId).orElseThrow(() -> new UploadFileException("Failed to upload file : module not found"));
+		ModuleEntity module = moduleService.findById(moduleId).orElseThrow(() -> new UploadFileException("error.upload.module.notfound"));
 
 		if(!canUpload(module, author))
-			throw new UploadFileException("Failed to upload file : user is not allowed to upload to this module");
+			throw new UploadFileException("error.upload.forbidden");
 
-		File fullPath = getFullPath(file, module, author);
+		File fullPath = getFullPath(file);
 		try {
 			file.transferTo(fullPath);
 		}
 		catch (IOException e) {
-			throw new UploadFileException("Failed to upload file: " + e.getMessage());
+			throw new UploadFileException("error.upload.failed");
 		}
 
 		PublicationEntity newPublication = new PublicationEntity(
@@ -111,19 +112,19 @@ public class PublicationService implements IPublicationService {
 		addPublication(newPublication);
 	}
 
-	private @NonNull File getFullPath(MultipartFile file, ModuleEntity module, UserEntity author) throws UploadFileException {
+	private @NonNull File getFullPath(MultipartFile file) throws UploadFileException {
 
 
 		//save the file in the storage
 		File uploadDirectory = new File(uploadDir);
 
 		if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
-			throw new UploadFileException("Failed to upload file : could not create upload directory");
+			throw new UploadFileException("error.upload.cannotcreatedir");
 		}
 
 		String originalFilename = file.getOriginalFilename();
 		if (originalFilename == null) {
-			throw new UploadFileException("Failed to upload file : no file name");
+			throw new UploadFileException("error.upload.filename.missing");
 		}
 		File fullPath = new File(uploadDirectory, originalFilename);
 
