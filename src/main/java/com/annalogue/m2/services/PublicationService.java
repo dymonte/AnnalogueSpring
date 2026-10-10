@@ -7,6 +7,7 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.PublicationRepository;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
@@ -91,14 +92,7 @@ public class PublicationService implements IPublicationService {
 		if(!canUpload(module, author))
 			throw new UploadFileException("Failed to upload file : user is not allowed to upload to this module");
 
-		//save the file in the storage
-		String filePath = file.getOriginalFilename();
-		File uploadDirectory = new File(uploadDir);
-
-		if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
-			throw new UploadFileException("Failed to upload file : could not create upload directory");
-		}
-		File fullPath = new File(uploadDirectory, filePath);
+		File fullPath = getFullPath(file, module, author);
 		try {
 			file.transferTo(fullPath);
 		}
@@ -115,6 +109,31 @@ public class PublicationService implements IPublicationService {
 				fullPath.toString()
 		);
 		addPublication(newPublication);
+	}
+
+	private @NonNull File getFullPath(MultipartFile file, ModuleEntity module, UserEntity author) throws UploadFileException {
+
+
+		//save the file in the storage
+		File uploadDirectory = new File(uploadDir);
+
+		if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
+			throw new UploadFileException("Failed to upload file : could not create upload directory");
+		}
+
+		String originalFilename = file.getOriginalFilename();
+		if (originalFilename == null) {
+			throw new UploadFileException("Failed to upload file : no file name");
+		}
+		File fullPath = new File(uploadDirectory, originalFilename);
+
+		// avoid overwriting existing files by adding a number
+		int i = 1;
+		while (fullPath.exists()) {
+			fullPath = new File(uploadDirectory, originalFilename.substring(0, originalFilename.lastIndexOf('.')) + "-" + i + originalFilename.substring(originalFilename.lastIndexOf('.')));
+			i++;
+		}
+		return fullPath;
 	}
 
 	private boolean canUpload(ModuleEntity module, UserEntity user) {
