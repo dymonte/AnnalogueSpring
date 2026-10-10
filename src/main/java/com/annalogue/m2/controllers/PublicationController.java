@@ -5,6 +5,7 @@ import com.annalogue.m2.exceptions.UploadFileException;
 import com.annalogue.m2.models.FileType;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IPublicationService;
+import com.annalogue.m2.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Objects;
+
 @Controller
 public class PublicationController {
 
@@ -26,6 +29,9 @@ public class PublicationController {
 
 	@Autowired
 	private IModuleService moduleService;
+
+	@Autowired
+	private IUserService userService;
 
 	@PostMapping("/publications")
 	public String addPublication() {
@@ -49,11 +55,24 @@ public class PublicationController {
 	}
 
 	@GetMapping("/upload")
-	public String showFileUploadForm(Model model, @RequestParam(required = false) String error,
+	public String showFileUploadForm(Authentication authentication, Model model, @RequestParam(required = false) String error,
 									  @RequestParam(required = false) String name,
 									  @RequestParam(required = false) String description,
 									  @RequestParam(required = false) Long moduleId,
 									  @RequestParam(required = false) String fileType) {
+
+		model.addAttribute("login", authentication != null ? authentication.getName() : "");
+		model.addAttribute("isAdmin",
+				authentication != null && authentication.getAuthorities() != null
+						&& authentication.getAuthorities().stream()
+						.anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
+
+		if (authentication != null) {
+			userService.findByEmail(authentication.getName()).ifPresent(
+					userEntity -> model.addAttribute("username", userEntity.getUsername()));
+		}
+
+
 		model.addAttribute("fileType", FileType.values());
 		model.addAttribute("modules", moduleService.findAll());
 		if (error != null) {
