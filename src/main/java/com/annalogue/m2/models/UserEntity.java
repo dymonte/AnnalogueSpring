@@ -39,8 +39,8 @@ public class UserEntity {
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    @OneToMany(mappedBy = "prof_responsable")
-    private List<ModuleEntity> modulesResponsable;
+    @OneToMany(mappedBy = "responsible")
+    private List<ModuleEntity> responsibleModules;
 
     // JPA constructor
     public UserEntity() {

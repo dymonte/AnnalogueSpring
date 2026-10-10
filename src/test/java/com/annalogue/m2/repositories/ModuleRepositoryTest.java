@@ -47,7 +47,7 @@ class ModuleRepositoryTest {
 
         ModuleEntity found = moduleRepository.findByName("MOIA").orElseThrow();
 
-        assertEquals("fabrice@example.com", found.getProf_responsable().getEmail());
+        assertEquals("fabrice@example.com", found.getResponsible().getEmail());
     }
 
     @Test

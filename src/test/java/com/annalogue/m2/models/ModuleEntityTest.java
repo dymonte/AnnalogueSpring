@@ -15,7 +15,7 @@ class ModuleEntityTest {
         ModuleEntity module = new ModuleEntity("MOIA", teacher);
 
         assertEquals("MOIA", module.getName());
-        assertEquals(teacher, module.getProf_responsable());
+        assertEquals(teacher, module.getResponsible());
         assertNull(module.getId());
     }
 
@@ -33,8 +33,8 @@ class ModuleEntityTest {
                 new UserEntity("claire@example.com", "hash", "claire", Role.PROF, null, null);
         ModuleEntity module = new ModuleEntity("MOIA", teacher);
 
-        module.setProf_responsable(otherTeacher);
+        module.setResponsible(otherTeacher);
 
-        assertEquals(otherTeacher, module.getProf_responsable());
+        assertEquals(otherTeacher, module.getResponsible());
     }
 }
