@@ -21,23 +21,72 @@
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
                     <form th:action="@{/module/users/register}" method="post">
+
+                        <!-- Choisir le module -->
                         <div class="mb-3">
-                            <!-- Register a user based on their email address -->
-                            <label for="emailUser" class="form-label fw-bold">User's email</label>
+                            <label for="moduleId" class="form-label fw-bold">
+                                Select a module
+                            </label>
+
+                            <select class="form-select"
+                                    id="moduleId"
+                                    name="moduleId"
+                                    th:classappend="${moduleIdError != null} ? 'is-invalid' : ''"
+                                    required>
+
+                                <option value=""
+                                        disabled
+                                        th:selected="${selectedModuleId == null}">
+                                    Choose a module
+                                </option>
+
+                                <option th:each="module : ${modules}"
+                                        th:value="${module.id}"
+                                        th:text="${module.nom}"
+                                        th:selected="${selectedModuleId != null
+                and selectedModuleId.equals(module.id)}">
+                                </option>
+                            </select>
+
+                            <div class="invalid-feedback"
+                                 th:if="${moduleIdError != null}"
+                                 th:text="${moduleIdError}">
+                            </div>
+                        </div>
+
+                        <!-- Email de l'utilisateur à inscrire -->
+                        <div class="mb-3">
+                            <label for="emailUser" class="form-label fw-bold">
+                                User's email
+                            </label>
+
                             <input type="email"
                                    class="form-control"
+                                   th:classappend="${emailUserError != null
+           or userAlreadyRegisterError != null} ? 'is-invalid' : ''"
                                    id="emailUser"
                                    name="emailUser"
                                    th:value="${emailUser}"
                                    autocomplete="off"
                                    required>
 
-                            <p class="text-danger small mt-1" th:if="${userAlreadyRegisterError}"
-                               th:text="${userAlreadyRegisterError}"></p>
+                            <div class="invalid-feedback"
+                                 th:if="${emailUserError != null}"
+                                 th:text="${emailUserError}">
+                            </div>
+
+                            <div class="invalid-feedback"
+                                 th:if="${userAlreadyRegisterError != null}"
+                                 th:text="${userAlreadyRegisterError}">
+                            </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">Register</button>
+                        <button type="submit" class="btn btn-primary w-100">
+                            Register
+                        </button>
+
                     </form>
+
                 </div>
             </div>
         </div>

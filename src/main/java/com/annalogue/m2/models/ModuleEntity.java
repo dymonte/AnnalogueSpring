@@ -34,6 +34,8 @@ public class ModuleEntity {
         this.name = name;
     }
 
+
+
     public ModuleEntity(String name, UserEntity prof_responsable) {
         this.name = name;
         this.prof_responsable = prof_responsable;
@@ -41,6 +43,10 @@ public class ModuleEntity {
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
