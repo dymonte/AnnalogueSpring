@@ -40,16 +40,9 @@ public class UserEntity {
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    @OneToMany(mappedBy = "responsible")
-    private List<ModuleEntity> responsibleModules;
+    @OneToMany(mappedBy = "responsable")
+    private List<ModuleEntity> responsablemodules;
 
-    public List<ModuleEntity> getModulesResponsable() {
-        return modulesResponsable;
-    }
-
-    public void setModulesResponsable(List<ModuleEntity> modulesResponsable) {
-        this.modulesResponsable = modulesResponsable;
-    }
 
     // JPA constructor
     public UserEntity() {
@@ -63,7 +56,7 @@ public class UserEntity {
         this.role = role;
         this.year = year;
         this.groupName = groupName;
-        this.modulesResponsable = new ArrayList<>();
+        this.responsablemodules = new ArrayList<>();
     }
 
     public Long getId() {
@@ -128,5 +121,13 @@ public class UserEntity {
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    public List<ModuleEntity> getResponsablemodules() {
+        return responsablemodules;
+    }
+
+    public void setResponsablemodules(List<ModuleEntity> responsablemodules) {
+        this.responsablemodules = responsablemodules;
     }
 }

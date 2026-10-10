@@ -47,11 +47,11 @@ public class UserRepositoryTest {
         ModuleEntity rx = new ModuleEntity("RX", bfabrice);
         moduleRepository.save(rx);
 
-        bfabrice.getModulesResponsable().add(pmt);
-        bfabrice.getModulesResponsable().add(tf);
-        bfabrice.getModulesResponsable().add(rx);
-        assertEquals(3, bfabrice.getModulesResponsable().size());
-        assertEquals("PMT",  bfabrice.getModulesResponsable().getFirst().getName() );
+        bfabrice.getResponsablemodules().add(pmt);
+        bfabrice.getResponsablemodules().add(tf);
+        bfabrice.getResponsablemodules().add(rx);
+        assertEquals(3, bfabrice.getResponsablemodules().size());
+        assertEquals("PMT",  bfabrice.getResponsablemodules().getFirst().getName() );
 
     }
 }

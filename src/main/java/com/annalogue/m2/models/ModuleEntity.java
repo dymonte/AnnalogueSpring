@@ -15,21 +15,16 @@ public class ModuleEntity {
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "responsible_id", nullable = false)
-    private UserEntity responsible;
+    private UserEntity responsable;
 
     public ModuleEntity() {
     }
 
-    public ModuleEntity(String name, UserEntity responsible) {
+    public ModuleEntity(String name, UserEntity responsable) {
         this.name = name;
+        this.responsable =responsable;
     }
 
-
-
-    public ModuleEntity(String name, UserEntity prof_responsable) {
-        this.name = name;
-        this.prof_responsable = prof_responsable;
-    }
 
     public Long getId() {
         return id;
@@ -47,11 +42,11 @@ public class ModuleEntity {
         this.name = name;
     }
 
-    public UserEntity getResponsible() {
-        return responsible;
+    public UserEntity getResponsable() {
+        return responsable;
     }
 
-    public void setResponsible(UserEntity responsible) {
-        this.responsible = responsible;
+    public void setResponsable(UserEntity responsable) {
+        this.responsable = responsable;
     }
 }
