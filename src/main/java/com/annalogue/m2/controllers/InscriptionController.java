@@ -174,7 +174,7 @@ public class InscriptionController {
             UserEntity currentUser = getCurrentUser();
 
             List<ModuleEntity> modules =
-                    currentUser.getResponsablemodules();
+                    currentUser.getResponsableModules();
 
             model.addAttribute("modules", modules);
 
