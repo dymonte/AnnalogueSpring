@@ -42,7 +42,7 @@
 
                                 <option th:each="module : ${modules}"
                                         th:value="${module.id}"
-                                        th:text="${module.nom}"
+                                        th:text="${module.name}"
                                         th:selected="${selectedModuleId != null
                 and selectedModuleId.equals(module.id)}">
                                 </option>
