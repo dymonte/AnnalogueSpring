@@ -14,7 +14,7 @@ public class ModuleEntity {
     private String name;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "responsible_id", nullable = false)
+    @JoinColumn(name = "responsable_id", nullable = false)
     private UserEntity responsable;
 
     public ModuleEntity() {
