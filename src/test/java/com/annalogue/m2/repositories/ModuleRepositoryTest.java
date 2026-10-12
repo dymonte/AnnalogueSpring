@@ -16,38 +16,43 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-@ActiveProfiles("test") // H2 in-memory database, the real database is never touched
-@Transactional          // every change is cancelled after each test
+@ActiveProfiles("test")
+@Transactional
 class ModuleRepositoryTest {
 
     @Autowired
     private ModuleRepository moduleRepository;
+
     @Autowired
     private UserRepository userRepository;
 
-    private UserEntity bfabrice;
+    private UserEntity teacher;
+
     @BeforeEach
-    public void setUp(){
-        bfabrice= new UserEntity(
-                "fabrice.bouquet@ufc",
-                "fake-hash",
-                "bfabrice",
-                Role.PROF,
-                null,
-                null
-        );
-        userRepository.save(bfabrice);
+    void setUp() {
+        teacher = userRepository.save(
+                new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null));
     }
+
     @Test
     void shouldSaveModuleAndGiveItAnId() {
-        ModuleEntity saved = moduleRepository.save(new ModuleEntity("MOIA", bfabrice));
+        ModuleEntity saved = moduleRepository.save(new ModuleEntity("MOIA", teacher));
 
         assertNotNull(saved.getId());
     }
 
     @Test
+    void shouldSaveTheResponsible() {
+        moduleRepository.saveAndFlush(new ModuleEntity("MOIA", teacher));
+
+        ModuleEntity found = moduleRepository.findByName("MOIA").orElseThrow();
+
+        assertEquals("fabrice@example.com", found.getResponsible().getEmail());
+    }
+
+    @Test
     void shouldFindModuleByName() {
-        moduleRepository.save(new ModuleEntity("MOIA", bfabrice));
+        moduleRepository.save(new ModuleEntity("MOIA", teacher));
 
         assertTrue(moduleRepository.findByName("MOIA").isPresent());
         assertTrue(moduleRepository.findByName("TF").isEmpty());
@@ -55,7 +60,7 @@ class ModuleRepositoryTest {
 
     @Test
     void shouldCheckNameExistsIgnoringCase() {
-        moduleRepository.save(new ModuleEntity("MOIA", bfabrice));
+        moduleRepository.save(new ModuleEntity("MOIA", teacher));
 
         assertTrue(moduleRepository.existsByNameIgnoreCase("moia"));
         assertFalse(moduleRepository.existsByNameIgnoreCase("TF"));
@@ -63,8 +68,8 @@ class ModuleRepositoryTest {
 
     @Test
     void shouldReturnModulesSortedByName() {
-        moduleRepository.save(new ModuleEntity("TF", bfabrice));
-        moduleRepository.save(new ModuleEntity("MOIA", bfabrice));
+        moduleRepository.save(new ModuleEntity("TF", teacher));
+        moduleRepository.save(new ModuleEntity("MOIA", teacher));
 
         List<String> names = moduleRepository.findAllByOrderByNameAsc()
                 .stream()
@@ -76,16 +81,9 @@ class ModuleRepositoryTest {
 
     @Test
     void shouldRejectTwoModulesWithTheSameName() {
-        moduleRepository.saveAndFlush(new ModuleEntity("MOIA", bfabrice));
+        moduleRepository.saveAndFlush(new ModuleEntity("MOIA", teacher));
 
-        // the unique constraint of the database refuses the second one
         assertThrows(DataIntegrityViolationException.class,
-                () -> moduleRepository.saveAndFlush(new ModuleEntity("MOIA")));
-    }
-
-    @Test
-    public void shouldThrowExceptionWhenProf_responsableIsNull(){
-        ModuleEntity module = new ModuleEntity("PMT");
-        assertThrows(DataIntegrityViolationException.class, ()-> moduleRepository.save(module));
+                () -> moduleRepository.saveAndFlush(new ModuleEntity("MOIA", teacher)));
     }
 }

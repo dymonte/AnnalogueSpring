@@ -191,7 +191,58 @@ class SecurityIntegrationTest {
                 )
                 .andExpect(status().isForbidden());
     }
-        // ===== TFAN26-117: module pages require authentication =====
+
+    // ===== Delete a member: admin only =====
+
+    @Test
+    void membersListShouldRequireAuthentication() throws Exception {
+
+        mockMvc.perform(get("/members"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void studentShouldNotBeAbleToDeleteMember() throws Exception {
+
+        mockMvc.perform(
+                        post("/members/1/delete")
+                                .with(user("student@example.com").roles("ETUDIANT"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(handleUserService, never()).deleteUser(any());
+    }
+
+    @Test
+    void professorShouldNotBeAbleToDeleteMember() throws Exception {
+
+        mockMvc.perform(
+                        post("/members/1/delete")
+                                .with(user("prof@example.com").roles("PROF"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(handleUserService, never()).deleteUser(any());
+    }
+
+    @Test
+    void adminShouldBeAbleToDeleteMember() throws Exception {
+
+        mockMvc.perform(
+                        post("/members/1/delete")
+                                .with(user("admin@example.com").roles("ADMIN"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"));
+
+        verify(handleUserService).deleteUser(1L);
+    }
+
+    // ===== TFAN26-117: module pages require authentication =====
 
     @Test
     void addModulePageShouldRequireAuthentication() throws Exception {
@@ -200,6 +251,7 @@ class SecurityIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
+
     @Test
     void modulesShouldRequireAuthentication() throws Exception {
 
