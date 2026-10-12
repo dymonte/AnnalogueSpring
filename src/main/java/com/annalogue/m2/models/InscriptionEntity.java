@@ -38,6 +38,10 @@ public class InscriptionEntity {
         this.module = module;
     }
 
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public Long getId() {
         return id;
     }

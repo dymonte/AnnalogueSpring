@@ -1,11 +1,14 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.models.InscriptionEntity;
+import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -14,10 +17,11 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    private final InscriptionService inscriptionService;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, InscriptionService inscriptionService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.inscriptionService = inscriptionService;
     }
 
     public Optional<UserEntity> findByEmail(String email) {
@@ -65,4 +69,23 @@ public class UserService implements IUserService {
         // the database refuses it here, where HandleUserService can catch it
         userRepository.flush();
     }
+
+    public List<InscriptionEntity> findInscriptions(
+            UserEntity currentUser) {
+
+        List<InscriptionEntity> inscriptions = new ArrayList<>();
+
+        List<ModuleEntity> responsibleModules =
+                currentUser.getResponsibleModules();
+
+        for (ModuleEntity module : responsibleModules) {
+
+            inscriptions.addAll(
+                    inscriptionService.findByModuleId(module.getId())
+            );
+        }
+
+        return inscriptions;
+    }
+
 }

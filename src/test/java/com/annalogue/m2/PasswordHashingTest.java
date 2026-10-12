@@ -2,6 +2,7 @@ package com.annalogue.m2;
 
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
+import com.annalogue.m2.services.InscriptionService;
 import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,12 +21,15 @@ class PasswordHashingTest {
         @Mock
         UserRepository userRepository;
 
+        @Mock
+        InscriptionService inscriptionService;
+
         @Test
         void passwordHashingTest() {
 
                 PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-                UserService userService = new UserService(userRepository, passwordEncoder);
+                UserService userService = new UserService(userRepository, passwordEncoder,inscriptionService);
 
                 UserEntity user = new UserEntity();
 

@@ -20,6 +20,10 @@ class UserServiceFindByRoleTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private InscriptionService inscriptionService;
+
+
     @InjectMocks
     private UserService userService;
 

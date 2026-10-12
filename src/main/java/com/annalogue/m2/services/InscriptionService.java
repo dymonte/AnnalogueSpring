@@ -62,7 +62,9 @@ public class InscriptionService {
         return inscriptionRepository.findByEditeurTrue();
     }
 
+    public void deleteById(Long id){inscriptionRepository.deleteById(id); }
 
+    public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
     @Transactional
     public InscriptionEntity save(
             UserEntity currentUser,
