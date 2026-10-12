@@ -107,8 +107,8 @@ public class InscriptionService {
                         )
                 );
 
-        if (module.getResponsable() == null
-                || !module.getResponsable().getId()
+        if (module.getResponsible() == null
+                || !module.getResponsible().getId()
                 .equals(currentUser.getId())) {
             throw new ModuleNotManagedException(
                     "error.inscription.module.not.managed"
