@@ -92,7 +92,7 @@ public class PublicationController {
 			redirectAttributes.addFlashAttribute("name", name);
 			redirectAttributes.addFlashAttribute("description", description);
 			redirectAttributes.addFlashAttribute("moduleId", moduleId);
-			redirectAttributes.addFlashAttribute("selectedFileType", fileType.name());
+			redirectAttributes.addFlashAttribute("fileType", fileType.name());
 			return "redirect:/upload";
 		}
 
