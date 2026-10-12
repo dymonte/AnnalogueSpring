@@ -96,10 +96,7 @@ class InscriptionRepositoryTest {
             String name,
             UserEntity professeur
     ) {
-        ModuleEntity module = new ModuleEntity(name);
-        module.setProf_responsable(professeur);
-
-        return moduleRepository.save(module);
+        return moduleRepository.save(new ModuleEntity(name, professeur));
     }
 
     private InscriptionEntity saveInscription(

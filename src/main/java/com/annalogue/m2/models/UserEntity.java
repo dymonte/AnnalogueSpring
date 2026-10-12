@@ -2,6 +2,7 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -21,9 +22,12 @@ public class UserEntity {
     @Column(name = "username", length = 100)
     private String username;
 
-    @Enumerated(EnumType.STRING)
+
+    @Convert(converter = RoleConverter.class)
     @Column(name = "role", nullable = false)
     private Role role;
+
+
 
     @Column(name = "year_level")
     private Integer year;
@@ -36,8 +40,9 @@ public class UserEntity {
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    @OneToMany(mappedBy = "prof_responsable")
-    private List<ModuleEntity> modulesResponsable;
+    @OneToMany(mappedBy = "responsible")
+    private List<ModuleEntity> responsibleModules;
+
 
     // JPA constructor
     public UserEntity() {
@@ -51,10 +56,15 @@ public class UserEntity {
         this.role = role;
         this.year = year;
         this.groupName = groupName;
+        this.responsibleModules = new ArrayList<>();
     }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -111,5 +121,13 @@ public class UserEntity {
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    public List<ModuleEntity> getResponsibleModules() {
+        return responsibleModules;
+    }
+
+    public void setResponsibleModules(List<ModuleEntity> responsibleModules) {
+        this.responsibleModules = responsibleModules;
     }
 }
