@@ -106,8 +106,8 @@ class InscriptionControllerTest {
         rx = new ModuleEntity("RX", achevlot);
         rx.setId(12L);
 
-        achevlot.setResponsableModules(List.of(rx));
-        fbouquet.setResponsableModules(List.of(tf, java));
+        achevlot.setResponsibleModules(List.of(rx));
+        fbouquet.setResponsibleModules(List.of(tf, java));
     }
 
     // GET requests

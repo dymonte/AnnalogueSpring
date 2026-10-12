@@ -64,7 +64,7 @@ class ModuleServiceTest {
         verify(moduleRepository).save(captor.capture());
 
         assertEquals("MOIA", captor.getValue().getName());
-        assertEquals(teacher, captor.getValue().getResponsable());
+        assertEquals(teacher, captor.getValue().getResponsible());
         assertEquals("MOIA", created.getName());
     }
 

@@ -14,15 +14,15 @@ public class ModuleEntity {
     private String name;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "responsable_id", nullable = false)
-    private UserEntity responsable;
+    @JoinColumn(name = "responsible_id", nullable = false)
+    private UserEntity responsible;
 
     public ModuleEntity() {
     }
 
     public ModuleEntity(String name, UserEntity responsable) {
         this.name = name;
-        this.responsable =responsable;
+        this.responsible =responsable;
     }
 
 
@@ -42,11 +42,11 @@ public class ModuleEntity {
         this.name = name;
     }
 
-    public UserEntity getResponsable() {
-        return responsable;
+    public UserEntity getResponsible() {
+        return responsible;
     }
 
-    public void setResponsable(UserEntity responsable) {
-        this.responsable = responsable;
+    public void setResponsible(UserEntity responsible) {
+        this.responsible = responsible;
     }
 }
