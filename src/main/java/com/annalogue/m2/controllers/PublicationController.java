@@ -55,11 +55,7 @@ public class PublicationController {
 	}
 
 	@GetMapping("/upload")
-	public String showFileUploadForm(Authentication authentication, Model model, @RequestParam(required = false) String error,
-									  @RequestParam(required = false) String name,
-									  @RequestParam(required = false) String description,
-									  @RequestParam(required = false) Long moduleId,
-									  @RequestParam(required = false) String fileType) {
+	public String showFileUploadForm(Authentication authentication, Model model) {
 
 		model.addAttribute("login", authentication != null ? authentication.getName() : "");
 		model.addAttribute("isAdmin",
@@ -75,21 +71,6 @@ public class PublicationController {
 
 		model.addAttribute("fileType", FileType.values());
 		model.addAttribute("modules", moduleService.findAll());
-		if (error != null) {
-			model.addAttribute("error", error);
-		}
-		if (name != null) {
-			model.addAttribute("name", name);
-		}
-		if (description != null) {
-			model.addAttribute("description", description);
-		}
-		if (moduleId != null) {
-			model.addAttribute("moduleId", moduleId);
-		}
-		if (fileType != null) {
-			model.addAttribute("selectedFileType", fileType);
-		}
 		return "modules/upload_file";
 	}
 
@@ -104,27 +85,18 @@ public class PublicationController {
 
 		String authorEmail = authentication.getName();
 
-		if (file.getSize() > 10 * 1024 * 1024) {
-			redirectAttributes.addAttribute("error", "Le fichier dépasse la taille maximale autorisée de 10MB.");
-			redirectAttributes.addAttribute("name", name);
-			redirectAttributes.addAttribute("description", description);
-			redirectAttributes.addAttribute("moduleId", moduleId);
-			redirectAttributes.addAttribute("fileType", fileType.name());
-			return "redirect:/upload";
-		}
-
 		try {
 			publicationService.saveMultipartFile(file, name, description, moduleId, authorEmail, fileType);
 		} catch (UploadFileException e) {
-			redirectAttributes.addAttribute("error", e.getMessage());
-			redirectAttributes.addAttribute("name", name);
-			redirectAttributes.addAttribute("description", description);
-			redirectAttributes.addAttribute("moduleId", moduleId);
-			redirectAttributes.addAttribute("fileType", fileType.name());
+			redirectAttributes.addFlashAttribute("error", e.getMessage());
+			redirectAttributes.addFlashAttribute("name", name);
+			redirectAttributes.addFlashAttribute("description", description);
+			redirectAttributes.addFlashAttribute("moduleId", moduleId);
+			redirectAttributes.addFlashAttribute("selectedFileType", fileType.name());
 			return "redirect:/upload";
 		}
 
-		redirectAttributes.addFlashAttribute("success", "Le fichier a été téléchargé avec succès.");
+		redirectAttributes.addFlashAttribute("success", "success.upload.file");
 		return "redirect:/upload";
 	}
 
