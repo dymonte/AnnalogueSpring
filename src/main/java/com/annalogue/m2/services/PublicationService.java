@@ -36,6 +36,9 @@ public class PublicationService implements IPublicationService {
 	@Autowired
 	private IModuleService moduleService;
 
+    @Autowired
+    private IInscriptionService inscriptionService;
+
 	@Value("${app.upload.dir}")
 	private String uploadDir;
 
@@ -90,7 +93,7 @@ public class PublicationService implements IPublicationService {
 
 		ModuleEntity module = moduleService.findById(moduleId).orElseThrow(() -> new UploadFileException("error.upload.module.notfound"));
 
-		if(!canUpload(module, author))
+		if(!canUpload(author, module))
 			throw new UploadFileException("error.upload.forbidden");
 
 		File fullPath = getFullPath(file);
@@ -137,7 +140,7 @@ public class PublicationService implements IPublicationService {
 		return fullPath;
 	}
 
-	private boolean canUpload(ModuleEntity module, UserEntity user) {
-		return true; // TODO check with relations
+	private boolean canUpload(UserEntity user, ModuleEntity module) {
+		return inscriptionService.hasWriterAccess(user, module);
 	}
 }

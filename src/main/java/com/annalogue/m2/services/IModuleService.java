@@ -16,4 +16,6 @@ public interface IModuleService {
     public Optional<ModuleEntity> findById(Long id);
 
     public boolean existsByName(String name);
+
+    public void deleteAll();
 }

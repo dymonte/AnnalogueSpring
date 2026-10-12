@@ -39,6 +39,9 @@ public class PublicationServiceTest {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
+	@Mock
+	private IInscriptionService inscriptionService;
+
 	@InjectMocks
 	private PublicationService publicationService;
 	private AutoCloseable mocks;
@@ -92,6 +95,8 @@ public class PublicationServiceTest {
 		Mockito.when(userService.findByEmail(Mockito.anyString())).thenReturn(Optional.of(userEntity));
 
 		Mockito.when(passwordEncoder.encode(Mockito.anyString())).thenReturn("encodedPassword");
+
+		Mockito.when(inscriptionService.hasWriterAccess(Mockito.any(), Mockito.any())).thenReturn(true);
 
 		publicationService.saveMultipartFile(multipartFile, "testFile", "testDescription", 1L, "test@test.com", FileType.CM);
 
@@ -160,6 +165,8 @@ public class PublicationServiceTest {
 		Mockito.when(userService.findByEmail(Mockito.anyString())).thenReturn(Optional.of(userEntity));
 
 		Mockito.when(passwordEncoder.encode(Mockito.anyString())).thenReturn("encodedPassword");
+
+		Mockito.when(inscriptionService.hasWriterAccess(Mockito.any(), Mockito.any())).thenReturn(true);
 
 		publicationService.saveMultipartFile(multipartFile, "testFile", "testDescription", 1L, "test@test.com", FileType.CM);
 

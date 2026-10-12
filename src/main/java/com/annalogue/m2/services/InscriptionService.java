@@ -1,10 +1,7 @@
 
 package com.annalogue.m2.services;
 
-import com.annalogue.m2.exceptions.EmailNotFoundException;
-import com.annalogue.m2.exceptions.ModuleNotFoundException;
-import com.annalogue.m2.exceptions.ModuleNotManagedException;
-import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
+import com.annalogue.m2.exceptions.*;
 import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.InscriptionType;
 import com.annalogue.m2.models.ModuleEntity;
@@ -12,6 +9,7 @@ import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
+import com.annalogue.m2.repositories.PublicationRepository;
 import com.annalogue.m2.repositories.UserRepository;
 
 import org.springframework.stereotype.Service;
@@ -22,20 +20,24 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
-public class InscriptionService {
+public class InscriptionService implements IInscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
     private final UserRepository userRepository;
+    private final PublicationRepository publicationRepository;
+
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     public InscriptionService(
             InscriptionRepository inscriptionRepository,
             ModuleRepository moduleRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            PublicationRepository publicationRepository) {
         this.inscriptionRepository = inscriptionRepository;
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
+        this.publicationRepository = publicationRepository;
     }
 
     public Optional<InscriptionEntity> findById(Long id) {
@@ -148,5 +150,24 @@ public class InscriptionService {
         inscription.setInscriptionType(inscriptionType);
 
         return inscriptionRepository.save(inscription);
+    }
+
+    public boolean canAccessFile(String email, Long fileId) throws UserNotFoundException, StorageFileNotFoundException {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        ModuleEntity module =  publicationRepository.findById(fileId).orElseThrow(StorageFileNotFoundException::new).getModule();
+
+        return hasReaderAccess(user, module);
+    }
+
+    public boolean hasWriterAccess(UserEntity user, ModuleEntity module) {
+        InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
+
+        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditeur());
+    }
+
+    public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
+        InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
+        return user.getRole() == Role.ADMIN || inscription != null; // all inscription are at least reader
     }
 }
