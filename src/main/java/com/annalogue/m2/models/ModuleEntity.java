@@ -22,11 +22,16 @@ public class ModuleEntity {
 
     public ModuleEntity(String name, UserEntity responsible) {
         this.name = name;
-        this.responsible = responsible;
+        this.responsible =responsible;
     }
+
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
