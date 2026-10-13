@@ -2,6 +2,7 @@ package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
@@ -86,5 +87,18 @@ public class ModuleService implements IModuleService {
     @Override
     public void deleteAll() {
         moduleRepository.deleteAll();
+    }
+
+    @Override
+    public List<PublicationEntity> findAllPublicationsFromModule(ModuleEntity module) {
+
+        return module.getPublications();
+    }
+
+    @Override
+    public List<PublicationEntity> findAllPublicationsFromModule(long id) {
+        return moduleRepository.findById(id)
+                .map(ModuleEntity::getPublications)
+                .orElse(List.of());
     }
 }

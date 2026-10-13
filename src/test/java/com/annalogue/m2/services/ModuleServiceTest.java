@@ -1,7 +1,9 @@
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
+import com.annalogue.m2.models.FileType;
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
@@ -141,5 +143,51 @@ class ModuleServiceTest {
 
         assertTrue(moduleService.existsByName(" MOIA "));
         assertFalse(moduleService.existsByName(null));
+    }
+
+    @Test
+    void shouldReturnPublicationsFromModule() {
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
+        PublicationEntity pub1 = new PublicationEntity("Pub1", "Desc1", FileType.CM, module, teacher, "/path1");
+        PublicationEntity pub2 = new PublicationEntity("Pub2", "Desc2", FileType.TD, module, teacher, "/path2");
+        module.setPublications(List.of(pub1, pub2));
+
+        List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(module);
+
+        assertEquals(2, publications.size());
+        assertEquals(pub1, publications.get(0));
+        assertEquals(pub2, publications.get(1));
+    }
+
+    @Test
+    void shouldReturnSameValuesPublicationsFromModule() {
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
+        PublicationEntity pub1 = new PublicationEntity("Pub1", "Desc1", FileType.CM, module, teacher, "/path1");
+        PublicationEntity pub2 = new PublicationEntity("Pub2", "Desc2", FileType.TD, module, teacher, "/path2");
+        module.setPublications(List.of(pub1, pub2));
+
+        when(moduleRepository.findById(1L)).thenReturn(Optional.of(module));
+
+        List<PublicationEntity> publications1 = moduleService.findAllPublicationsFromModule(module);
+        List<PublicationEntity> publications2 = moduleService.findAllPublicationsFromModule(1L);
+
+        assertEquals(publications1, publications2);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenModuleHasNoPublications() {
+        ModuleEntity module = new ModuleEntity("MOIA", teacher);
+        module.setPublications(List.of());
+
+        List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(module);
+
+        assertTrue(publications.isEmpty());
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenFindingPublicationsById() {
+        List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(1L);
+
+        assertTrue(publications.isEmpty());
     }
 }
