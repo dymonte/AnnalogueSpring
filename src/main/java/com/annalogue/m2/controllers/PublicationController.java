@@ -68,7 +68,6 @@ public class PublicationController {
 					userEntity -> model.addAttribute("username", userEntity.getUsername()));
 		}
 
-
 		model.addAttribute("fileType", FileType.values());
 		model.addAttribute("modules", moduleService.findAll());
 		return "modules/upload_file";
