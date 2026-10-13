@@ -18,4 +18,5 @@ public interface IUserService {
     public List<UserEntity> findAll();
     public Optional<UserEntity> findById(Long id);
     public void delete(UserEntity user);
+    public UserEntity getCurrentUser();
 }

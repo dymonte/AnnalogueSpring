@@ -2,6 +2,9 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "modules")
 public class ModuleEntity {
@@ -17,14 +20,17 @@ public class ModuleEntity {
     @JoinColumn(name = "responsible_id", nullable = false)
     private UserEntity responsible;
 
+    @OneToMany(mappedBy = "module")
+    private List<PublicationEntity> publications;
+
     public ModuleEntity() {
     }
 
     public ModuleEntity(String name, UserEntity responsible) {
         this.name = name;
         this.responsible =responsible;
+        this.publications = new ArrayList<>();
     }
-
 
     public Long getId() {
         return id;
