@@ -26,8 +26,8 @@ public class SecurityConfig {
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/members/**").hasRole("ADMIN")
                         .requestMatchers("/module-enrollments/new").hasRole("PROF")
-                        .requestMatchers("/module-enrollments").hasRole("PROF")
-                        .requestMatchers("/module-enrollments/{id}/delete").hasRole("PROF")
+                        .requestMatchers("/module-enrollments").hasAnyRole("PROF", "ADMIN")
+                        .requestMatchers("/module-enrollments/{id}/delete").hasAnyRole("PROF", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
