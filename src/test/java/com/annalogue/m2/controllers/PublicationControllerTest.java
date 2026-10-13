@@ -43,106 +43,108 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class PublicationControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+	@Autowired
+	private MockMvc mockMvc;
 
-    @MockitoBean
-    private IPublicationService publicationService;
+	@MockitoBean
+	private IPublicationService publicationService;
 
-    @MockitoBean
-    private IModuleService moduleService;
+	@MockitoBean
+	private IModuleService moduleService;
 
-    @MockitoBean
-    private IUserService userService;
+	@MockitoBean
+	private IUserService userService;
 
-    @MockitoBean
-    private CustomUserDetailsService customUserDetailsService;
+	@MockitoBean
+	private CustomUserDetailsService customUserDetailsService;
 
-    @Test
-    void shouldShowUploadPageForAdmin() throws Exception {
-        ModuleEntity module = new ModuleEntity("MOIA");
-        when(moduleService.findAll()).thenReturn(List.of(module));
-        when(userService.findByEmail("admin@example.com")).thenReturn(Optional.of(
-                new UserEntity("admin@example.com", "hash", "alice", Role.ADMIN, null, null)
-        ));
+	@Test
+	void shouldShowUploadPageForAdmin() throws Exception {
 
-        mockMvc.perform(get("/upload").with(user("admin@example.com").roles("ADMIN")))
-                .andExpect(status().isOk())
-                .andExpect(view().name("modules/upload_file"))
-                .andExpect(model().attributeExists("login"))
-                .andExpect(model().attributeExists("isAdmin"))
-                .andExpect(model().attributeExists("username"))
-                .andExpect(model().attributeExists("fileType"))
-                .andExpect(model().attributeExists("modules"));
-    }
+		UserEntity user = new UserEntity("admin@example.com", "hash", "admin", Role.ADMIN, null, "");
+		ModuleEntity module = new ModuleEntity("MOIA", user);
+		when(moduleService.findAll()).thenReturn(List.of(module));
+		when(userService.findByEmail("admin@example.com")).thenReturn(Optional.of(
+				new UserEntity("admin@example.com", "hash", "alice", Role.ADMIN, null, null)
+		));
 
-    @Test
-    void shouldUploadFileAndRedirectWithSuccess() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "document.pdf",
-                "application/pdf",
-                "content".getBytes(StandardCharsets.UTF_8)
-        );
+		mockMvc.perform(get("/upload").with(user("admin@example.com").roles("ADMIN")))
+				.andExpect(status().isOk())
+				.andExpect(view().name("modules/upload_file"))
+				.andExpect(model().attributeExists("login"))
+				.andExpect(model().attributeExists("isAdmin"))
+				.andExpect(model().attributeExists("username"))
+				.andExpect(model().attributeExists("fileType"))
+				.andExpect(model().attributeExists("modules"));
+	}
 
-        mockMvc.perform(multipart("/files")
-                        .file(file)
-                        .param("name", "My file")
-                        .param("description", "A PDF")
-                        .param("moduleId", "1")
-                        .param("fileType", FileType.CM.name())
-                        .with(user("admin@example.com").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/upload"))
-                .andExpect(flash().attribute("success", "success.upload.file"));
+	@Test
+	void shouldUploadFileAndRedirectWithSuccess() throws Exception {
+		MockMultipartFile file = new MockMultipartFile(
+				"file",
+				"document.pdf",
+				"application/pdf",
+				"content".getBytes(StandardCharsets.UTF_8)
+		);
 
-        verify(publicationService).saveMultipartFile(
-                any(),
-                eq("My file"),
-                eq("A PDF"),
-                eq(1L),
-                eq("admin@example.com"),
-                eq(FileType.CM)
-        );
-    }
+		mockMvc.perform(multipart("/files")
+						.file(file)
+						.param("name", "My file")
+						.param("description", "A PDF")
+						.param("moduleId", "1")
+						.param("fileType", FileType.CM.name())
+						.with(user("admin@example.com").roles("ADMIN"))
+						.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/upload"))
+				.andExpect(flash().attribute("success", "success.upload.file"));
 
-    @Test
-    void shouldRedirectBackWithErrorWhenUploadFails() throws Exception {
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "document.pdf",
-                "application/pdf",
-                "content".getBytes(StandardCharsets.UTF_8)
-        );
+		verify(publicationService).saveMultipartFile(
+				any(),
+				eq("My file"),
+				eq("A PDF"),
+				eq(1L),
+				eq("admin@example.com"),
+				eq(FileType.CM)
+		);
+	}
 
-        doThrow(new UploadFileException("error.upload.failed"))
-                .when(publicationService)
-                .saveMultipartFile(any(), eq("My file"), eq("A PDF"), eq(1L), eq("admin@example.com"), eq(FileType.CM));
+	@Test
+	void shouldRedirectBackWithErrorWhenUploadFails() throws Exception {
+		MockMultipartFile file = new MockMultipartFile(
+				"file",
+				"document.pdf",
+				"application/pdf",
+				"content".getBytes(StandardCharsets.UTF_8)
+		);
 
-        mockMvc.perform(multipart("/files")
-                        .file(file)
-                        .param("name", "My file")
-                        .param("description", "A PDF")
-                        .param("moduleId", "1")
-                        .param("fileType", FileType.CM.name())
-                        .with(user("admin@example.com").roles("ADMIN"))
-                        .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/upload"))
-                .andExpect(flash().attribute("error", "error.upload.failed"))
-                .andExpect(flash().attribute("name", "My file"))
-                .andExpect(flash().attribute("description", "A PDF"))
-                .andExpect(flash().attribute("moduleId", 1L))
-                .andExpect(flash().attribute("fileType", FileType.CM.name()));
-    }
+		doThrow(new UploadFileException("error.upload.failed"))
+				.when(publicationService)
+				.saveMultipartFile(any(), eq("My file"), eq("A PDF"), eq(1L), eq("admin@example.com"), eq(FileType.CM));
 
-    @Test
-    void shouldReturnNotFoundWhenRequestedFileDoesNotExist() throws Exception {
-        when(publicationService.loadAsResource(99L))
-                .thenThrow(new StorageFileNotFoundException());
+		mockMvc.perform(multipart("/files")
+						.file(file)
+						.param("name", "My file")
+						.param("description", "A PDF")
+						.param("moduleId", "1")
+						.param("fileType", FileType.CM.name())
+						.with(user("admin@example.com").roles("ADMIN"))
+						.with(csrf()))
+				.andExpect(status().is3xxRedirection())
+				.andExpect(redirectedUrl("/upload"))
+				.andExpect(flash().attribute("error", "error.upload.failed"))
+				.andExpect(flash().attribute("name", "My file"))
+				.andExpect(flash().attribute("description", "A PDF"))
+				.andExpect(flash().attribute("moduleId", 1L))
+				.andExpect(flash().attribute("fileType", FileType.CM.name()));
+	}
 
-        mockMvc.perform(get("/files/99").with(user("admin@example.com").roles("ADMIN")))
-                .andExpect(status().isNotFound());
-    }
+	@Test
+	void shouldReturnNotFoundWhenRequestedFileDoesNotExist() throws Exception {
+		when(publicationService.loadAsResource(99L))
+				.thenThrow(new StorageFileNotFoundException());
+
+		mockMvc.perform(get("/files/99").with(user("admin@example.com").roles("ADMIN")))
+				.andExpect(status().isNotFound());
+	}
 }

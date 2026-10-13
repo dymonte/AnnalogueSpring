@@ -5,9 +5,8 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.Authentication;
-
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,20 +45,16 @@ public class ModuleService implements IModuleService {
         }
 
         UserEntity currentUser = getCurrentUser();
-        ModuleEntity newModule = moduleRepository.save(new ModuleEntity(moduleName));
 
-        newModule.setProf_responsable(currentUser);
-
-        return newModule;
+        return moduleRepository.save(new ModuleEntity(moduleName, currentUser));
     }
 
     private String getCurrentUserEmail() {
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication == null ||
-            !authentication.isAuthenticated() ||
-                Objects.equals(authentication.getPrincipal(), "anonymousUser")) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || Objects.equals(authentication.getPrincipal(), "anonymousUser")) {
             throw new IllegalStateException("No users logged in");
         }
 
@@ -70,13 +65,8 @@ public class ModuleService implements IModuleService {
         String email = getCurrentUserEmail();
 
         return userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new IllegalStateException(
-                                "Logged-in user not found"
-                        )
-                );
+                .orElseThrow(() -> new IllegalStateException("Logged-in user not found"));
     }
-
 
     @Override
     public List<ModuleEntity> findAll() {

@@ -17,6 +17,7 @@ The admin has already verified that the student's email address is active.
 -->
 
 <body class="bg-light">
+    <div th:insert="~{navbar.html}"></div>
 
     <div class="container py-5">
         <div class="card shadow-sm mx-auto" style="max-width: 700px;">
@@ -78,8 +79,8 @@ The admin has already verified that the student's email address is active.
                             <option value="" disabled th:selected="${selectedRole == null}"
                                 th:text="#{member.role.select}">Select a role</option>
 
-                            <option th:each="role : ${roles}" th:value="${role.name()}" th:text="#{${'role.' + role.name()}}"
-                                th:selected="${role.name() == selectedRole}">
+                            <option th:each="role : ${roles}" th:value="${role.name()}"
+                                th:text="#{${'role.' + role.name()}}" th:selected="${role.name() == selectedRole}">
                             </option>
 
                         </select>

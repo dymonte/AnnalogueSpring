@@ -9,10 +9,13 @@ import java.util.Optional;
 public interface IUserService {
 
     public Optional<UserEntity> findByEmail(String email);
-    public Optional<UserEntity> findByUsername(String username);
+    public List<UserEntity> findByUsername(String username);
     public boolean existsByEmail(String email);
     public UserEntity save(UserEntity user);
     public List<UserEntity> findByRole(Role role);
     public void deleteAll();
     public boolean existsByUsername(String username);
+    public List<UserEntity> findAll();
+    public Optional<UserEntity> findById(Long id);
+    public void delete(UserEntity user);
 }
