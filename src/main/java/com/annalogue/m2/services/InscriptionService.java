@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class InscriptionService implements IInscriptionService {
@@ -169,5 +170,16 @@ public class InscriptionService implements IInscriptionService {
     public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
         InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
         return user.getRole() == Role.ADMIN || inscription != null; // all inscription are at least reader
+    }
+
+    public List<ModuleEntity> getAllModulesEditable(UserEntity user) {
+        if (user.getRole() == Role.ADMIN) {
+            return moduleRepository.findAll();
+        }
+
+        return inscriptionRepository.findByUserAndModule(user, null).stream()
+                .filter(InscriptionEntity::isEditeur)
+                .map(InscriptionEntity::getModule)
+                .collect(Collectors.toList());
     }
 }

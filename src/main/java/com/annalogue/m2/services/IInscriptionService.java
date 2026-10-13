@@ -29,4 +29,6 @@ public interface IInscriptionService {
     public boolean hasWriterAccess(UserEntity user, ModuleEntity module);
 
     public boolean hasReaderAccess(UserEntity user, ModuleEntity module);
+
+    public List<ModuleEntity> getAllModulesEditable(UserEntity user);
 }

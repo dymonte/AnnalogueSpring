@@ -10,6 +10,7 @@ import com.annalogue.m2.repositories.PublicationRepository;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class PublicationService implements IPublicationService {
 	private IModuleService moduleService;
 
     @Autowired
+    @Lazy
     private IInscriptionService inscriptionService;
 
 	@Value("${app.upload.dir}")
