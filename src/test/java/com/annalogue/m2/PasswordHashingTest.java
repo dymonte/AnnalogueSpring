@@ -21,15 +21,12 @@ class PasswordHashingTest {
         @Mock
         UserRepository userRepository;
 
-        @Mock
-        InscriptionService inscriptionService;
-
         @Test
         void passwordHashingTest() {
 
                 PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-                UserService userService = new UserService(userRepository, passwordEncoder,inscriptionService);
+                UserService userService = new UserService(userRepository, passwordEncoder);
 
                 UserEntity user = new UserEntity();
 

@@ -155,7 +155,7 @@ public class InscriptionController {
             RedirectAttributes redirectAttributes) {
         try {
             UserEntity currentUser = getCurrentUser();
-            boolean isManagedEnrollment = userService
+            boolean isManagedEnrollment = inscriptionService
                     .findInscriptions(currentUser)
                     .stream()
                     .anyMatch(inscription -> inscription.getId().equals(id));
@@ -189,7 +189,7 @@ public class InscriptionController {
         UserEntity currentUser = getCurrentUser();
 
         List<InscriptionEntity> inscriptions =
-                userService.findInscriptions(currentUser);
+                inscriptionService.findInscriptions(currentUser);
 
         model.addAttribute("inscriptions", inscriptions);
 

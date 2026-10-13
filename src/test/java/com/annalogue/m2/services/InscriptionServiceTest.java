@@ -42,11 +42,15 @@ class InscriptionServiceTest {
     private UserEntity fmaiou;
     private UserEntity achevlot;
     private UserEntity fbouquet;
-    private ModuleEntity tf;
 
+    private ModuleEntity tf;
+    private ModuleEntity java;
+    private ModuleEntity rx;
+    private InscriptionEntity tf_fmaiou;
+    private InscriptionEntity tf_achevlot;
+    private InscriptionEntity rx_fmaiou;
     @BeforeEach
     void setUp() {
-
         fmaiou = new UserEntity(
                 "fmaiou@ufr.com",
                 "fake-hash",
@@ -79,6 +83,19 @@ class InscriptionServiceTest {
 
         tf = new ModuleEntity("TF", fbouquet);
         tf.setId(10L);
+
+        java = new ModuleEntity("Java", fbouquet);
+        java.setId(11L);
+
+        rx = new ModuleEntity("RX", achevlot);
+        rx.setId(12L);
+
+        achevlot.setResponsibleModules(List.of(rx));
+        fbouquet.setResponsibleModules(List.of(tf, java));
+
+        tf_fmaiou = new InscriptionEntity(InscriptionType.ETUDIANT, fmaiou, tf);tf_fmaiou.setId(1L);
+        tf_achevlot = new InscriptionEntity(InscriptionType.INTERVENANT, achevlot, tf);tf_achevlot.setId(2L);
+        rx_fmaiou = new InscriptionEntity(InscriptionType.ETUDIANT, fmaiou, rx);rx_fmaiou.setId(3L);
     }
 
     @Test
@@ -331,5 +348,36 @@ class InscriptionServiceTest {
 
         verifyNoInteractions(userRepository, moduleRepository, inscriptionRepository);
     }
+
+    @Test
+    void shouldFindInscriptionsModulesByUserEntity(){
+        when(inscriptionService.findByModuleId(tf.getId())).thenReturn(
+                List.of(tf_fmaiou, tf_achevlot)
+        );
+        when(inscriptionService.findByModuleId(java.getId())).thenReturn(
+                List.of()
+        );
+
+        List<InscriptionEntity> inscrptions = inscriptionService.findInscriptions(fbouquet);
+        assertEquals(List.of(tf_fmaiou, tf_achevlot), inscrptions);
+        assertEquals(2, inscrptions.size());
+        for (InscriptionEntity inscrption : inscrptions) {
+            assertEquals(fbouquet, inscrption.getModule().getResponsible());
+            assertNotEquals(rx.getName(),inscrption.getModule().getName());
+        }
+
+        assertFalse(inscrptions.contains(rx_fmaiou));
+        fbouquet.setResponsibleModules(List.of());
+        inscrptions = inscriptionService.findInscriptions(fbouquet);
+
+        assertTrue(inscrptions.isEmpty());
+
+
+
+    }
+
+
+
+
 
 }

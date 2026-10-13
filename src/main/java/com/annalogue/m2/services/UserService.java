@@ -17,11 +17,9 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final InscriptionService inscriptionService;
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, InscriptionService inscriptionService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.inscriptionService = inscriptionService;
     }
 
     public Optional<UserEntity> findByEmail(String email) {
@@ -70,22 +68,6 @@ public class UserService implements IUserService {
         userRepository.flush();
     }
 
-    public List<InscriptionEntity> findInscriptions(
-            UserEntity currentUser) {
 
-        List<InscriptionEntity> inscriptions = new ArrayList<>();
-
-        List<ModuleEntity> responsibleModules =
-                currentUser.getResponsibleModules();
-
-        for (ModuleEntity module : responsibleModules) {
-
-            inscriptions.addAll(
-                    inscriptionService.findByModuleId(module.getId())
-            );
-        }
-
-        return inscriptions;
-    }
 
 }

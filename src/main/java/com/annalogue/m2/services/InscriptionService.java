@@ -17,6 +17,7 @@ import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -65,6 +66,24 @@ public class InscriptionService {
     public void deleteById(Long id){inscriptionRepository.deleteById(id); }
 
     public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
+
+    public List<InscriptionEntity> findInscriptions(
+            UserEntity currentUser) {
+
+        List<InscriptionEntity> inscriptions = new ArrayList<>();
+
+        List<ModuleEntity> responsibleModules =
+                currentUser.getResponsibleModules();
+
+        for (ModuleEntity module : responsibleModules) {
+
+            inscriptions.addAll(
+                    this.findByModuleId(module.getId())
+            );
+        }
+
+        return inscriptions;
+    }
     @Transactional
     public InscriptionEntity save(
             UserEntity currentUser,

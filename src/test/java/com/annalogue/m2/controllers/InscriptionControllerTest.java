@@ -182,7 +182,7 @@ class InscriptionControllerTest {
     @Test
     void shouldReturnRegisterMembersViewPage() throws Exception {
         when(userService.findByEmail("fbouquet@ufr.com")).thenReturn(Optional.of(fbouquet));;
-        when(userService.findInscriptions(fbouquet)).thenReturn(List.of(tf_achevlot, tf_fmaiou));
+        when(inscriptionService.findInscriptions(fbouquet)).thenReturn(List.of(tf_achevlot, tf_fmaiou));
         mockMvc.perform(
                 get("/module-enrollments")
                         .with(user("fbouquet@ufr.com").roles("PROF"))
@@ -507,7 +507,7 @@ class InscriptionControllerTest {
         when(userService.findByEmail("fbouquet@ufr.com"))
                 .thenReturn(Optional.of(fbouquet));
 
-        when(userService.findInscriptions(fbouquet))
+        when(inscriptionService.findInscriptions(fbouquet))
                 .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
         Long id = tf_achevlot.getId();
@@ -558,7 +558,7 @@ class InscriptionControllerTest {
         when(userService.findByEmail("fbouquet@ufr.com"))
                 .thenReturn(Optional.of(fbouquet));
 
-        when(userService.findInscriptions(fbouquet))
+        when(inscriptionService.findInscriptions(fbouquet))
                 .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
         Long id = rx_fmaiou.getId();
@@ -585,7 +585,7 @@ class InscriptionControllerTest {
         when(userService.findByEmail("fbouquet@ufr.com"))
                 .thenReturn(Optional.of(fbouquet));
 
-        when(userService.findInscriptions(fbouquet))
+        when(inscriptionService.findInscriptions(fbouquet))
                 .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
         when(inscriptionService.existsById(5L)).thenReturn(false);
