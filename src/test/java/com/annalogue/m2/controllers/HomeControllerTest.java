@@ -48,4 +48,37 @@ class HomeControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
+
+    @Test
+    void userAuthenticatedAsStudentShouldNotShowTheButton() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("user1").roles("USER"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(view().name("home"))
+                .andExpect(model().attribute("canCreateModuleAndPublication", false));
+    }
+
+    @Test
+    void userAuthenticatedAsProfessorShouldShowTheButton() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("prof1").roles("PROF"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(view().name("home"))
+                .andExpect(model().attribute("canCreateModuleAndPublication", true));
+    }
+
+    @Test
+    void userAuthenticatedAsAdminShouldShowTheButton() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("prof1").roles("ADMIN"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(view().name("home"))
+                .andExpect(model().attribute("canCreateModuleAndPublication", true));
+    }
 }

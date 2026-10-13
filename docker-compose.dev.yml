@@ -28,6 +28,7 @@ services:
       - ./target/classes:/app/target/classes
       - ./pom.xml:/app/pom.xml
       - ./files:/app/files
+      - ./src/main/resources:/app/src/main/resources
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/annalogue
       SPRING_DATASOURCE_USERNAME: root
@@ -35,6 +36,8 @@ services:
       SPRING_DEVTOOLS_RESTART_POLL_INTERVAL: "1s"
       SPRING_DEVTOOLS_RESTART_QUIET_PERIOD: "500ms"
       SPRING_DEVTOOLS_LIVERELOAD_ENABLED: "true"
+      SPRING_THYMELAF_PREFIX: file:/app/src/main/resources/templates/
+      SPRING_WEB_RESOURCES_STATIC_LOCATIONS: file:/app/src/main/resources/static/
     depends_on:
       mysql:
         condition: service_healthy
