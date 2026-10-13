@@ -27,7 +27,7 @@ public class InscriptionEntity {
     @JoinColumn(name = "module_id", nullable = false)
     private ModuleEntity module;
 
-    private boolean editeur = false;
+    private boolean editor = false;
 
     public InscriptionEntity() {
     }
@@ -54,12 +54,12 @@ public class InscriptionEntity {
         this.inscriptionType = inscriptionType;
     }
 
-    public boolean isEditeur() {
-        return editeur;
+    public boolean isEditor() {
+        return editor;
     }
 
-    public void setEditeur(boolean editeur) {
-        this.editeur = editeur;
+    public void setEditor(boolean editor) {
+        this.editor = editor;
     }
 
 

@@ -84,19 +84,30 @@
 
                                 <td>
                                     <span class="badge"
-                                          th:classappend="${inscription.editeur}
+                                          th:classappend="${inscription.editor}
                                               ? ' bg-success' : ' bg-secondary'"
-                                          th:text="${inscription.editeur}
+                                          th:text="${inscription.editor}
                                               ? 'Yes' : 'No'">
                                         No
                                     </span>
                                 </td>
 
                                 <td>
-                                    <a class="btn btn-sm btn-warning"
-                                       th:href="@{/module-enrollments/{id}/edit(id=${inscription.id})}">
-                                        Edit
-                                    </a>
+                                    <form th:action="@{/module-enrollments/{id}/toggle-editor(id=${inscription.id})}"
+                                          method="post"
+                                          class="d-inline">
+
+                                        <button type="submit"
+                                                class="btn btn-sm"
+                                                th:classappend="${inscription.editor}
+                    ? ' btn-outline-secondary'
+                    : ' btn-success'"
+                                                th:text="${inscription.editor}
+                    ? 'Remove editor'
+                    : 'Make editor'">
+                                        </button>
+                                    </form>
+
 
                                     <form th:action="@{/module-enrollments/{id}/delete(id=${inscription.id})}"
                                           method="post"

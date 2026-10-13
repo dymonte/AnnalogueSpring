@@ -3,7 +3,6 @@ package com.annalogue.m2.controllers;
 import com.annalogue.m2.exceptions.*;
 import com.annalogue.m2.services.HandleUserService;
 import com.annalogue.m2.services.RoleService;
-import com.annalogue.m2.services.UserService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,14 +10,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.annalogue.m2.services.HandPasswordService;
 
 import org.springframework.mail.MailException;
 
-import java.util.Optional;
 
 import com.annalogue.m2.dto.UsernameCheckResponse;
 import com.annalogue.m2.models.StudyLevel;

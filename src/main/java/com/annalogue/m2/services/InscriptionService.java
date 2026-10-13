@@ -55,12 +55,12 @@ public class InscriptionService {
         return inscriptionRepository.findByUserId(id);
     }
 
-    public List<InscriptionEntity> findByEditeurFalse(){
-        return inscriptionRepository.findByEditeurFalse();
+    public List<InscriptionEntity> findByEditorFalse(){
+        return inscriptionRepository.findByEditorFalse();
     }
 
-    public List<InscriptionEntity> findByEditeurTrue(){
-        return inscriptionRepository.findByEditeurTrue();
+    public List<InscriptionEntity> findByEditorTrue(){
+        return inscriptionRepository.findByEditorTrue();
     }
 
     public void deleteById(Long id){inscriptionRepository.deleteById(id); }
@@ -83,6 +83,20 @@ public class InscriptionService {
         }
 
         return inscriptions;
+    }
+
+    @Transactional
+    public boolean toggleEditor(Long inscriptionId) {
+        InscriptionEntity inscription = inscriptionRepository
+                .findById(inscriptionId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "error.inscription.not.found"
+                        )
+                );
+
+        inscription.setEditor(!inscription.isEditor());
+        return inscription.isEditor();
     }
     @Transactional
     public InscriptionEntity save(
