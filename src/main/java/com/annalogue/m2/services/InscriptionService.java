@@ -23,7 +23,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
-public class InscriptionService {
+public class InscriptionService implements IInscriptionService{
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
@@ -38,19 +38,19 @@ public class InscriptionService {
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
     }
-
+    @Override
     public Optional<InscriptionEntity> findById(Long id) {
         return inscriptionRepository.findById(id);
     }
-
+    @Override
     public List<InscriptionEntity> findAll() {
         return inscriptionRepository.findAll();
     }
-
+    @Override
     public List<InscriptionEntity>  findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
-
+    @Override
     public List<InscriptionEntity>   findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
@@ -62,13 +62,12 @@ public class InscriptionService {
     public List<InscriptionEntity> findByEditorTrue(){
         return inscriptionRepository.findByEditorTrue();
     }
-
+    @Override
     public void deleteById(Long id){inscriptionRepository.deleteById(id); }
-
+    @Override
     public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
-
-    public List<InscriptionEntity> findInscriptions(
-            UserEntity currentUser) {
+    @Override
+    public List<InscriptionEntity> findInscriptions(UserEntity currentUser) {
 
         List<InscriptionEntity> inscriptions = new ArrayList<>();
 
@@ -84,7 +83,7 @@ public class InscriptionService {
 
         return inscriptions;
     }
-
+    @Override
     @Transactional
     public boolean toggleEditor(Long inscriptionId) {
         InscriptionEntity inscription = inscriptionRepository
@@ -98,11 +97,9 @@ public class InscriptionService {
         inscription.setEditor(!inscription.isEditor());
         return inscription.isEditor();
     }
+    @Override
     @Transactional
-    public InscriptionEntity save(
-            UserEntity currentUser,
-            String userEmail,
-            Long moduleId) {
+    public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId) {
 
         if (currentUser == null) {
             throw new IllegalArgumentException(

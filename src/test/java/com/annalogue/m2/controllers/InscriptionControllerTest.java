@@ -6,10 +6,7 @@ import com.annalogue.m2.exceptions.ModuleNotManagedException;
 import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
 import com.annalogue.m2.ldap.SecurityConfig;
 import com.annalogue.m2.models.*;
-import com.annalogue.m2.services.CustomUserDetailsService;
-import com.annalogue.m2.services.InscriptionService;
-import com.annalogue.m2.services.NotifyService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +47,7 @@ class InscriptionControllerTest {
     private CustomUserDetailsService customUserDetailsService;
 
     @MockitoBean
-    private InscriptionService inscriptionService;
+    private IInscriptionService inscriptionService;
 
     @MockitoBean
     private NotifyService notifyService;
