@@ -75,7 +75,6 @@ public class PublicationController {
                     });
 		}
 
-
 		model.addAttribute("fileType", FileType.values());
 		return "modules/upload_file";
 	}
