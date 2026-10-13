@@ -27,6 +27,7 @@ services:
     volumes:
       - ./target/classes:/app/target/classes
       - ./pom.xml:/app/pom.xml
+      - ./files:/app/files
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/annalogue
       SPRING_DATASOURCE_USERNAME: root
