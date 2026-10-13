@@ -36,20 +36,14 @@ class ModuleServiceTest {
     @InjectMocks
     private ModuleService moduleService;
 
+    @Mock
+    private IUserService iUserService;
+
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
 
     private void loggedInAs(UserEntity user) {
-        UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                user.getEmail(), null, List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-    }
-
-    @AfterEach
-    void logout() {
-        SecurityContextHolder.clearContext();
+        when(iUserService.getCurrentUser()).thenReturn(user);
     }
 
     @Test
@@ -80,7 +74,10 @@ class ModuleServiceTest {
     }
 
     @Test
-    void shouldRefuseWhenNobodyIsLoggedIn() {
+    void shouldPropagateExceptionWhenNobodyIsLoggedIn() {
+        when(iUserService.getCurrentUser())
+                .thenThrow(new IllegalStateException("No users logged in"));
+
         assertThrows(IllegalStateException.class, () -> moduleService.createModule("MOIA"));
 
         verify(moduleRepository, never()).save(any());

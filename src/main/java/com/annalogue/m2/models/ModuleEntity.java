@@ -20,16 +20,12 @@ public class ModuleEntity {
     @JoinColumn(name = "responsible_id", nullable = false)
     private UserEntity responsible;
 
-    @OneToMany(mappedBy = "module")
-    private List<PublicationEntity> publications;
-
     public ModuleEntity() {
     }
 
     public ModuleEntity(String name, UserEntity responsible) {
         this.name = name;
         this.responsible =responsible;
-        this.publications = new ArrayList<>();
     }
 
     public Long getId() {
