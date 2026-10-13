@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
-public class InscriptionService {
+public class InscriptionService implements IInscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
@@ -37,32 +37,32 @@ public class InscriptionService {
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
     }
-
+    @Override
     public Optional<InscriptionEntity> findById(Long id) {
         return inscriptionRepository.findById(id);
     }
-
+    @Override
     public List<InscriptionEntity> findAll() {
         return inscriptionRepository.findAll();
     }
-
+    @Override
     public List<InscriptionEntity>  findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
-
+    @Override
     public List<InscriptionEntity>   findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
-
+    @Override
     public List<InscriptionEntity> findByEditeurFalse(){
         return inscriptionRepository.findByEditeurFalse();
     }
-
+    @Override
     public List<InscriptionEntity> findByEditeurTrue(){
         return inscriptionRepository.findByEditeurTrue();
     }
 
-
+    @Override
     @Transactional
     public InscriptionEntity save(
             UserEntity currentUser,

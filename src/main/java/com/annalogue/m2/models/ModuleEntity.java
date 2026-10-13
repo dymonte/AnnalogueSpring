@@ -20,9 +20,9 @@ public class ModuleEntity {
     public ModuleEntity() {
     }
 
-    public ModuleEntity(String name, UserEntity responsable) {
+    public ModuleEntity(String name, UserEntity responsible) {
         this.name = name;
-        this.responsible =responsable;
+        this.responsible =responsible;
     }
 
 

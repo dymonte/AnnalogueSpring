@@ -6,7 +6,7 @@ import com.annalogue.m2.exceptions.ModuleNotManagedException;
 import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
-import com.annalogue.m2.services.InscriptionService;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.NotifyService;
 import com.annalogue.m2.services.UserService;
 
@@ -30,12 +30,12 @@ public class InscriptionController {
             "modules/add_member_module";
 
     private final UserService userService;
-    private final InscriptionService inscriptionService;
+    private final IInscriptionService inscriptionService;
     private final NotifyService notifyService;
 
     public InscriptionController(
             UserService userService,
-            InscriptionService inscriptionService,
+            IInscriptionService inscriptionService,
             NotifyService notifyService) {
 
         this.userService = userService;
