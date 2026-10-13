@@ -21,8 +21,6 @@ public class DataInitializer implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
-
-
     @Override
     public void run(String... args) {
         System.out.println(">>> DataInitializer démarré");
@@ -38,8 +36,6 @@ public class DataInitializer implements CommandLineRunner {
             admin.setPasswordHash(passwordEncoder.encode("admin123"));
             admin.setUsername("admin");
             admin.setRole(Role.ADMIN);
-            admin.setYear(2024);
-            admin.setGroupName("A");
             userRepository.save(admin);
 
             UserEntity user1 = new UserEntity();
