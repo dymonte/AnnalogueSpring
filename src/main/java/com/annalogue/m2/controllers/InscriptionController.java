@@ -7,7 +7,8 @@ import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
 import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
-import com.annalogue.m2.services.InscriptionService;
+import com.annalogue.m2.services.IInscriptionService;
+
 import com.annalogue.m2.services.NotifyService;
 import com.annalogue.m2.services.UserService;
 
@@ -22,7 +23,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,12 +33,12 @@ public class InscriptionController {
             "modules/add_member_module";
 
     private final UserService userService;
-    private final InscriptionService inscriptionService;
+    private final IInscriptionService inscriptionService;
     private final NotifyService notifyService;
 
     public InscriptionController(
             UserService userService,
-            InscriptionService inscriptionService,
+            IInscriptionService inscriptionService,
             NotifyService notifyService) {
 
         this.userService = userService;
