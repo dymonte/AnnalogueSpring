@@ -97,6 +97,15 @@ public class InscriptionService implements IInscriptionService{
                         )
                 );
 
+        boolean isResponsible = inscription.getUser().getId()
+                .equals(inscription.getModule().getResponsible().getId());
+
+        if (isResponsible && inscription.isEditor()) {
+            throw new IllegalArgumentException(
+                    "error.inscription.responsible.cannot.remove.editor"
+            );
+        }
+
         inscription.setEditor(!inscription.isEditor());
         return inscription.isEditor();
     }
@@ -181,6 +190,7 @@ public class InscriptionService implements IInscriptionService{
         inscription.setUser(member);
         inscription.setModule(module);
         inscription.setInscriptionType(inscriptionType);
+        inscription.setEditor(member.getId().equals(module.getResponsible().getId()));
 
         return inscriptionRepository.save(inscription);
     }
@@ -205,11 +215,14 @@ public class InscriptionService implements IInscriptionService{
     }
 
     public List<ModuleEntity> getAllModulesEditable(UserEntity user) {
+        System.out.println("DEBUG getAllModulesEditable: User id = " + user.getId() + ", role = " + user.getRole());
+
         if (user.getRole() == Role.ADMIN) {
+            System.out.println("DEBUG getAllModulesEditable: User is ADMIN, returning all modules");
             return moduleRepository.findAll();
         }
 
-        return inscriptionRepository.findByUserAndModule(user, null).stream()
+        return inscriptionRepository.findByUserId(user.getId()).stream()
                 .filter(InscriptionEntity::isEditor)
                 .map(InscriptionEntity::getModule)
                 .collect(Collectors.toList());

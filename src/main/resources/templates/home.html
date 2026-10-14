@@ -12,10 +12,7 @@
 
     <div th:insert="~{navbar.html}"></div>
 
-    <h1><span th:text="#{home.welcome}">Welcome</span> <span th:text="${username}"></span></h1>
-
-    <a href="/change-password" class="btn btn-primary" th:text="#{home.change.password}">Change password</a>
-    <a href="/members/add" class="btn btn-primary" th:text="#{home.add.member}">Add Member</a>
+    <h1><span th:text="#{home.welcome}">Welcome</span> </h1>
 
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
