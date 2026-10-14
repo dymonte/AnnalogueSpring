@@ -53,7 +53,7 @@ The admin has already verified that the student's email address is active.
                     <!-- Username -->
                     <div class="mb-3">
                         <label for="username" class="form-label" th:text="#{member.username}">Username</label>
-                        <input type="text" id="username" name="username" class="form-control" th:value="${username}"
+                        <input type="text" id="username" name="enteredUsername" class="form-control" th:value="${enteredUsername}"
                             maxlength="50" pattern="[a-zA-Z0-9._\-]{3,50}" th:title="#{error.user.username.invalid}"
                             th:classappend="${usernameErrorKey != null} ? 'is-invalid'" required>
 
