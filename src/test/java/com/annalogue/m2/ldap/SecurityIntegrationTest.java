@@ -275,4 +275,49 @@ class SecurityIntegrationTest {
 
         verify(handleUserService, never()).changeRole(any(), any());
     }
+
+    // ===== only a Responsable Module creates modules =====
+
+    @Test
+    void professorShouldNotAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("prof@test.com").roles("PROF"))
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void studentShouldNotAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("student@test.com").roles("ETUDIANT"))
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminShouldNotCreateModule() throws Exception {
+
+        mockMvc.perform(
+                        post("/modules/add")
+                                .with(user("admin@test.com").roles("ADMIN"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .param("name", "MOIA")
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void responsableShouldAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("resp@test.com").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(view().name("modules/add"));
+    }
 }

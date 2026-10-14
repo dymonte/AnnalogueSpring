@@ -122,7 +122,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         get("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                 )
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add_member_module"))
@@ -168,7 +168,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         get("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                 )
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add_member_module"))
@@ -182,7 +182,7 @@ class InscriptionControllerTest {
         when(inscriptionService.findInscriptions(fbouquet)).thenReturn(List.of(tf_achevlot, tf_fmaiou));
         mockMvc.perform(
                 get("/module-enrollments")
-                        .with(user("fbouquet@ufr.com").roles("PROF"))
+                        .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
 
         ).andExpect(status().isOk())
                 .andExpect(view().name("modules/register_members_view"))
@@ -223,7 +223,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -256,7 +256,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "inconnu@ufr.com")
@@ -297,7 +297,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "9")
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -332,7 +332,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -369,7 +369,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "12")
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -392,7 +392,7 @@ class InscriptionControllerTest {
     void shouldThrowExceptionWhenModuleIdIsMissing() throws Exception {
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("emailUser", "fmaiou@ufr.com")
                 )
@@ -403,7 +403,7 @@ class InscriptionControllerTest {
     void shouldThrowExceptionWhenEmailUserIsMissing() throws Exception {
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                 )
@@ -426,7 +426,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "")
@@ -458,7 +458,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/new")
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "fmaiou.com")
@@ -513,7 +513,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                         post("/module-enrollments/{id}/delete", id)
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
@@ -566,7 +566,7 @@ class InscriptionControllerTest {
         );
         mockMvc.perform(
                         post("/module-enrollments/{id}/delete", id)
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
@@ -591,7 +591,7 @@ class InscriptionControllerTest {
         );
         mockMvc.perform(
                         post("/module-enrollments/{id}/delete", 5L)
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
@@ -616,7 +616,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(
                 post("/module-enrollments/{id}/toggle-editor", tf_achevlot.getId())
-                        .with(user("fbouquet@ufr.com").roles("PROF"))
+                        .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                         .with(csrf())
 
         ).andExpect(status().is3xxRedirection())
@@ -673,7 +673,7 @@ class InscriptionControllerTest {
         );
         mockMvc.perform(
                         post("/module-enrollments/{id}/toggle-editor", id)
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
@@ -698,7 +698,7 @@ class InscriptionControllerTest {
         );
         mockMvc.perform(
                         post("/module-enrollments/{id}/delete", 5L)
-                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
@@ -709,5 +709,25 @@ class InscriptionControllerTest {
         verify(inscriptionService, never()).toggleEditor(5L);
     }
 
+    @Test
+    void shouldDenyProfessorAccessToRegisterPageGet() throws Exception {
+        mockMvc.perform(
+                        get("/module-enrollments/new")
+                                .with(user("achevlot@ufr.com").roles("PROF"))
+                )
+                .andExpect(status().isForbidden());
+    }
 
+    @Test
+    void shouldDenyProfessorAccessToToggleEditor() throws Exception {
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(user("achevlot@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
 }
