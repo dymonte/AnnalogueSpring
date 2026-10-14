@@ -27,6 +27,7 @@ public class InscriptionEntity {
     @JoinColumn(name = "module_id", nullable = false)
     private ModuleEntity module;
 
+    @Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
     private boolean editor = false;
 
     public InscriptionEntity() {

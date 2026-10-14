@@ -56,7 +56,16 @@ public class ModuleService implements IModuleService {
 
         UserEntity currentUser = getCurrentUser();
 
-        return moduleRepository.save(new ModuleEntity(moduleName, currentUser));
+        ModuleEntity module = moduleRepository.save(new ModuleEntity(moduleName, currentUser));
+
+        InscriptionEntity inscription = new InscriptionEntity();
+        inscription.setUser(currentUser);
+        inscription.setModule(module);
+        inscription.setInscriptionType(com.annalogue.m2.models.InscriptionType.INTERVENANT);
+        inscription.setEditor(true);
+        inscriptionRepository.save(inscription);
+
+        return module;
     }
 
     @Override
