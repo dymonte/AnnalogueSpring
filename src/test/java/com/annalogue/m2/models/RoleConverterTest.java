@@ -11,6 +11,7 @@ class RoleConverterTest {
     @Test
     void shouldConvertRoleToDatabaseValue() {
         assertEquals("admin", converter.convertToDatabaseColumn(Role.ADMIN));
+        assertEquals("responsable", converter.convertToDatabaseColumn(Role.RESPONSABLE));
         assertEquals("prof", converter.convertToDatabaseColumn(Role.PROF));
         assertEquals("étudiant", converter.convertToDatabaseColumn(Role.ETUDIANT));
     }
@@ -18,6 +19,7 @@ class RoleConverterTest {
     @Test
     void shouldConvertDatabaseValueToRole() {
         assertEquals(Role.ADMIN, converter.convertToEntityAttribute("admin"));
+        assertEquals(Role.RESPONSABLE, converter.convertToEntityAttribute("responsable"));
         assertEquals(Role.PROF, converter.convertToEntityAttribute("prof"));
         assertEquals(Role.ETUDIANT, converter.convertToEntityAttribute("étudiant"));
     }

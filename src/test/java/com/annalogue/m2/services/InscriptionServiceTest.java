@@ -174,6 +174,35 @@ class InscriptionServiceTest {
     }
 
     @Test
+    void shouldRegisterResponsableOfAnotherModuleAsIntervenant() {
+        UserEntity claire = new UserEntity("claire@ufr.com", "fake-hash", "claire", Role.RESPONSABLE, null, null);
+        claire.setId(4L);
+
+        when(userRepository.findByEmail("claire@ufr.com"))
+                .thenReturn(Optional.of(claire));
+
+        when(moduleRepository.findById(10L))
+                .thenReturn(Optional.of(tf));
+
+        when(inscriptionRepository.findByUserId(4L))
+                .thenReturn(List.of());
+
+        when(inscriptionRepository.save(any(InscriptionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        InscriptionEntity inscription = inscriptionService.save(
+                fbouquet,
+                "claire@ufr.com",
+                10L
+        );
+
+        assertEquals(
+                InscriptionType.INTERVENANT,
+                inscription.getInscriptionType()
+        );
+    }
+
+    @Test
     void shouldThrowExceptionWhenUserNotFound() {
 
         when(userRepository.findByEmail("fmaiou@ufr.com"))

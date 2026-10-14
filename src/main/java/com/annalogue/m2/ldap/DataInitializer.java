@@ -38,6 +38,13 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             userRepository.save(admin);
 
+            UserEntity responsable = new UserEntity();
+            responsable.setEmail("resp@example.com");
+            responsable.setPasswordHash(passwordEncoder.encode("resp1234"));
+            responsable.setUsername("resp");
+            responsable.setRole(Role.RESPONSABLE);
+            userRepository.save(responsable);
+
             UserEntity user1 = new UserEntity();
             user1.setEmail("user1@example.com");
             user1.setPasswordHash(passwordEncoder.encode("user1123"));

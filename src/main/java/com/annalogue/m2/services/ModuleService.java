@@ -4,12 +4,11 @@ import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +26,19 @@ public class ModuleService implements IModuleService {
     private static final String ROLE_KEY_PREFIX = "my.modules.role.";
 
     private final ModuleRepository moduleRepository;
+
     private final UserRepository userRepository;
+    private final IUserService iUserService;
     private final InscriptionRepository inscriptionRepository;
 
     public ModuleService(ModuleRepository moduleRepository,
                          UserRepository userRepository,
-                         InscriptionRepository inscriptionRepository) {
+                         InscriptionRepository inscriptionRepository,
+                         IUserService iUserService) {
+
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
+        this.iUserService = iUserService;
         this.inscriptionRepository = inscriptionRepository;
     }
 
@@ -54,7 +58,7 @@ public class ModuleService implements IModuleService {
             throw new InvalidModuleDataException("error.module.name.exists");
         }
 
-        UserEntity currentUser = getCurrentUser();
+        UserEntity currentUser = iUserService.getCurrentUser();
 
         ModuleEntity module = moduleRepository.save(new ModuleEntity(moduleName, currentUser));
 
@@ -107,25 +111,6 @@ public class ModuleService implements IModuleService {
                 .toList();
     }
 
-    private String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || Objects.equals(authentication.getPrincipal(), "anonymousUser")) {
-            throw new IllegalStateException("No users logged in");
-        }
-
-        return authentication.getName();
-    }
-
-    private UserEntity getCurrentUser() {
-        String email = getCurrentUserEmail();
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("Logged-in user not found"));
-    }
-
     @Override
     public List<ModuleEntity> findAll() {
         return moduleRepository.findAllByOrderByNameAsc();
@@ -144,5 +129,18 @@ public class ModuleService implements IModuleService {
     @Override
     public void deleteAll() {
         moduleRepository.deleteAll();
+    }
+
+    @Override
+    public List<PublicationEntity> findAllPublicationsFromModule(ModuleEntity module) {
+
+        return module.getPublications();
+    }
+
+    @Override
+    public List<PublicationEntity> findAllPublicationsFromModule(long id) {
+        return moduleRepository.findById(id)
+                .map(ModuleEntity::getPublications)
+                .orElse(List.of());
     }
 }

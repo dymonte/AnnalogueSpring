@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "publications")
@@ -19,6 +21,7 @@ public class PublicationEntity {
 		this.module = module;
 		this.author = author;
 		this.filePath = filePath;
+		this.comments = new ArrayList<>();
 	}
 
 	@Id
@@ -46,6 +49,9 @@ public class PublicationEntity {
 	@CreationTimestamp
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
+
+	@OneToMany(mappedBy = "publication")
+	private List<CommentEntity> comments;
 
 
 	public Long getId() {
@@ -100,6 +106,14 @@ public class PublicationEntity {
 		this.filePath = filePath;
 	}
 
+	public void setComments(List<CommentEntity> comments) {
+		this.comments = comments;
+	}
+
+	public List<CommentEntity> getComments() {
+		return comments;
+	}
+
 	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
@@ -107,4 +121,6 @@ public class PublicationEntity {
 	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
+
+
 }

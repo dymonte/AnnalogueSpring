@@ -1,6 +1,7 @@
 package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "modules")
@@ -17,6 +18,9 @@ public class ModuleEntity {
     @JoinColumn(name = "responsible_id", nullable = false)
     private UserEntity responsible;
 
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PublicationEntity> publications;
+
     public ModuleEntity() {
     }
 
@@ -24,7 +28,6 @@ public class ModuleEntity {
         this.name = name;
         this.responsible =responsible;
     }
-
 
     public Long getId() {
         return id;
@@ -48,5 +51,13 @@ public class ModuleEntity {
 
     public void setResponsible(UserEntity responsible) {
         this.responsible = responsible;
+    }
+
+    public List<PublicationEntity> getPublications() {
+        return publications;
+    }
+
+    public void setPublications(List<PublicationEntity> publications) {
+        this.publications = publications;
     }
 }

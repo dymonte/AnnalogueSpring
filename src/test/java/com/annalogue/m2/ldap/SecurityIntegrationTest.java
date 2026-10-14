@@ -55,7 +55,8 @@ class SecurityIntegrationTest {
                                 .with(user("test@test.com"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(view().name("home"));
+                // « My modules » is the home page of the non-admin users
+                .andExpect(view().name("modules/list"));
     }
 
     // ===== TFAN26-12: only an admin can create members =====
@@ -258,5 +259,66 @@ class SecurityIntegrationTest {
         mockMvc.perform(get("/modules"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
+    }
+
+    // ===== TFAN26-125 (ADMIN-02): only the admin changes a role =====
+
+    @Test
+    void nonAdminShouldNotChangeRoles() throws Exception {
+
+        mockMvc.perform(
+                        post("/members/1/role")
+                                .with(user("prof@example.com").roles("RESPONSABLE"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .param("role", "RESPONSABLE")
+                )
+                .andExpect(status().isForbidden());
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
+
+    // ===== only a Responsable Module creates modules =====
+
+    @Test
+    void professorShouldNotAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("prof@test.com").roles("PROF"))
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void studentShouldNotAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("student@test.com").roles("ETUDIANT"))
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void adminShouldNotCreateModule() throws Exception {
+
+        mockMvc.perform(
+                        post("/modules/add")
+                                .with(user("admin@test.com").roles("ADMIN"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .param("name", "MOIA")
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void responsableShouldAccessAddModulePage() throws Exception {
+
+        mockMvc.perform(
+                        get("/modules/add")
+                                .with(user("resp@test.com").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(view().name("modules/add"));
     }
 }
