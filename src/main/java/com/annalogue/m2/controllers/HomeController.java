@@ -34,11 +34,6 @@ public class HomeController {
                         .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN") || Objects.equals(role.getAuthority(), "ROLE_PROF")));
 
 
-        if (authentication != null) {
-            userService.findByEmail(authentication.getName()).ifPresent(
-                    userEntity -> model.addAttribute("username", userEntity.getUsername()));
-        }
-
         return "home";
     }
 }
