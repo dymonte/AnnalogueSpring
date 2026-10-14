@@ -48,6 +48,13 @@ public class DataInitializer implements CommandLineRunner {
             user1.setGroupName("A");
             userRepository.save(user1);
 
+            UserEntity prof = new UserEntity();
+            prof.setEmail("prof@example.com");
+            prof.setPasswordHash(passwordEncoder.encode("prof123"));
+            prof.setUsername("prof");
+            prof.setRole(Role.PROF);
+            userRepository.save(prof);
+
             System.out.println(">>> Comptes créés !");
         } else {
             System.out.println(">>> Initialisation ignorée : la table n'est pas vide");
