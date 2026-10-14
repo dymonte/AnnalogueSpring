@@ -18,7 +18,10 @@ public interface IModuleService {
 
     public boolean existsByName(String name);
 
+    public void deleteAll();
+
     public List<UserModuleView> findModulesOfUser(String email);
 
     public List<UserModuleView> findAllModuleViews();
+
 }

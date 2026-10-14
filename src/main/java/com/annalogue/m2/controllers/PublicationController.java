@@ -3,6 +3,7 @@ package com.annalogue.m2.controllers;
 import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
 import com.annalogue.m2.models.FileType;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IPublicationService;
 import com.annalogue.m2.services.IUserService;
@@ -32,6 +33,9 @@ public class PublicationController {
 
 	@Autowired
 	private IUserService userService;
+
+    @Autowired
+    private IInscriptionService inscriptionService;
 
 	@PostMapping("/publications")
 	public String addPublication() {
@@ -65,11 +69,13 @@ public class PublicationController {
 
 		if (authentication != null) {
 			userService.findByEmail(authentication.getName()).ifPresent(
-					userEntity -> model.addAttribute("username", userEntity.getUsername()));
+					userEntity -> {
+                        model.addAttribute("username", userEntity.getUsername());
+                        model.addAttribute("modules", inscriptionService.getAllModulesEditable(userEntity));
+                    });
 		}
 
 		model.addAttribute("fileType", FileType.values());
-		model.addAttribute("modules", moduleService.findAll());
 		return "modules/upload_file";
 	}
 

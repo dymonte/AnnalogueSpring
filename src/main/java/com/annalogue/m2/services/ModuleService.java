@@ -131,4 +131,9 @@ public class ModuleService implements IModuleService {
     public boolean existsByName(String name) {
         return name != null && moduleRepository.existsByNameIgnoreCase(name.trim());
     }
+
+    @Override
+    public void deleteAll() {
+        moduleRepository.deleteAll();
+    }
 }

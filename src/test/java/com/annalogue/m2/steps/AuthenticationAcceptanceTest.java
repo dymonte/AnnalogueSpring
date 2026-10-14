@@ -2,7 +2,8 @@ package com.annalogue.m2.steps;
 
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterAll;
@@ -22,10 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AuthenticationAcceptanceTest {
 
 	@Autowired
-	private UserService userService;
+	private IUserService userService;
 
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private IModuleService moduleService;
 
 	@LocalServerPort
 	private int port;
@@ -63,6 +67,9 @@ public class AuthenticationAcceptanceTest {
 				.setSources(true));
 		page = context.newPage();
 
+        // delete all modules
+        moduleService.deleteAll();
+
 		// delete all users
 		userService.deleteAll();
 	}
@@ -76,6 +83,9 @@ public class AuthenticationAcceptanceTest {
 		}
 		// delete all users
 		userService.deleteAll();
+
+        // delete all modules
+        moduleService.deleteAll();
 	}
 
 	@Soit("L'utilisateur \"ToTo\" possède un compte {string} ayant comme mot de passe \"titi\"")

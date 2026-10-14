@@ -58,6 +58,9 @@ class PublicationControllerTest {
 	@MockitoBean
 	private CustomUserDetailsService customUserDetailsService;
 
+    @MockitoBean
+    private IInscriptionService inscriptionService;
+
 	@Test
 	void shouldShowUploadPageForAdmin() throws Exception {
 
