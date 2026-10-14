@@ -1,0 +1,19 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${module.name}"></title>
+</head>
+<body>
+    <div th:insert="~{navbar.html}"></div>
+
+    <tr th:each="publication: ${publications}">
+        <td th:text="${publication.getName()} + ' (' + ${publication.getFileType()} + ')'" />
+        <td th:if="${publication.getDescription() != null}" th:text="${publication.getDescription()}" />
+        <td th:text="#{publication.download}"><a th:href="/files/+publication.getId()"></a></td>
+    </tr>
+
+
+    </div>
+</body>
+</html>
