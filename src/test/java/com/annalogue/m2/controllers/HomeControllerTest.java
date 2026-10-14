@@ -81,4 +81,35 @@ class HomeControllerTest {
                 .andExpect(view().name("home"))
                 .andExpect(model().attribute("canCreateModuleAndPublication", true));
     }
+
+    @Test
+    void responsableShouldSeeCreateModule() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("resp1").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("canCreateModuleAndPublication", true))
+                .andExpect(model().attribute("canCreateModule", true));
+    }
+
+    @Test
+    void professorShouldNotSeeCreateModule() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("prof1").roles("PROF"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("canCreateModule", false));
+    }
+
+    @Test
+    void adminShouldNotSeeCreateModule() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("admin1").roles("ADMIN"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("canCreateModule", false));
+    }
 }

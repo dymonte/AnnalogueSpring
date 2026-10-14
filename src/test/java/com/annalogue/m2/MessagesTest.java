@@ -153,21 +153,3 @@ class MessagesTest {
         assertTrue(text.contains("toto"));
     }
 }
-git add src/test/java/com/annalogue/m2/services/InscriptionServiceTest.java
-git add src/test/java/com/annalogue/m2/services/RoleServiceTest.java
-git add src/test/java/com/annalogue/m2/services/HandleUserServiceTest.java
-git add src/test/java/com/annalogue/m2/repositories/ModuleRepositoryTest.java
-git add src/test/java/com/annalogue/m2/models/RoleTest.java
-git add src/test/java/com/annalogue/m2/models/RoleConverterTest.java
-git add src/test/java/com/annalogue/m2/ldap/SecurityIntegrationTest.java
-git add src/test/java/com/annalogue/m2/controllers/UserControllerTest.java
-git add src/test/java/com/annalogue/m2/MessagesTest.java
-git add src/main/resources/templates/admin/members.html
-git add src/main/resources/messages.properties
-git add src/main/java/com/annalogue/m2/controllers/UserController.java
-git add src/main/java/com/annalogue/m2/ldap/SecurityConfig.java
-git add src/main/java/com/annalogue/m2/models/Role.java
-git add src/main/java/com/annalogue/m2/repositories/ModuleRepository.java
-git add src/main/java/com/annalogue/m2/services/HandleUserService.java
-git add src/main/java/com/annalogue/m2/services/InscriptionService.java
-git add src/main/java/com/annalogue/m2/services/RoleService.java

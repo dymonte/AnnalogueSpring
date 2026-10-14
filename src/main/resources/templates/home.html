@@ -20,8 +20,7 @@
     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
 
 
-    <button type="button"
-        th:if="${canCreateModuleAndPublication}"
+    <button type="button" th:if="${canCreateModuleAndPublication}"
         class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow fs-2 d-flex align-items-center justify-content-center"
         style="width: 3.5rem; height: 3.5rem;" data-bs-toggle="modal" data-bs-target="#createModal"
         th:aria-label="#{home.create.title}" th:text="#{home.upload}">+</button>
@@ -30,13 +29,16 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2 class="modal-title fs-5" id="createModalLabel" th:text="#{home.create.title}">What would you like to create?</h2>
+                    <h2 class="modal-title fs-5" id="createModalLabel" th:text="#{home.create.title}">What would you
+                        like to create?</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"
                         th:aria-label="#{home.create.close}"></button>
                 </div>
                 <div class="modal-body d-grid gap-2">
-                    <a href="/upload" class="btn btn-primary" th:text="#{home.create.publication}">Create a publication</a>
-                    <a href="/modules/add" class="btn btn-outline-primary" th:text="#{home.create.module}">Create a module</a>
+                    <a href="/upload" class="btn btn-primary" th:text="#{home.create.publication}">Create a
+                        publication</a>
+                    <a href="/modules/add" th:if="${canCreateModule}" class="btn btn-outline-primary"
+                        th:text="#{home.create.module}">Create a module</a>
                 </div>
             </div>
         </div>
