@@ -184,6 +184,42 @@ public class InscriptionController {
         return "redirect:/module-enrollments";
     }
 
+    @PostMapping("/module-enrollments/{id}/toggle-editor")
+    public String toggleEditor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            UserEntity currentUser = getCurrentUser();
+            boolean isManagedEnrollment = inscriptionService
+                    .findInscriptions(currentUser)
+                    .stream()
+                    .anyMatch(inscription -> inscription.getId().equals(id));
+
+            if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
+                redirectAttributes.addFlashAttribute(
+                        "error",
+                        notifyService.getMessage("error.inscription.not.found")
+                );
+                return "redirect:/module-enrollments";
+            }
+            boolean isEditor = inscriptionService.toggleEditor(id);
+
+            String messageKey = isEditor
+                    ? "success.inscription.editor.enabled"
+                    : "success.inscription.editor.disabled";
+
+            redirectAttributes.addFlashAttribute(
+                    "success",
+                    notifyService.getMessage(messageKey)
+            );
+
+        } catch (UsernameNotFoundException e) {
+            redirectAttributes.addFlashAttribute(
+                    "error",
+                    notifyService.getMessage("error.inscription.prof.not.found")
+            );
+        }
+        return "redirect:/module-enrollments";
+    }
+
     @GetMapping("/module-enrollments")
     public String listModuleEnrollments(Model model) {
         UserEntity currentUser = getCurrentUser();

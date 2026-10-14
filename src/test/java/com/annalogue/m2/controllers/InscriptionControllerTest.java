@@ -601,4 +601,113 @@ class InscriptionControllerTest {
 
         verify(inscriptionService, never()).deleteById(5L);
     }
+
+    @Test
+    void shouldEnableEditor() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet)).thenReturn(
+                List.of(tf_achevlot, tf_fmaiou)
+        );
+        when(inscriptionService.existsById(2L)).thenReturn(true);
+        when(notifyService.getMessage("success.inscription.editor.enabled")).thenReturn("Editor status enabled successfully.");
+        when(notifyService.getMessage("success.inscription.editor.disabled")).thenReturn("Editor status disabled successfully.");
+
+        mockMvc.perform(
+                post("/module-enrollments/{id}/toggle-editor", tf_achevlot.getId())
+                        .with(user("fbouquet@ufr.com").roles("PROF"))
+                        .with(csrf())
+
+        ).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("success"))
+                .andExpect(flash().attribute("success", tf_achevlot.isEditor()?"Editor status enabled successfully." : "Editor status disabled successfully."));
+
+        verify(inscriptionService).findInscriptions(fbouquet);
+        verify(inscriptionService).existsById(2L);
+        verify(inscriptionService).toggleEditor(2L);
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedToToggleEditor() throws Exception {
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyStudentAccessToToggleEditor() throws Exception {
+        when(userService.findByEmail("fmaiou@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));;
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyToggleEditorWhenInscriptionModuleNotManaged() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        Long id = rx_fmaiou.getId();
+
+        when(inscriptionService.existsById(id)).thenReturn(true);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to modify or delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyToggleEditorWhenInscriptionModuleNotExiste() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        when(inscriptionService.existsById(5L)).thenReturn(false);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to modify or delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", 5L)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
+
+        verify(inscriptionService, never()).toggleEditor(5L);
+    }
+
+
 }

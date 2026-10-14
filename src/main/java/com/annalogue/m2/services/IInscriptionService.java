@@ -12,10 +12,11 @@ public interface IInscriptionService {
     public List<InscriptionEntity> findAll();
     public List<InscriptionEntity>  findByModuleId(Long id);
     public List<InscriptionEntity>   findByUserId(Long id);
-    public List<InscriptionEntity> findByEditeurFalse();
-    public List<InscriptionEntity> findByEditeurTrue();
+    public List<InscriptionEntity> findByEditorFalse();
+    public List<InscriptionEntity> findByEditorTrue();
     public void deleteById(Long id);
     public boolean existsById(Long id);
     public List<InscriptionEntity> findInscriptions(UserEntity currentUser);
+    public boolean toggleEditor(Long inscriptionId);
     public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId);
 }

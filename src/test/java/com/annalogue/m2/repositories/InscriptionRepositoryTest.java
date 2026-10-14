@@ -111,7 +111,7 @@ class InscriptionRepositoryTest {
                 module
         );
 
-        inscription.setEditeur(editeur);
+        inscription.setEditor(editeur);
 
         return inscriptionRepository.save(inscription);
     }
@@ -265,11 +265,11 @@ class InscriptionRepositoryTest {
         );
 
         List<InscriptionEntity> result =
-                inscriptionRepository.findByEditeurTrue();
+                inscriptionRepository.findByEditorTrue();
 
         assertEquals(1, result.size());
         assertTrue(
-                result.stream().allMatch(InscriptionEntity::isEditeur)
+                result.stream().allMatch(InscriptionEntity::isEditor)
         );
         assertEquals(
                 "cantoine",
@@ -301,11 +301,11 @@ class InscriptionRepositoryTest {
         );
 
         List<InscriptionEntity> result =
-                inscriptionRepository.findByEditeurFalse();
+                inscriptionRepository.findByEditorFalse();
 
         assertEquals(2, result.size());
         assertTrue(
-                result.stream().noneMatch(InscriptionEntity::isEditeur)
+                result.stream().noneMatch(InscriptionEntity::isEditor)
         );
         assertTrue(
                 result.stream().anyMatch(

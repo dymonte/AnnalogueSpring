@@ -29,6 +29,7 @@ public class SecurityConfig {
                         .requestMatchers("/module-enrollments/new").hasRole("PROF")
                         .requestMatchers("/module-enrollments").hasAnyRole("PROF", "ADMIN")
                         .requestMatchers("/module-enrollments/{id}/delete").hasAnyRole("PROF", "ADMIN")
+                        .requestMatchers("/module-enrollments/{id}/toggle-editor").hasRole("PROF")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

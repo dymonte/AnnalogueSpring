@@ -140,7 +140,7 @@ class InscriptionServiceTest {
                 inscription.getUser().getEmail()
         );
 
-        assertFalse(inscription.isEditeur());
+        assertFalse(inscription.isEditor());
 
 
         verify(inscriptionRepository)
@@ -373,10 +373,26 @@ class InscriptionServiceTest {
         assertTrue(inscrptions.isEmpty());
 
 
-
     }
 
+    @Test
+    void shouldToggleEditor(){
+        when(inscriptionService.findById(1L)).thenReturn(Optional.of(tf_fmaiou));
 
+        Optional<InscriptionEntity> inscription = inscriptionService.findById(1L);
+        assertTrue(inscription.isPresent());
+
+        assertFalse(inscription.get().isEditor());
+        boolean editor = inscriptionService.toggleEditor(1L);
+
+        assertTrue(inscription.get().isEditor());
+
+        editor = inscriptionService.toggleEditor(1L);
+        assertFalse(inscription.get().isEditor());
+
+
+
+    }
 
 
 
