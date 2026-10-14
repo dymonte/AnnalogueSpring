@@ -14,7 +14,7 @@
                     <a class="nav-link" href="/modules" th:text="#{nav.modules}">Modules</a>
                 </li>
                 <li class="nav-item">
-                    <a th:attr="class=${isAdmin == true ? 'nav-link' : 'nav-link disabled'}" href="/admin"
+                    <a th:if="${isAdmin}" class="nav-link" href="/admin"
                         th:text="#{nav.admin}">Admin Dashboard</a>
                 </li>
 
