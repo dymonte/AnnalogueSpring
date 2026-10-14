@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.models.ModuleEntity;
 
 import java.util.List;
@@ -18,4 +19,9 @@ public interface IModuleService {
     public boolean existsByName(String name);
 
     public void deleteAll();
+
+    public List<UserModuleView> findModulesOfUser(String email);
+
+    public List<UserModuleView> findAllModuleViews();
+
 }
