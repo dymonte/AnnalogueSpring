@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserAcceptanceTest {
 
@@ -86,14 +87,6 @@ public class UserAcceptanceTest {
         moduleService.deleteAll();
     }
 
-
-
-    @Et("L{string}existe pas")
-    public void lUtilisateurNExistePas(String arg0) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
-    }
-
     @Quand("Je supprime <login> du site")
     public void jeSupprimeLoginDuSite() {
         // Write code here that turns the phrase above into concrete actions
@@ -112,31 +105,32 @@ public class UserAcceptanceTest {
         throw new PendingException();
     }
 
-    @Quand("J'ajoute un utilisateur <login> en tant que <role> avec le mot de passe <mdp> avec comme année {string}")
-    public void jAjouteUnUtilisateurLoginEnTantQueRoleAvecLeMotDePasseMdpAvecCommeAnnée(String arg0) {
-
-        // UserEntity user = userService.getCurrentUser();
-
+    @Quand("J'ajoute un utilisateur {string} en tant que {string} avec le mot de passe <mdp> avec comme année {string}")
+    public void jAjouteUnUtilisateurLoginEnTantQueRoleAvecLeMotDePasseMdpAvecCommeAnnée(String login,String role, String year) {
         page.navigate("http://localhost:8080/members/add");
         page.locator("input[name=\"email\"]").click();
-        page.locator("input[name=\"email\"]").fill("...");
+        page.locator("input[name=\"email\"]").fill(login + "@example.com");
         page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).click();
-        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).fill("...");
-        page.locator("#email").
-
-        throw new PendingException();
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).fill(login);
+        page.getByLabel("Role").selectOption(role);
+        page.locator("#email").selectOption(year);
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Member")).click();
     }
 
     @Alors("L'utilisateur <login> existe")
     public void lUtilisateurLoginExiste() {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+        assertTrue(userService.findByEmail("toto@example.com").isPresent());
     }
 
     @Quand("J'ajoute un utilisateur {string} en tant que {string}")
-    public void jAjouteUnUtilisateurEnTantQue(String arg0, String arg1) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+    public void jAjouteUnUtilisateurEnTantQue(String login, String role) {
+        page.navigate("http://localhost:8080/members/add");
+        page.locator("input[name=\"email\"]").click();
+        page.locator("input[name=\"email\"]").fill(login + "@example.com");
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).click();
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).fill(login);
+        page.getByLabel("Role").selectOption(role);
+        page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Member")).click();
     }
 
     @Alors("J{string}erreur qui dit qu'on ne peut pas ajouter un autre administrateur")
