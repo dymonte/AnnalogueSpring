@@ -200,6 +200,7 @@ class ModuleServiceTest {
         List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(1L);
 
         assertTrue(publications.isEmpty());
+    }
 
     // ===== My modules (TFAN26-65) =====
 
