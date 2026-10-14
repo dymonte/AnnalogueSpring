@@ -178,7 +178,7 @@ class ModuleServiceTest {
         UserEntity fabien = user(2L, "fabien", Role.ETUDIANT);
         InscriptionEntity editorInMoia =
                 new InscriptionEntity(InscriptionType.ETUDIANT, fabien, module(10L, "MOIA", fabrice));
-        editorInMoia.setEditeur(true);
+        editorInMoia.setEditor(true);
         when(userRepository.findByEmail("fabien@example.com")).thenReturn(Optional.of(fabien));
         when(moduleRepository.findByResponsibleIdOrderByNameAsc(2L)).thenReturn(List.of());
         // the repository returns them unsorted: TF before MOIA

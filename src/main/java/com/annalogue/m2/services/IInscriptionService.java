@@ -22,9 +22,9 @@ public interface IInscriptionService {
 
     public List<InscriptionEntity>   findByUserId(Long id);
 
-    public List<InscriptionEntity> findByEditeurFalse();
+    public List<InscriptionEntity> findByEditorFalse();
 
-    public List<InscriptionEntity> findByEditeurTrue();
+    public List<InscriptionEntity> findByEditorTrue();
 
 
     @Transactional
@@ -43,4 +43,7 @@ public interface IInscriptionService {
     public List<ModuleEntity> getAllModulesEditable(UserEntity user);
 
     public List<InscriptionEntity> findInscriptions(UserEntity currentUser);
+
+    @Transactional
+    public boolean toggleEditor(Long inscriptionId);
 }

@@ -196,7 +196,7 @@ public class InscriptionService implements IInscriptionService{
     public boolean hasWriterAccess(UserEntity user, ModuleEntity module) {
         InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
 
-        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditeur());
+        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditor());
     }
 
     public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
@@ -210,7 +210,7 @@ public class InscriptionService implements IInscriptionService{
         }
 
         return inscriptionRepository.findByUserAndModule(user, null).stream()
-                .filter(InscriptionEntity::isEditeur)
+                .filter(InscriptionEntity::isEditor)
                 .map(InscriptionEntity::getModule)
                 .collect(Collectors.toList());
     }

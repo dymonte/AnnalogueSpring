@@ -83,7 +83,7 @@ public class ModuleService implements IModuleService {
                     module.getId(),
                     module.getName(),
                     ROLE_KEY_PREFIX + inscription.getInscriptionType().name(),
-                    inscription.isEditeur()));
+                    inscription.isEditor()));
         }
 
         return modules.values().stream()
