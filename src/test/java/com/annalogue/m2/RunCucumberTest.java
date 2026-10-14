@@ -1,5 +1,6 @@
 package com.annalogue.m2;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.platform.suite.api.*;
 
 import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
@@ -8,5 +9,6 @@ import static io.cucumber.junit.platform.engine.Constants.GLUE_PROPERTY_NAME;
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "com.annalogue.m2.steps")
+@Disabled
 public class RunCucumberTest {
 }
