@@ -8,7 +8,6 @@ import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IInscriptionService;
-
 import com.annalogue.m2.services.NotifyService;
 import com.annalogue.m2.services.UserService;
 
