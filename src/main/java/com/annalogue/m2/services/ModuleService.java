@@ -8,8 +8,6 @@ import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,14 +25,19 @@ public class ModuleService implements IModuleService {
     private static final String ROLE_KEY_PREFIX = "my.modules.role.";
 
     private final ModuleRepository moduleRepository;
+
     private final UserRepository userRepository;
+    private final IUserService iUserService;
     private final InscriptionRepository inscriptionRepository;
 
     public ModuleService(ModuleRepository moduleRepository,
                          UserRepository userRepository,
-                         InscriptionRepository inscriptionRepository) {
+                         InscriptionRepository inscriptionRepository,
+                         IUserService iUserService) {
+
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
+        this.iUserService = iUserService;
         this.inscriptionRepository = inscriptionRepository;
     }
 
@@ -54,7 +57,7 @@ public class ModuleService implements IModuleService {
             throw new InvalidModuleDataException("error.module.name.exists");
         }
 
-        UserEntity currentUser = getCurrentUser();
+        UserEntity currentUser = iUserService.getCurrentUser();
 
         return moduleRepository.save(new ModuleEntity(moduleName, currentUser));
     }
@@ -96,25 +99,6 @@ public class ModuleService implements IModuleService {
         return findAll().stream()
                 .map(module -> new UserModuleView(module.getId(), module.getName(), null, false))
                 .toList();
-    }
-
-    private String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null
-                || !authentication.isAuthenticated()
-                || Objects.equals(authentication.getPrincipal(), "anonymousUser")) {
-            throw new IllegalStateException("No users logged in");
-        }
-
-        return authentication.getName();
-    }
-
-    private UserEntity getCurrentUser() {
-        String email = getCurrentUserEmail();
-
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalStateException("Logged-in user not found"));
     }
 
     @Override

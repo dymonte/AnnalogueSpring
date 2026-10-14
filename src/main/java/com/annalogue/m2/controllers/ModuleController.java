@@ -30,12 +30,13 @@ public class ModuleController {
         this.moduleService = moduleService;
     }
 
-        // list of all modules (catalogue)
+    // list of all modules (catalogue)
     @GetMapping
     public String listModules(Model model) {
         model.addAttribute("modules", moduleService.findAll());
         return "modules/list";
     }
+
     // empty creation form
     @GetMapping("/add")
     public String showAddForm() {
@@ -67,8 +68,6 @@ public class ModuleController {
         model.addAttribute("name", name);
         return "modules/add";
     }
-
-
 
     // page of one module
     @GetMapping("/{id}")

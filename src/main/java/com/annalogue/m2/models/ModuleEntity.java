@@ -25,7 +25,6 @@ public class ModuleEntity {
         this.responsible =responsible;
     }
 
-
     public Long getId() {
         return id;
     }
