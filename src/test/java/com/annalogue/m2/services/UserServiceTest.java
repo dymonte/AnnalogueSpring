@@ -23,6 +23,7 @@ class UserServiceTest {
 
         @Mock
         private PasswordEncoder passwordEncoder;
+
         @InjectMocks
         private UserService userService;
 
@@ -155,4 +156,5 @@ class UserServiceTest {
                 verify(userRepository).delete(user);
                 verify(userRepository).flush();
         }
+
 }
