@@ -43,19 +43,20 @@ public class UserEntity {
     @OneToMany(mappedBy = "responsible")
     private List<ModuleEntity> responsibleModules;
 
+    @OneToMany(mappedBy = "authorComment")
+    private List<CommentEntity> comments;
 
-    // JPA constructor
-    public UserEntity() {
-    }
+    public UserEntity() {}
 
     public UserEntity(String email, String passwordHash, String username,
-            Role role, Integer year, String groupName) {
+                      Role role, Integer year, String groupName) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.username = username;
         this.role = role;
         this.year = year;
         this.groupName = groupName;
+        this.comments = new ArrayList<>();
         this.responsibleModules = new ArrayList<>();
     }
 
@@ -125,6 +126,14 @@ public class UserEntity {
 
     public List<ModuleEntity> getResponsibleModules() {
         return responsibleModules;
+    }
+
+    public void setComments(List<CommentEntity> comments) {
+        this.comments = comments;
+    }
+
+    public List<CommentEntity> getComments() {
+        return comments;
     }
 
     public void setResponsibleModules(List<ModuleEntity> responsibleModules) {

@@ -38,7 +38,7 @@ class InscriptionEntityTest {
                 "TF",
                 inscription.getModule().getName()
         );
-        assertFalse(inscription.isEditeur());
+        assertFalse(inscription.isEditor());
 
         assertEquals(
                 "bfabrice",
@@ -80,7 +80,7 @@ class InscriptionEntityTest {
                 "TF",
                 inscription.getModule().getName()
         );
-        assertFalse(inscription.isEditeur());
+        assertFalse(inscription.isEditor());
 
         assertEquals(
                 "bfabrice",
@@ -89,9 +89,9 @@ class InscriptionEntityTest {
                         .getUsername()
         );
 
-        inscription.setEditeur(true);
+        inscription.setEditor(true);
 
-        assertTrue(inscription.isEditeur());
+        assertTrue(inscription.isEditor());
     }
 
     UserEntity createProfResponsable(){

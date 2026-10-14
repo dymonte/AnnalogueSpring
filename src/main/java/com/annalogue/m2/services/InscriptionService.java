@@ -15,13 +15,14 @@ import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
-public class InscriptionService implements IInscriptionService {
+public class InscriptionService implements IInscriptionService{
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
@@ -40,37 +41,68 @@ public class InscriptionService implements IInscriptionService {
         this.userRepository = userRepository;
         this.publicationRepository = publicationRepository;
     }
-
+    @Override
     public Optional<InscriptionEntity> findById(Long id) {
         return inscriptionRepository.findById(id);
     }
-
+    @Override
     public List<InscriptionEntity> findAll() {
         return inscriptionRepository.findAll();
     }
-
+    @Override
     public List<InscriptionEntity>  findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
-
+    @Override
     public List<InscriptionEntity>   findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
 
-    public List<InscriptionEntity> findByEditeurFalse(){
-        return inscriptionRepository.findByEditeurFalse();
+    public List<InscriptionEntity> findByEditorFalse(){
+        return inscriptionRepository.findByEditorFalse();
     }
 
-    public List<InscriptionEntity> findByEditeurTrue(){
-        return inscriptionRepository.findByEditeurTrue();
+    public List<InscriptionEntity> findByEditorTrue(){
+        return inscriptionRepository.findByEditorTrue();
     }
+    @Override
+    public void deleteById(Long id){inscriptionRepository.deleteById(id); }
+    @Override
+    public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
+    @Override
+    public List<InscriptionEntity> findInscriptions(UserEntity currentUser) {
 
+        List<InscriptionEntity> inscriptions = new ArrayList<>();
 
+        List<ModuleEntity> responsibleModules =
+                currentUser.getResponsibleModules();
+
+        for (ModuleEntity module : responsibleModules) {
+
+            inscriptions.addAll(
+                    this.findByModuleId(module.getId())
+            );
+        }
+
+        return inscriptions;
+    }
+    @Override
     @Transactional
-    public InscriptionEntity save(
-            UserEntity currentUser,
-            String userEmail,
-            Long moduleId) {
+    public boolean toggleEditor(Long inscriptionId) {
+        InscriptionEntity inscription = inscriptionRepository
+                .findById(inscriptionId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "error.inscription.not.found"
+                        )
+                );
+
+        inscription.setEditor(!inscription.isEditor());
+        return inscription.isEditor();
+    }
+    @Override
+    @Transactional
+    public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId) {
 
         if (currentUser == null) {
             throw new IllegalArgumentException(
@@ -164,7 +196,7 @@ public class InscriptionService implements IInscriptionService {
     public boolean hasWriterAccess(UserEntity user, ModuleEntity module) {
         InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
 
-        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditeur());
+        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditor());
     }
 
     public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
@@ -178,7 +210,7 @@ public class InscriptionService implements IInscriptionService {
         }
 
         return inscriptionRepository.findByUserAndModule(user, null).stream()
-                .filter(InscriptionEntity::isEditeur)
+                .filter(InscriptionEntity::isEditor)
                 .map(InscriptionEntity::getModule)
                 .collect(Collectors.toList());
     }

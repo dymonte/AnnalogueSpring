@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
 
@@ -23,4 +24,9 @@ public interface IModuleService {
     public List<PublicationEntity> findAllPublicationsFromModule(ModuleEntity module);
 
     public List<PublicationEntity> findAllPublicationsFromModule(long id);
+
+    public List<UserModuleView> findModulesOfUser(String email);
+
+    public List<UserModuleView> findAllModuleViews();
+
 }

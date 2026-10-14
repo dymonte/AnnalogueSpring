@@ -20,7 +20,7 @@
                     <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
                     <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
-                    <form th:action="@{/module/users/register}" method="post">
+                    <form th:action="@{/module-enrollments/new}" method="post">
 
                         <div class="mb-3">
                             <label for="moduleId" class="form-label fw-bold">
@@ -41,7 +41,7 @@
 
                                 <option th:each="module : ${modules}"
                                         th:value="${module.id}"
-                                        th:text="${module.nom}"
+                                        th:text="${module.name}"
                                         th:selected="${selectedModuleId != null
                 and selectedModuleId.equals(module.id)}">
                                 </option>
