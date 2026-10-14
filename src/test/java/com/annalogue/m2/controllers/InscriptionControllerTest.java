@@ -5,9 +5,7 @@ import com.annalogue.m2.exceptions.ModuleNotFoundException;
 import com.annalogue.m2.exceptions.ModuleNotManagedException;
 import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
 import com.annalogue.m2.ldap.SecurityConfig;
-import com.annalogue.m2.models.ModuleEntity;
-import com.annalogue.m2.models.Role;
-import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.models.*;
 import com.annalogue.m2.services.*;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -61,7 +59,9 @@ class InscriptionControllerTest {
     private ModuleEntity tf;
     private ModuleEntity java;
     private ModuleEntity rx;
-
+    private InscriptionEntity tf_fmaiou;
+    private InscriptionEntity tf_achevlot;
+    private InscriptionEntity rx_fmaiou;
     @BeforeEach
     void setUp() {
         fmaiou = new UserEntity(
@@ -105,6 +105,10 @@ class InscriptionControllerTest {
 
         achevlot.setResponsibleModules(List.of(rx));
         fbouquet.setResponsibleModules(List.of(tf, java));
+
+        tf_fmaiou = new InscriptionEntity(InscriptionType.ETUDIANT, fmaiou, tf);tf_fmaiou.setId(1L);
+        tf_achevlot = new InscriptionEntity(InscriptionType.INTERVENANT, achevlot, tf);tf_achevlot.setId(2L);
+        rx_fmaiou = new InscriptionEntity(InscriptionType.ETUDIANT, fmaiou, rx);rx_fmaiou.setId(3L);
     }
 
     // GET requests
@@ -117,7 +121,7 @@ class InscriptionControllerTest {
                 .thenReturn(Optional.of(fbouquet));
 
         mockMvc.perform(
-                        get("/module/users/register")
+                        get("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                 )
                 .andExpect(status().isOk())
@@ -136,7 +140,7 @@ class InscriptionControllerTest {
     @Test
     void shouldDenyStudentAccessToRegisterPageGet() throws Exception {
         mockMvc.perform(
-                        get("/module/users/register")
+                        get("/module-enrollments/new")
                                 .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
                 )
                 .andExpect(status().isForbidden());
@@ -146,7 +150,7 @@ class InscriptionControllerTest {
     void shouldDenyUnauthenticatedAccessToRegisterPageGet()
             throws Exception {
 
-        mockMvc.perform(get("/module/users/register"))
+        mockMvc.perform(get("/module-enrollments/new"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
@@ -163,13 +167,48 @@ class InscriptionControllerTest {
         )).thenReturn("Professor not found.");
 
         mockMvc.perform(
-                        get("/module/users/register")
+                        get("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                 )
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add_member_module"))
                 .andExpect(model().attribute("modules", List.of()))
                 .andExpect(model().attributeExists("error"));
+    }
+
+    @Test
+    void shouldReturnRegisterMembersViewPage() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com")).thenReturn(Optional.of(fbouquet));;
+        when(inscriptionService.findInscriptions(fbouquet)).thenReturn(List.of(tf_achevlot, tf_fmaiou));
+        mockMvc.perform(
+                get("/module-enrollments")
+                        .with(user("fbouquet@ufr.com").roles("PROF"))
+
+        ).andExpect(status().isOk())
+                .andExpect(view().name("modules/register_members_view"))
+                .andExpect(model().attributeExists("inscriptions"))
+                .andExpect(model().attribute(
+                        "inscriptions",
+                        containsInAnyOrder(tf_achevlot, tf_fmaiou)
+                ));
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedAccessToRegisterMembersView() throws Exception {
+        mockMvc.perform(
+                        get("/module-enrollments")
+
+                ).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+    }
+
+    @Test
+    void shouldDenyUnautorizedAccessToRegisterMembersView() throws Exception {
+        mockMvc.perform(
+                        get("/module-enrollments")
+                                .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
+
+                ).andExpect(status().isForbidden());
     }
 
     // POST requests
@@ -183,14 +222,14 @@ class InscriptionControllerTest {
                 .thenReturn("User successfully registered.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "fmaiou@ufr.com")
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/module/users/register"));
+                .andExpect(redirectedUrl("/module-enrollments"));
 
         verify(inscriptionService).save(
                 fbouquet,
@@ -216,7 +255,7 @@ class InscriptionControllerTest {
         )).thenReturn("No user was found with this email address.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -257,7 +296,7 @@ class InscriptionControllerTest {
         )).thenReturn("The selected module does not exist.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "9")
@@ -292,7 +331,7 @@ class InscriptionControllerTest {
         )).thenReturn("This user is already registered for this module.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -329,7 +368,7 @@ class InscriptionControllerTest {
         )).thenReturn("You are not authorized to manage this module.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "12")
@@ -352,7 +391,7 @@ class InscriptionControllerTest {
     @Test
     void shouldThrowExceptionWhenModuleIdIsMissing() throws Exception {
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -363,7 +402,7 @@ class InscriptionControllerTest {
     @Test
     void shouldThrowExceptionWhenEmailUserIsMissing() throws Exception {
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -386,7 +425,7 @@ class InscriptionControllerTest {
         )).thenReturn("Please enter the user's email address.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -418,7 +457,7 @@ class InscriptionControllerTest {
         )).thenReturn("Please enter a valid email address.");
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fbouquet@ufr.com").roles("PROF"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -438,7 +477,7 @@ class InscriptionControllerTest {
     @Test
     void shouldDenyStudentAccessToRegisterPagePost() throws Exception {
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
                                 .with(csrf())
                                 .param("moduleId", "10")
@@ -448,11 +487,10 @@ class InscriptionControllerTest {
     }
 
     @Test
-    void shouldDenyUnauthenticatedAccessToRegisterPagePost()
-            throws Exception {
+    void shouldDenyUnauthenticatedAccessToRegisterPagePost() throws Exception {
 
         mockMvc.perform(
-                        post("/module/users/register")
+                        post("/module-enrollments/new")
                                 .with(csrf())
                                 .param("moduleId", "10")
                                 .param("emailUser", "fmaiou@ufr.com")
@@ -460,4 +498,216 @@ class InscriptionControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
+
+    @Test
+    void shouldRemoveEnrollmentById() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        Long id = tf_achevlot.getId();
+
+        when(inscriptionService.existsById(id)).thenReturn(true);
+
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", id)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"));
+
+        verify(inscriptionService).deleteById(id);
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedToRemoveEnrollmentById() throws Exception {
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", id)
+                                .with(csrf())
+             )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(inscriptionService, never()).deleteById(id);
+    }
+
+    @Test
+    void shouldDenyStudentAccessToRemoveEnrollmentById() throws Exception {
+        when(userService.findByEmail("fmaiou@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));;
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", id)
+                                .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(inscriptionService, never()).deleteById(id);
+    }
+
+    @Test
+    void shouldDenyRemoveEnrollmentByIdWhenInscriptionModuleNotManaged() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        Long id = rx_fmaiou.getId();
+
+        when(inscriptionService.existsById(id)).thenReturn(true);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", id)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to delete it."));
+
+        verify(inscriptionService, never()).deleteById(id);
+    }
+
+    @Test
+    void shouldDenyRemoveEnrollmentByIdWhenInscriptionModuleNotExiste() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        when(inscriptionService.existsById(5L)).thenReturn(false);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", 5L)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to delete it."));
+
+        verify(inscriptionService, never()).deleteById(5L);
+    }
+
+    @Test
+    void shouldEnableEditor() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet)).thenReturn(
+                List.of(tf_achevlot, tf_fmaiou)
+        );
+        when(inscriptionService.existsById(2L)).thenReturn(true);
+        when(notifyService.getMessage("success.inscription.editor.enabled")).thenReturn("Editor status enabled successfully.");
+        when(notifyService.getMessage("success.inscription.editor.disabled")).thenReturn("Editor status disabled successfully.");
+
+        mockMvc.perform(
+                post("/module-enrollments/{id}/toggle-editor", tf_achevlot.getId())
+                        .with(user("fbouquet@ufr.com").roles("PROF"))
+                        .with(csrf())
+
+        ).andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("success"))
+                .andExpect(flash().attribute("success", tf_achevlot.isEditor()?"Editor status enabled successfully." : "Editor status disabled successfully."));
+
+        verify(inscriptionService).findInscriptions(fbouquet);
+        verify(inscriptionService).existsById(2L);
+        verify(inscriptionService).toggleEditor(2L);
+    }
+
+    @Test
+    void shouldDenyUnauthenticatedToToggleEditor() throws Exception {
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"));
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyStudentAccessToToggleEditor() throws Exception {
+        when(userService.findByEmail("fmaiou@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));;
+        Long id = tf_achevlot.getId();
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(user("fmaiou@ufr.com").roles("ETUDIANT"))
+                                .with(csrf())
+                )
+                .andExpect(status().isForbidden());
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyToggleEditorWhenInscriptionModuleNotManaged() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        Long id = rx_fmaiou.getId();
+
+        when(inscriptionService.existsById(id)).thenReturn(true);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to modify or delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/toggle-editor", id)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
+
+        verify(inscriptionService, never()).toggleEditor(id);
+    }
+
+    @Test
+    void shouldDenyToggleEditorWhenInscriptionModuleNotExiste() throws Exception {
+        when(userService.findByEmail("fbouquet@ufr.com"))
+                .thenReturn(Optional.of(fbouquet));
+
+        when(inscriptionService.findInscriptions(fbouquet))
+                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+
+        when(inscriptionService.existsById(5L)).thenReturn(false);
+        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                "Enrollment not found or you are not authorized to modify or delete it."
+        );
+        mockMvc.perform(
+                        post("/module-enrollments/{id}/delete", 5L)
+                                .with(user("fbouquet@ufr.com").roles("PROF"))
+                                .with(csrf())
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/module-enrollments"))
+                .andExpect(flash().attributeExists("error"))
+                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
+
+        verify(inscriptionService, never()).toggleEditor(5L);
+    }
+
+
 }

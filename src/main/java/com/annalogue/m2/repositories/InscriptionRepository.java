@@ -19,9 +19,9 @@ public interface InscriptionRepository extends JpaRepository<InscriptionEntity, 
             InscriptionType inscriptionType
     );
 
-    List<InscriptionEntity> findByEditeurTrue();
+    List<InscriptionEntity> findByEditorTrue();
 
-    List<InscriptionEntity> findByEditeurFalse();
+    List<InscriptionEntity> findByEditorFalse();
 
 
 }

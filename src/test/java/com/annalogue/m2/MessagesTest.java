@@ -119,4 +119,11 @@ class MessagesTest {
         assertFalse(message("error.module.database").isBlank());
         assertFalse(message("success.module.created").isBlank());
     }
+
+    @Test
+    void shouldContainMyModulesLabels() {
+        assertFalse(message("my.modules.role.responsible").isBlank());
+        assertFalse(message("my.modules.role.ETUDIANT").isBlank());
+        assertFalse(message("my.modules.role.INTERVENANT").isBlank());
+    }
 }

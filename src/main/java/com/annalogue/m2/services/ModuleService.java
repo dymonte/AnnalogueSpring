@@ -1,8 +1,11 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
+import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.security.core.Authentication;
@@ -10,7 +13,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -18,14 +24,18 @@ import java.util.Optional;
 public class ModuleService implements IModuleService {
 
     private static final int MAX_NAME_LENGTH = 255;
+    private static final String ROLE_KEY_PREFIX = "my.modules.role.";
 
     private final ModuleRepository moduleRepository;
-
     private final UserRepository userRepository;
+    private final InscriptionRepository inscriptionRepository;
 
-    public ModuleService(ModuleRepository moduleRepository, UserRepository userRepository) {
+    public ModuleService(ModuleRepository moduleRepository,
+                         UserRepository userRepository,
+                         InscriptionRepository inscriptionRepository) {
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
+        this.inscriptionRepository = inscriptionRepository;
     }
 
     @Override
@@ -47,6 +57,45 @@ public class ModuleService implements IModuleService {
         UserEntity currentUser = getCurrentUser();
 
         return moduleRepository.save(new ModuleEntity(moduleName, currentUser));
+    }
+
+    @Override
+    public List<UserModuleView> findModulesOfUser(String email) {
+        if (email == null || email.isBlank()) {
+            return List.of();
+        }
+        Optional<UserEntity> user = userRepository.findByEmail(email.trim());
+        if (user.isEmpty()) {
+            return List.of();
+        }
+        Long userId = user.get().getId();
+
+        Map<Long, UserModuleView> modules = new LinkedHashMap<>();
+
+        for (ModuleEntity module : moduleRepository.findByResponsibleIdOrderByNameAsc(userId)) {
+            modules.put(module.getId(), new UserModuleView(
+                    module.getId(), module.getName(), UserModuleView.RESPONSIBLE_ROLE_KEY, false));
+        }
+
+        for (InscriptionEntity inscription : inscriptionRepository.findByUserId(userId)) {
+            ModuleEntity module = inscription.getModule();
+            modules.putIfAbsent(module.getId(), new UserModuleView(
+                    module.getId(),
+                    module.getName(),
+                    ROLE_KEY_PREFIX + inscription.getInscriptionType().name(),
+                    inscription.isEditor()));
+        }
+
+        return modules.values().stream()
+                .sorted(Comparator.comparing(UserModuleView::getName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    @Override
+    public List<UserModuleView> findAllModuleViews() {
+        return findAll().stream()
+                .map(module -> new UserModuleView(module.getId(), module.getName(), null, false))
+                .toList();
     }
 
     private String getCurrentUserEmail() {
