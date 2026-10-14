@@ -2,9 +2,6 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Entity
 @Table(name = "modules")
 public class ModuleEntity {
