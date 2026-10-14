@@ -70,9 +70,9 @@ public class PublicationController {
 		if (authentication != null) {
 			userService.findByEmail(authentication.getName()).ifPresent(
 					userEntity -> {
-                        model.addAttribute("username", userEntity.getUsername());
-                        model.addAttribute("modules", inscriptionService.getAllModulesEditable(userEntity));
-                    });
+						var modules = inscriptionService.getAllModulesEditable(userEntity);
+						model.addAttribute("modules", modules);
+					});
 		}
 
 		model.addAttribute("fileType", FileType.values());
