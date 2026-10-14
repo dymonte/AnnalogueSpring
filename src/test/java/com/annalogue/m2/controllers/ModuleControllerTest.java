@@ -1,5 +1,6 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
@@ -8,6 +9,8 @@ import com.annalogue.m2.services.IModuleService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -49,7 +52,7 @@ class ModuleControllerTest {
 
         mockMvc.perform(post("/modules/add").param("name", "MOIA"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/modules"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("successKey", "success.module.created"))
                 .andExpect(flash().attribute("createdModuleName", "MOIA"));
 
@@ -114,17 +117,42 @@ class ModuleControllerTest {
                 .andExpect(model().attribute("name", "MOIA"));
     }
 
-    @Test
-    void shouldListModules() throws Exception {
-        List<ModuleEntity> modules = List.of(
-                new ModuleEntity("MOIA", teacher),
-                new ModuleEntity("TF", teacher));
-        when(moduleService.findAll()).thenReturn(modules);
+    // ===== GET /modules: catalogue for the admin, home page for the others =====
 
-        mockMvc.perform(get("/modules"))
+    private UsernamePasswordAuthenticationToken loggedIn(String email, String role) {
+        return new UsernamePasswordAuthenticationToken(
+                email, null, List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+    }
+
+    @Test
+    void adminSeesAllTheModules() throws Exception {
+        List<UserModuleView> modules = List.of(
+                new UserModuleView(1L, "MOIA", null, false),
+                new UserModuleView(2L, "TF", null, false));
+        when(moduleService.findAllModuleViews()).thenReturn(modules);
+
+        mockMvc.perform(get("/modules").principal(loggedIn("admin@example.com", "ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/list"))
-                .andExpect(model().attribute("modules", modules));
+                .andExpect(model().attribute("modules", modules))
+                .andExpect(model().attribute("countAll", 2))
+                .andExpect(model().attribute("isAdmin", true));
+    }
+
+    @Test
+    void teacherIsSentToHisHomePage() throws Exception {
+        mockMvc.perform(get("/modules").principal(loggedIn("fabrice@example.com", "RESPONSABLE")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"));
+
+        verify(moduleService, never()).findAllModuleViews();
+    }
+
+    @Test
+    void studentIsSentToHisHomePage() throws Exception {
+        mockMvc.perform(get("/modules").principal(loggedIn("fabien@example.com", "ETUDIANT")))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"));
     }
 
     @Test
