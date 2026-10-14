@@ -11,14 +11,24 @@
     <div th:insert="~{navbar.html}"></div>
 
     <div class="container mt-5">
-        <h1 th:text="${module.name}"></h1>
-        <table class="table">
-            <tr th:each="publication: ${publications}">
-                <td th:text="${publication.name} + ' (' + ${publication.fileType} + ')'" />
-                <td th:if="${publication.description != null}" th:text="${publication.description}" />
-                <td><a th:text="#{publication.download}" th:href="@{/files/{id}(id=${publication.id})}">Download</a></td>
-            </tr>
-        </table>
+        <div class="card">
+            <h5 class="card-header">
+                <span th:text="${module.name}"></span>
+            </h5>
+            <div class="card-body">
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                  <div class="col" th:each="publication: ${publications}">
+                    <div class="card h-100">
+                      <div class="card-body">
+                        <h5 class="card-title" th:text="${publication.name} + ' (' + ${publication.fileType} + ')'"></h5>
+                        <p class="card-text" th:if="${publication.description != null}" th:text="${publication.description}"></p>
+                        <a th:text="#{publication.download}" th:href="@{/files/{id}(id=${publication.id})}" class="btn btn-primary">Télécharger</a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
