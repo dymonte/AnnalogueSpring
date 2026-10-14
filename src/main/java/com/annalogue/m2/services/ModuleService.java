@@ -32,9 +32,9 @@ public class ModuleService implements IModuleService {
 
     public ModuleService(ModuleRepository moduleRepository,
                          UserRepository userRepository,
-                         InscriptionRepository inscriptionRepository) {
+                         InscriptionRepository inscriptionRepository,
+                         IUserService iUserService) {
 
-    public ModuleService(ModuleRepository moduleRepository, UserRepository userRepository, IUserService iUserService) {
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
         this.iUserService = iUserService;
@@ -114,5 +114,10 @@ public class ModuleService implements IModuleService {
     @Override
     public boolean existsByName(String name) {
         return name != null && moduleRepository.existsByNameIgnoreCase(name.trim());
+    }
+
+    @Override
+    public void deleteAll() {
+        moduleRepository.deleteAll();
     }
 }
