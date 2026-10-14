@@ -25,6 +25,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+
 @WebMvcTest(HomeController.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -216,5 +219,69 @@ class HomeControllerTest {
                 .andExpect(model().attributeDoesNotExist("modules"));
 
         verify(moduleService, never()).findModulesOfUser(any());
+    }
+
+        // ===== TFAN26-66 (UTIL-04): « My modules » page =====
+
+    @Test
+    void pageShowsTheModulesWithTheirLabels() throws Exception {
+        when(moduleService.findModulesOfUser("fabrice@example.com")).thenReturn(List.of(moia, tf));
+
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("fabrice@example.com").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("My modules")))
+                .andExpect(content().string(containsString("MOIA")))
+                .andExpect(content().string(containsString("href=\"/modules/1\"")))
+                .andExpect(content().string(containsString("Created by me")))
+                .andExpect(content().string(containsString("Lecturer")))
+                .andExpect(content().string(containsString("Editor")));
+    }
+
+    @Test
+    void responsableSeesTheCreateButtonAndTheCreatedFilter() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("resp@example.com").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"create-module\"")))
+                .andExpect(content().string(containsString("id=\"filter-created\"")));
+    }
+
+    @Test
+    void professorDoesNotSeeTheCreateButton() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("prof@example.com").roles("PROF"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("id=\"create-module\""))));
+    }
+
+    @Test
+    void studentWithoutModuleSeesTheEmptyMessage() throws Exception {
+        mockMvc.perform(
+                        get("/home")
+                                .with(user("fabien@example.com").roles("ETUDIANT"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("You are not in any module yet.")))
+                .andExpect(content().string(containsString("id=\"filter-enrolled\"")))
+                .andExpect(content().string(not(containsString("id=\"filter-created\""))));
+    }
+
+    @Test
+    void emptyCreatedFilterShowsItsMessage() throws Exception {
+        when(moduleService.findModulesOfUser("resp@example.com")).thenReturn(List.of(tf));
+
+        mockMvc.perform(
+                        get("/home").param("filter", "created")
+                                .with(user("resp@example.com").roles("RESPONSABLE"))
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("You have not created any module yet.")));
     }
 }
