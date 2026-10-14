@@ -5,6 +5,7 @@ import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.StudyLevel;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.ModuleRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,14 +30,17 @@ public class HandleUserService {
     private final UserService userService;
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
+    private final ModuleRepository moduleRepository;
 
     public HandleUserService(
             UserService userService,
             MailService mailService,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            ModuleRepository moduleRepository) {
         this.userService = userService;
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
+        this.moduleRepository = moduleRepository;
     }
 
     // year = start of the academic year (2026 for 2026-2027), level = L1, L2, L3, M1, M2
@@ -120,6 +124,11 @@ public class HandleUserService {
         return userService.findAll();
     }
 
+    // members list filtered by role
+    public List<UserEntity> findUsersByRole(Role role) {
+        return userService.findByRole(role);
+    }
+
     // deletes a user linked to nothing; returns his username for the success message.
     // the user is found by id (the username is not unique)
     @Transactional
@@ -145,6 +154,46 @@ public class HandleUserService {
 
         return user.getUsername();
     }
+
+    // the admin switches a teacher between PROF and RESPONSABLE (Responsable Module);
+    // returns his username for the success message
+    @Transactional
+    public String changeRole(Long id, Role newRole) {
+        UserEntity user = userService.findById(id)
+                .orElseThrow(() -> new InvalidUserDataException("role", "error.user.role.change.notfound"));
+
+        if (newRole == null) {
+            throw new InvalidUserDataException("role", "error.user.role.empty");
+        }
+        // only one administrator
+        if (newRole == Role.ADMIN) {
+            throw new InvalidUserDataException("role", "error.user.role.change.admin");
+        }
+        if (user.getRole() == Role.ADMIN) {
+            throw new InvalidUserDataException("role", "error.user.role.change.admin.user");
+        }
+        // only a teacher: a student has a year, a level and a group
+        if (!isTeacherRole(user.getRole()) || !isTeacherRole(newRole)) {
+            throw new InvalidUserDataException("role", "error.user.role.change.notallowed");
+        }
+        // a responsable who still manages modules cannot become a simple teacher
+        if (user.getRole() == Role.RESPONSABLE && newRole == Role.PROF
+                && moduleRepository.existsByResponsibleId(user.getId())) {
+            throw new InvalidUserDataException("role", "error.user.role.change.modules");
+        }
+
+        if (user.getRole() != newRole) {
+            user.setRole(newRole);
+            userService.save(user);
+        }
+
+        return user.getUsername();
+    }
+
+    private boolean isTeacherRole(Role role) {
+        return role == Role.PROF || role == Role.RESPONSABLE;
+    }
+
     private void validate(
             String email,
             Role role,

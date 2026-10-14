@@ -1,4 +1,3 @@
-
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.exceptions.*;
@@ -167,7 +166,8 @@ public class InscriptionService implements IInscriptionService{
 
         InscriptionType inscriptionType;
 
-        if (member.getRole() == Role.PROF) {
+        // a Responsable Module is a teacher too: intervenant in the modules of the others
+        if (member.getRole() == Role.PROF || member.getRole() == Role.RESPONSABLE) {
             inscriptionType = InscriptionType.INTERVENANT;
         } else if (member.getRole() == Role.ETUDIANT) {
             inscriptionType = InscriptionType.ETUDIANT;

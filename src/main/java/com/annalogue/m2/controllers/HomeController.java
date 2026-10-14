@@ -29,9 +29,10 @@ public class HomeController {
                                 .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
 
         model.addAttribute("canCreateModuleAndPublication",
-                authentication != null
-                        && authentication.getAuthorities().stream()
-                        .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN") || Objects.equals(role.getAuthority(), "ROLE_PROF")));
+                hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_PROF", "ROLE_RESPONSABLE"));
+
+        // only a Responsable Module sees "Create a module"
+        model.addAttribute("canCreateModule", hasAnyRole(authentication, "ROLE_RESPONSABLE"));
 
 
         if (authentication != null) {
@@ -40,5 +41,11 @@ public class HomeController {
         }
 
         return "home";
+    }
+
+    private boolean hasAnyRole(Authentication authentication, String... roles) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(authority -> java.util.Arrays.asList(roles).contains(authority.getAuthority()));
     }
 }

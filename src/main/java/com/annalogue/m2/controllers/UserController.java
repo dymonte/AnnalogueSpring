@@ -18,6 +18,7 @@ import org.springframework.mail.MailException;
 
 
 import com.annalogue.m2.dto.UsernameCheckResponse;
+import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.StudyLevel;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -114,8 +115,19 @@ public class UserController {
     }
         // members list with a delete button (admin only, see SecurityConfig: /members/**)
     @GetMapping("/members")
-    public String listMembers(Model model) {
-        model.addAttribute("users", handleUserService.findAllUsers());
+    public String listMembers(@RequestParam(required = false) String role, Model model) {
+        // empty or unknown filter: all the members
+        Role selectedRole = (role != null && !role.isBlank() && roleService.exists(role))
+                ? roleService.fromString(role)
+                : null;
+
+        model.addAttribute("users", selectedRole == null
+                ? handleUserService.findAllUsers()
+                : handleUserService.findUsersByRole(selectedRole));
+        model.addAttribute("filterRoles", roleService.getRoles());
+        model.addAttribute("selectedFilter", selectedRole == null ? "" : selectedRole.name());
+        // roles offered in the "change role" select of a teacher
+        model.addAttribute("teacherRoles", roleService.getTeacherRoles());
         return "admin/members";
     }
 
@@ -137,6 +149,44 @@ public class UserController {
         }
 
         // back to the list in both cases, with the message
+        return "redirect:/members";
+    }
+
+    // the admin switches a teacher between Teacher and Module manager (admin only, see SecurityConfig: /members/**)
+    @PostMapping("/members/{id}/role")
+    public String changeMemberRole(@PathVariable Long id,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String filter,
+            RedirectAttributes redirectAttributes) {
+
+        // back to the list with the same role filter
+        if (filter != null && !filter.isBlank()) {
+            redirectAttributes.addAttribute("role", filter);
+        }
+
+        if (role == null || role.isBlank()) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.empty");
+            return "redirect:/members";
+        }
+        if (!roleService.exists(role)) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.invalid");
+            return "redirect:/members";
+        }
+
+        try {
+            String changedUsername = handleUserService.changeRole(id, roleService.fromString(role));
+
+            redirectAttributes.addFlashAttribute("successKey", "success.member.role.changed");
+            redirectAttributes.addFlashAttribute("changedUsername", changedUsername);
+
+        } catch (InvalidUserDataException e) {
+            // unknown user, admin, student, or responsable who still manages modules
+            redirectAttributes.addFlashAttribute("errorKey", e.getMessageKey());
+
+        } catch (DataAccessException e) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.change.database");
+        }
+
         return "redirect:/members";
     }
     // lists shown in the form's dropdowns

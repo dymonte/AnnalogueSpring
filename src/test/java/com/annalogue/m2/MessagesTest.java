@@ -126,4 +126,30 @@ class MessagesTest {
         assertFalse(message("my.modules.role.ETUDIANT").isBlank());
         assertFalse(message("my.modules.role.INTERVENANT").isBlank());
     }
+
+    @Test
+    void shouldContainResponsableRoleMessages() {
+        assertFalse(message("role.RESPONSABLE").isBlank());
+        assertFalse(message("members.role.change").isBlank());
+        assertFalse(message("members.filter.role").isBlank());
+        assertFalse(message("members.filter.all").isBlank());
+        assertFalse(message("members.filter.submit").isBlank());
+        assertFalse(message("members.filter.empty").isBlank());
+        assertFalse(message("error.user.role.change.notfound").isBlank());
+        assertFalse(message("error.user.role.change.admin").isBlank());
+        assertFalse(message("error.user.role.change.admin.user").isBlank());
+        assertFalse(message("error.user.role.change.notallowed").isBlank());
+        assertFalse(message("error.user.role.change.modules").isBlank());
+        assertFalse(message("error.user.role.change.database").isBlank());
+    }
+
+    @Test
+    void shouldInsertUsernameInRoleChangedMessage() {
+        String text = messageSource.getMessage(
+                "success.member.role.changed",
+                new Object[]{"toto"},
+                Locale.ENGLISH);
+
+        assertTrue(text.contains("toto"));
+    }
 }

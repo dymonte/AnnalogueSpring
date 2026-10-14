@@ -4,6 +4,7 @@ import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.StudyLevel;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.ModuleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -46,6 +47,9 @@ class HandleUserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private ModuleRepository moduleRepository;
 
     @InjectMocks
     private HandleUserService handleUserService;
@@ -370,5 +374,116 @@ class HandleUserServiceTest {
                 () -> handleUserService.deleteUser(6L));
 
         assertEquals("error.user.delete.linked", exception.getMessageKey());
+    }
+
+    // ===== change role (Prof <-> Responsable Module) =====
+
+    private UserEntity userWithId(long id, String username, Role role) {
+        UserEntity user = user(username, role);
+        user.setId(id);
+        return user;
+    }
+
+    private void assertRoleChangeRefused(String expectedKey, Long id, Role newRole) {
+        InvalidUserDataException exception = assertThrows(
+                InvalidUserDataException.class,
+                () -> handleUserService.changeRole(id, newRole));
+
+        assertEquals("role", exception.getField());
+        assertEquals(expectedKey, exception.getMessageKey());
+        verify(userService, never()).save(any());
+    }
+
+    @Test
+    void shouldPromoteProfToResponsable() {
+        UserEntity toto = userWithId(7L, "toto", Role.PROF);
+        when(userService.findById(7L)).thenReturn(Optional.of(toto));
+
+        String username = handleUserService.changeRole(7L, Role.RESPONSABLE);
+
+        assertEquals("toto", username);
+        assertEquals(Role.RESPONSABLE, toto.getRole());
+        verify(userService).save(toto);
+    }
+
+    @Test
+    void shouldDemoteResponsableWhoManagesNoModule() {
+        UserEntity toto = userWithId(7L, "toto", Role.RESPONSABLE);
+        when(userService.findById(7L)).thenReturn(Optional.of(toto));
+        when(moduleRepository.existsByResponsibleId(7L)).thenReturn(false);
+
+        handleUserService.changeRole(7L, Role.PROF);
+
+        assertEquals(Role.PROF, toto.getRole());
+        verify(userService).save(toto);
+    }
+
+    @Test
+    void shouldRefuseToDemoteResponsableWhoStillManagesModules() {
+        UserEntity toto = userWithId(7L, "toto", Role.RESPONSABLE);
+        when(userService.findById(7L)).thenReturn(Optional.of(toto));
+        when(moduleRepository.existsByResponsibleId(7L)).thenReturn(true);
+
+        assertRoleChangeRefused("error.user.role.change.modules", 7L, Role.PROF);
+        assertEquals(Role.RESPONSABLE, toto.getRole());
+    }
+
+    @Test
+    void shouldNotSaveWhenTheRoleIsTheSame() {
+        UserEntity toto = userWithId(7L, "toto", Role.RESPONSABLE);
+        when(userService.findById(7L)).thenReturn(Optional.of(toto));
+
+        assertEquals("toto", handleUserService.changeRole(7L, Role.RESPONSABLE));
+        verify(userService, never()).save(any());
+    }
+
+    @Test
+    void shouldRefuseToChangeRoleOfUnknownUser() {
+        when(userService.findById(99L)).thenReturn(Optional.empty());
+
+        assertRoleChangeRefused("error.user.role.change.notfound", 99L, Role.RESPONSABLE);
+    }
+
+    @Test
+    void shouldRefuseEmptyNewRole() {
+        when(userService.findById(7L)).thenReturn(Optional.of(userWithId(7L, "toto", Role.PROF)));
+
+        assertRoleChangeRefused("error.user.role.empty", 7L, null);
+    }
+
+    @Test
+    void shouldRefuseToGiveAdminRole() {
+        when(userService.findById(7L)).thenReturn(Optional.of(userWithId(7L, "toto", Role.PROF)));
+
+        assertRoleChangeRefused("error.user.role.change.admin", 7L, Role.ADMIN);
+    }
+
+    @Test
+    void shouldRefuseToChangeAdminRole() {
+        when(userService.findById(1L)).thenReturn(Optional.of(userWithId(1L, "admin", Role.ADMIN)));
+
+        assertRoleChangeRefused("error.user.role.change.admin.user", 1L, Role.PROF);
+    }
+
+    @Test
+    void shouldRefuseToChangeStudentRole() {
+        when(userService.findById(2L)).thenReturn(Optional.of(userWithId(2L, "memb", Role.ETUDIANT)));
+
+        assertRoleChangeRefused("error.user.role.change.notallowed", 2L, Role.RESPONSABLE);
+    }
+
+    @Test
+    void shouldRefuseToTurnTeacherIntoStudent() {
+        when(userService.findById(7L)).thenReturn(Optional.of(userWithId(7L, "toto", Role.PROF)));
+
+        assertRoleChangeRefused("error.user.role.change.notallowed", 7L, Role.ETUDIANT);
+    }
+
+    @Test
+    void shouldReturnUsersOfOneRole() {
+        List<UserEntity> teachers = List.of(user("toto", Role.PROF));
+        when(userService.findByRole(Role.PROF)).thenReturn(teachers);
+
+        assertEquals(teachers, handleUserService.findUsersByRole(Role.PROF));
     }
 }
