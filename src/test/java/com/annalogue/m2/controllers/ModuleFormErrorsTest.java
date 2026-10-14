@@ -2,6 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -31,6 +32,9 @@ class ModuleFormErrorsTest {
 
     @MockitoBean
     private IModuleService moduleService;
+
+    @MockitoBean
+    private IUserService userService;
 
     @Test
     void emptyFormShouldShowNoError() throws Exception {

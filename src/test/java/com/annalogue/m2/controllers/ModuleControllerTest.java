@@ -5,9 +5,11 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -23,6 +25,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ModuleControllerTest {
 
     private final IModuleService moduleService = mock(IModuleService.class);
+
+    @MockitoBean
+    private IUserService userService;
 
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);

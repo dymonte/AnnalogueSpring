@@ -1,6 +1,6 @@
 package com.annalogue.m2.controllers;
 
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalModelAttributes {
 
     @Autowired
-    private UserService userService;
+    private IUserService userService;
 
     @ModelAttribute
     public void addGlobalAttributes(Authentication authentication, Model model) {
