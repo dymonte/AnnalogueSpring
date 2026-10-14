@@ -14,7 +14,6 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -65,4 +64,7 @@ public class UserService implements IUserService {
         // the database refuses it here, where HandleUserService can catch it
         userRepository.flush();
     }
+
+
+
 }
