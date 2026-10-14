@@ -1,10 +1,9 @@
 package com.annalogue.m2.steps;
 
-import com.annalogue.m2.models.Role;
-import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.AriaRole;
 import io.cucumber.java.*;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Et;
@@ -16,10 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserAcceptanceTest {
 
@@ -89,5 +86,80 @@ public class UserAcceptanceTest {
         moduleService.deleteAll();
     }
 
+
+
+    @Et("L{string}existe pas")
+    public void lUtilisateurNExistePas(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Quand("Je supprime <login> du site")
+    public void jeSupprimeLoginDuSite() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("J{string}erreur qui dit que l{string}existe pas")
+    public void jAiUnMessageDErreurQuiDitQueLUtilisateurNExistePas() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("J{string}erreur qui dit que je n'ai pas le droit de supprimer un utilisateur de site")
+    public void jAiUnMessageDErreurQuiDitQueJeNAiPasLeDroitDeSupprimerUnUtilisateurDeSite() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Quand("J'ajoute un utilisateur <login> en tant que <role> avec le mot de passe <mdp> avec comme année {string}")
+    public void jAjouteUnUtilisateurLoginEnTantQueRoleAvecLeMotDePasseMdpAvecCommeAnnée(String arg0) {
+
+        // UserEntity user = userService.getCurrentUser();
+
+        page.navigate("http://localhost:8080/members/add");
+        page.locator("input[name=\"email\"]").click();
+        page.locator("input[name=\"email\"]").fill("...");
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).click();
+        page.getByRole(AriaRole.TEXTBOX, new Page.GetByRoleOptions().setName("Username")).fill("...");
+        page.locator("#email").
+
+        throw new PendingException();
+    }
+
+    @Alors("L'utilisateur <login> existe")
+    public void lUtilisateurLoginExiste() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Quand("J'ajoute un utilisateur {string} en tant que {string}")
+    public void jAjouteUnUtilisateurEnTantQue(String arg0, String arg1) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("J{string}erreur qui dit qu'on ne peut pas ajouter un autre administrateur")
+    public void jAiUnMessageDErreurQuiDitQuOnNePeutPasAjouterUnAutreAdministrateur() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Quand("Je supprime {string} du site")
+    public void jeSupprimeDuSite(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Et("<login> a le mot de passe <mdp>")
+    public void loginALeMotDePasseMdp() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Et("L'utilisateur {string} n'existe pas")
+    public void l_utilisateur_n_existe_pas() {
+        assertFalse(userService.findByEmail("toto@example.com").isPresent());
+    }
 
 }
