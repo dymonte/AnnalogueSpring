@@ -1,51 +1,92 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.dto.UserModuleView;
+import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.UserService;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.bind.annotation.RequestParam;
 
-import org.springframework.security.core.Authentication;
-
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
 
 @Controller
 public class HomeController {
 
-    @Autowired
-    private UserService userService;
+    // filters of « My modules »
+    static final String FILTER_ALL = "all";
+    static final String FILTER_CREATED = "created";
+    static final String FILTER_ENROLLED = "enrolled";
 
+    private final UserService userService;
+    private final IModuleService moduleService;
+
+    public HomeController(UserService userService, IModuleService moduleService) {
+        this.userService = userService;
+        this.moduleService = moduleService;
+    }
+
+    // the admin keeps his home page; for the others the home page is « My modules »
     @GetMapping(value = { "/home", "/" })
-    public String home(Authentication authentication, Model model) {
+    public String home(@RequestParam(defaultValue = FILTER_ALL) String filter,
+                       Authentication authentication,
+                       Model model) {
 
-        model.addAttribute("login", authentication != null ? authentication.getName() : "");
-        model.addAttribute("isAdmin",
-                authentication != null
-                        && authentication.getAuthorities().stream()
-                                .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
+        String email = authentication != null ? authentication.getName() : "";
+        boolean isAdmin = hasAnyRole(authentication, "ROLE_ADMIN");
 
+        model.addAttribute("login", email);
+        model.addAttribute("isAdmin", isAdmin);
         model.addAttribute("canCreateModuleAndPublication",
                 hasAnyRole(authentication, "ROLE_ADMIN", "ROLE_PROF", "ROLE_RESPONSABLE"));
-
-        // only a Responsable Module sees "Create a module"
         model.addAttribute("canCreateModule", hasAnyRole(authentication, "ROLE_RESPONSABLE"));
 
-
         if (authentication != null) {
-            userService.findByEmail(authentication.getName()).ifPresent(
+            userService.findByEmail(email).ifPresent(
                     userEntity -> model.addAttribute("username", userEntity.getUsername()));
         }
 
-        return "home";
+        if (isAdmin) {
+            return "home";
+        }
+
+        addMyModules(model, moduleService.findModulesOfUser(email), filter);
+        return "modules/list";
+    }
+
+    // the modules of the user, filtered: all, created by him, or the ones he is enrolled in
+    private void addMyModules(Model model, List<UserModuleView> modules, String filter) {
+        List<UserModuleView> created = modules.stream()
+                .filter(UserModuleView::isResponsible)
+                .toList();
+        List<UserModuleView> enrolled = modules.stream()
+                .filter(module -> !module.isResponsible())
+                .toList();
+
+        // an unknown filter shows everything
+        String selectedFilter = switch (filter) {
+            case FILTER_CREATED, FILTER_ENROLLED -> filter;
+            default -> FILTER_ALL;
+        };
+
+        List<UserModuleView> shown = switch (selectedFilter) {
+            case FILTER_CREATED -> created;
+            case FILTER_ENROLLED -> enrolled;
+            default -> modules;
+        };
+
+        model.addAttribute("modules", shown);
+        model.addAttribute("filter", selectedFilter);
+        model.addAttribute("countAll", modules.size());
+        model.addAttribute("countCreated", created.size());
+        model.addAttribute("countEnrolled", enrolled.size());
     }
 
     private boolean hasAnyRole(Authentication authentication, String... roles) {
         return authentication != null
                 && authentication.getAuthorities().stream()
-                        .anyMatch(authority -> java.util.Arrays.asList(roles).contains(authority.getAuthority()));
+                        .anyMatch(authority -> Arrays.asList(roles).contains(authority.getAuthority()));
     }
 }

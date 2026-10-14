@@ -55,7 +55,8 @@ class SecurityIntegrationTest {
                                 .with(user("test@test.com"))
                 )
                 .andExpect(status().isOk())
-                .andExpect(view().name("home"));
+                // « My modules » is the home page of the non-admin users
+                .andExpect(view().name("modules/list"));
     }
 
     // ===== TFAN26-12: only an admin can create members =====
