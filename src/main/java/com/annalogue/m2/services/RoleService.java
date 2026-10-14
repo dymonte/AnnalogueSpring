@@ -32,4 +32,8 @@ public class RoleService {
                 .filter(role -> role != Role.ADMIN)
                 .toList();
     }
+    // roles a teacher can switch between (Prof <-> Responsable Module)
+    public List<Role> getTeacherRoles() {
+        return List.of(Role.PROF, Role.RESPONSABLE);
+    }
 }

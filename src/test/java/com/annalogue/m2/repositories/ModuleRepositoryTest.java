@@ -104,4 +104,14 @@ class ModuleRepositoryTest {
         // only Fabrice's modules, sorted; JPA belongs to Claire
         assertEquals(List.of("MOIA", "TF"), names);
     }
+
+    @Test
+    void shouldKnowIfAUserStillManagesModules() {
+        UserEntity other = userRepository.save(
+                new UserEntity("claire@example.com", "hash", "claire", Role.RESPONSABLE, null, null));
+        moduleRepository.save(new ModuleEntity("MOIA", teacher));
+
+        assertTrue(moduleRepository.existsByResponsibleId(teacher.getId()));
+        assertFalse(moduleRepository.existsByResponsibleId(other.getId()));
+    }
 }

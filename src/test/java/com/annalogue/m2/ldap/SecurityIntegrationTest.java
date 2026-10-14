@@ -259,4 +259,20 @@ class SecurityIntegrationTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"));
     }
+
+    // ===== TFAN26-125 (ADMIN-02): only the admin changes a role =====
+
+    @Test
+    void nonAdminShouldNotChangeRoles() throws Exception {
+
+        mockMvc.perform(
+                        post("/members/1/role")
+                                .with(user("prof@example.com").roles("RESPONSABLE"))
+                                .with(SecurityMockMvcRequestPostProcessors.csrf())
+                                .param("role", "RESPONSABLE")
+                )
+                .andExpect(status().isForbidden());
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
 }

@@ -126,4 +126,48 @@ class MessagesTest {
         assertFalse(message("my.modules.role.ETUDIANT").isBlank());
         assertFalse(message("my.modules.role.INTERVENANT").isBlank());
     }
+
+    @Test
+    void shouldContainResponsableRoleMessages() {
+        assertFalse(message("role.RESPONSABLE").isBlank());
+        assertFalse(message("members.role.change").isBlank());
+        assertFalse(message("members.filter.role").isBlank());
+        assertFalse(message("members.filter.all").isBlank());
+        assertFalse(message("members.filter.submit").isBlank());
+        assertFalse(message("members.filter.empty").isBlank());
+        assertFalse(message("error.user.role.change.notfound").isBlank());
+        assertFalse(message("error.user.role.change.admin").isBlank());
+        assertFalse(message("error.user.role.change.admin.user").isBlank());
+        assertFalse(message("error.user.role.change.notallowed").isBlank());
+        assertFalse(message("error.user.role.change.modules").isBlank());
+        assertFalse(message("error.user.role.change.database").isBlank());
+    }
+
+    @Test
+    void shouldInsertUsernameInRoleChangedMessage() {
+        String text = messageSource.getMessage(
+                "success.member.role.changed",
+                new Object[]{"toto"},
+                Locale.ENGLISH);
+
+        assertTrue(text.contains("toto"));
+    }
 }
+git add src/test/java/com/annalogue/m2/services/InscriptionServiceTest.java
+git add src/test/java/com/annalogue/m2/services/RoleServiceTest.java
+git add src/test/java/com/annalogue/m2/services/HandleUserServiceTest.java
+git add src/test/java/com/annalogue/m2/repositories/ModuleRepositoryTest.java
+git add src/test/java/com/annalogue/m2/models/RoleTest.java
+git add src/test/java/com/annalogue/m2/models/RoleConverterTest.java
+git add src/test/java/com/annalogue/m2/ldap/SecurityIntegrationTest.java
+git add src/test/java/com/annalogue/m2/controllers/UserControllerTest.java
+git add src/test/java/com/annalogue/m2/MessagesTest.java
+git add src/main/resources/templates/admin/members.html
+git add src/main/resources/messages.properties
+git add src/main/java/com/annalogue/m2/controllers/UserController.java
+git add src/main/java/com/annalogue/m2/ldap/SecurityConfig.java
+git add src/main/java/com/annalogue/m2/models/Role.java
+git add src/main/java/com/annalogue/m2/repositories/ModuleRepository.java
+git add src/main/java/com/annalogue/m2/services/HandleUserService.java
+git add src/main/java/com/annalogue/m2/services/InscriptionService.java
+git add src/main/java/com/annalogue/m2/services/RoleService.java
