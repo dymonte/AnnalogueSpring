@@ -2,6 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
@@ -128,13 +129,37 @@ class ModuleControllerTest {
     }
 
     @Test
-    void shouldShowModulePage() throws Exception {
-        ModuleEntity module = new ModuleEntity("MOIA", teacher);
+    void shouldShowEmptyModulePage() throws Exception {
+        ModuleEntity module = mock(ModuleEntity.class);
+        when(module.getId()).thenReturn(1L);
+        when(module.getName()).thenReturn("MOIA");
+        when(module.getResponsible()).thenReturn(teacher);
+        when(module.getPublications()).thenReturn(List.of());
         when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+
 
         mockMvc.perform(get("/modules/1"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/detail"))
+                .andExpect(model().attribute("publications", List.of()))
+                .andExpect(model().attribute("module", module));
+    }
+
+    @Test
+    void shouldShowFilledModulePage() throws Exception {
+        ModuleEntity module = mock(ModuleEntity.class);
+        when(module.getId()).thenReturn(1L);
+        when(module.getName()).thenReturn("MOIA");
+        when(module.getResponsible()).thenReturn(teacher);
+        PublicationEntity pub1 = mock(PublicationEntity.class), pub2 = mock(PublicationEntity.class);
+        when(module.getPublications()).thenReturn(List.of(pub1, pub2));
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+
+
+        mockMvc.perform(get("/modules/1"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("modules/detail"))
+                .andExpect(model().attribute("publications", List.of(pub1, pub2)))
                 .andExpect(model().attribute("module", module));
     }
 
