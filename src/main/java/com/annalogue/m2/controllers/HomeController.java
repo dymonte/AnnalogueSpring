@@ -24,9 +24,15 @@ public class HomeController {
 
         model.addAttribute("login", authentication != null ? authentication.getName() : "");
         model.addAttribute("isAdmin",
-                authentication != null && authentication.getAuthorities() != null
+                authentication != null
                         && authentication.getAuthorities().stream()
                                 .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN")));
+
+        model.addAttribute("canCreateModuleAndPublication",
+                authentication != null
+                        && authentication.getAuthorities().stream()
+                        .anyMatch(role -> Objects.equals(role.getAuthority(), "ROLE_ADMIN") || Objects.equals(role.getAuthority(), "ROLE_PROF")));
+
 
         if (authentication != null) {
             userService.findByEmail(authentication.getName()).ifPresent(

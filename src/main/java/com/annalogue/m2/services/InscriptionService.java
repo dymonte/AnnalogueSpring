@@ -1,10 +1,7 @@
 
 package com.annalogue.m2.services;
 
-import com.annalogue.m2.exceptions.EmailNotFoundException;
-import com.annalogue.m2.exceptions.ModuleNotFoundException;
-import com.annalogue.m2.exceptions.ModuleNotManagedException;
-import com.annalogue.m2.exceptions.UserAlreadyEnrolledException;
+import com.annalogue.m2.exceptions.*;
 import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.InscriptionType;
 import com.annalogue.m2.models.ModuleEntity;
@@ -12,62 +9,100 @@ import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
+import com.annalogue.m2.repositories.PublicationRepository;
 import com.annalogue.m2.repositories.UserRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
-public class InscriptionService {
+public class InscriptionService implements IInscriptionService{
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
     private final UserRepository userRepository;
+    private final PublicationRepository publicationRepository;
+
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
     public InscriptionService(
             InscriptionRepository inscriptionRepository,
             ModuleRepository moduleRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            PublicationRepository publicationRepository) {
         this.inscriptionRepository = inscriptionRepository;
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
+        this.publicationRepository = publicationRepository;
     }
-
+    @Override
     public Optional<InscriptionEntity> findById(Long id) {
         return inscriptionRepository.findById(id);
     }
-
+    @Override
     public List<InscriptionEntity> findAll() {
         return inscriptionRepository.findAll();
     }
-
+    @Override
     public List<InscriptionEntity>  findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
-
+    @Override
     public List<InscriptionEntity>   findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
 
-    public List<InscriptionEntity> findByEditeurFalse(){
-        return inscriptionRepository.findByEditeurFalse();
+    public List<InscriptionEntity> findByEditorFalse(){
+        return inscriptionRepository.findByEditorFalse();
     }
 
-    public List<InscriptionEntity> findByEditeurTrue(){
-        return inscriptionRepository.findByEditeurTrue();
+    public List<InscriptionEntity> findByEditorTrue(){
+        return inscriptionRepository.findByEditorTrue();
     }
+    @Override
+    public void deleteById(Long id){inscriptionRepository.deleteById(id); }
+    @Override
+    public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
+    @Override
+    public List<InscriptionEntity> findInscriptions(UserEntity currentUser) {
 
+        List<InscriptionEntity> inscriptions = new ArrayList<>();
 
+        List<ModuleEntity> responsibleModules =
+                currentUser.getResponsibleModules();
+
+        for (ModuleEntity module : responsibleModules) {
+
+            inscriptions.addAll(
+                    this.findByModuleId(module.getId())
+            );
+        }
+
+        return inscriptions;
+    }
+    @Override
     @Transactional
-    public InscriptionEntity save(
-            UserEntity currentUser,
-            String userEmail,
-            Long moduleId) {
+    public boolean toggleEditor(Long inscriptionId) {
+        InscriptionEntity inscription = inscriptionRepository
+                .findById(inscriptionId)
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "error.inscription.not.found"
+                        )
+                );
+
+        inscription.setEditor(!inscription.isEditor());
+        return inscription.isEditor();
+    }
+    @Override
+    @Transactional
+    public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId) {
 
         if (currentUser == null) {
             throw new IllegalArgumentException(
@@ -148,5 +183,35 @@ public class InscriptionService {
         inscription.setInscriptionType(inscriptionType);
 
         return inscriptionRepository.save(inscription);
+    }
+
+    public boolean canAccessFile(String email, Long fileId) throws UserNotFoundException, StorageFileNotFoundException {
+        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        ModuleEntity module =  publicationRepository.findById(fileId).orElseThrow(StorageFileNotFoundException::new).getModule();
+
+        return hasReaderAccess(user, module);
+    }
+
+    public boolean hasWriterAccess(UserEntity user, ModuleEntity module) {
+        InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
+
+        return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditor());
+    }
+
+    public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
+        InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
+        return user.getRole() == Role.ADMIN || inscription != null; // all inscription are at least reader
+    }
+
+    public List<ModuleEntity> getAllModulesEditable(UserEntity user) {
+        if (user.getRole() == Role.ADMIN) {
+            return moduleRepository.findAll();
+        }
+
+        return inscriptionRepository.findByUserAndModule(user, null).stream()
+                .filter(InscriptionEntity::isEditor)
+                .map(InscriptionEntity::getModule)
+                .collect(Collectors.toList());
     }
 }

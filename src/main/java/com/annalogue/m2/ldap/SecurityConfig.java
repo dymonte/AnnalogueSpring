@@ -23,8 +23,13 @@ public class SecurityConfig {
         http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/login", "/css/**", "/js/**", "/error").permitAll()
+                        .requestMatchers("/upload").hasAnyRole("ADMIN", "PROF")
                         .requestMatchers("/admin").hasRole("ADMIN")
                         .requestMatchers("/members/**").hasRole("ADMIN")
+                        .requestMatchers("/module-enrollments/new").hasRole("PROF")
+                        .requestMatchers("/module-enrollments").hasAnyRole("PROF", "ADMIN")
+                        .requestMatchers("/module-enrollments/{id}/delete").hasAnyRole("PROF", "ADMIN")
+                        .requestMatchers("/module-enrollments/{id}/toggle-editor").hasRole("PROF")
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
