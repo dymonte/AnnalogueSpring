@@ -11,6 +11,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.file.Paths;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class RoleAcceptanceTest {
 
     @Autowired
@@ -72,6 +75,7 @@ public class RoleAcceptanceTest {
                     .setPath(Paths.get("trace.zip")));
             context.close();
         }
+
         // delete all users
         userService.deleteAll();
 
@@ -81,14 +85,7 @@ public class RoleAcceptanceTest {
 
     @Et("{string} a le role {string}")
     public void loginALeRoleRole(String login, String role) {
-
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
-    }
-
-    @Et("<login> a le role {string}")
-    public void loginALeRole(String arg0) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+        assertTrue(userService.findByEmail(login + "@example.com").isPresent());
+        assertEquals(role.toLowerCase(), userService.findByEmail(login + "@example.com").get().getRole().toString());
     }
 }

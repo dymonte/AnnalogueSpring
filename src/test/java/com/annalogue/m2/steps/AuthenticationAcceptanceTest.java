@@ -16,6 +16,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.nio.file.Paths;
+import java.util.Optional;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -119,79 +120,12 @@ public class AuthenticationAcceptanceTest {
         moduleService.deleteAll();
 	}
 
-
-	@Soit("L'utilisateur \"ToTo\" possède un compte {string} ayant comme mot de passe \"titi\"")
-	public void l_utilisateur_possede_un_compte_ayant_comme_mot_de_passe(String role) {
-		Role r = switch (role.toLowerCase()) {
-			case "membre" -> Role.ETUDIANT;
-			case "administrateur" -> Role.ADMIN;
-			case "responsable module" -> Role.PROF;
-			default -> Role.ETUDIANT;
-		};
-
-		// create user
-		UserEntity user = new UserEntity(
-				"toto@example.com",
-				passwordEncoder.encode("titi"),
-				"ToTo",
-				r,
-				0,
-				"g");
-		userService.save(user);
-
-		// check user informations in db
-		assertTrue(userService.findByEmail("toto@example.com").isPresent());
-		assertEquals(userService.findByEmail("toto@example.com").get().getRole(), r);
-		assertTrue(
-				passwordEncoder.matches("titi", userService.findByEmail("toto@example.com").get().getPasswordHash()));
-		assertEquals("ToTo", userService.findByEmail("toto@example.com").get().getUsername());
-	}
-
-	@Quand("je m'authentifie avec l'identifiant \"ToTo\" et le mot de passe {string}")
-	public void userLogsIn(String password) {
-		// navigate to login page and fill form
-		page.navigate("http://localhost:" + port + "/login");
-		page.fill("#username", "toto@example.com");
-		page.fill("#password", password);
-		page.click("#login-btn");
-	}
-
-	@Alors("je suis connecté en tant que \"ToTo\" avec le rôle {string}")
-	public void userIsLoggedInWithRole(String role) {
-		page.waitForURL("http://localhost:" + port + "/home");
-
-		// check url
-		assertEquals("http://localhost:" + port + "/home", page.url());
-
-		// check user informations
-		String email = page.textContent("#email");
-		assertNotNull(email);
-		assertEquals("toto@example.com", email);
-
-		// check role
-		if (role.equals("Administrateur")) {
-			assertEquals(200, page.navigate("http://localhost:" + port + "/admin").status());
-		} else {
-			assertEquals(403, page.navigate("http://localhost:" + port + "/admin").status());
-		}
-
-	}
-
-
-	@Alors("j'ai un message d'erreur")
-	public void j_ai_un_message_d_erreur() {
-		// check url
-		assertEquals("http://localhost:" + port + "/login?error", page.url());
-
-		assertTrue(page.isVisible("#error"));
-	}
-
-	private UserEntity getUserDependOnHisLogin(String login) {
+	private Optional<UserEntity> getUserDependOnHisRole(String login) {
 		return switch (login.toLowerCase()) {
-			case "membre" -> member;
-			case "administrateur" -> admin;
-			case "responsable module" -> respMod;
-			default -> admin;
+			case "membre" -> Optional.of(member);
+			case "administrateur" -> Optional.of(admin);
+			case "responsable module" -> Optional.of(respMod);
+			default -> Optional.empty();
 		};
 	}
 
@@ -204,9 +138,11 @@ public class AuthenticationAcceptanceTest {
 	}
 
 	@Soit("Je suis connecté en tant que {string}")
-	public void jeSuisConnectéEnTantQue(String login) {
+	public void jeSuisConnectéEnTantQue(String role) {
 
-		UserEntity user = getUserDependOnHisLogin(login);
+		UserEntity user = getUserDependOnHisRole(role)
+				.orElseThrow(() -> new IllegalArgumentException("Rôle inconnu dans le Gherkin : " + role));
+
 		assertTrue(userService.findByEmail(user.getEmail()).isPresent());
 
 		// Connected user
