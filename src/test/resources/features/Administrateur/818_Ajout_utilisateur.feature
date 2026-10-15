@@ -35,7 +35,7 @@ Fonctionnalité: Administrateur - Ajout utilisateur
   
   Scénario: Administrateur role qui n'existe pas
     Soit Je suis connecté en tant que "Administrateur"
-    Et L\'utilisateur "boo" n'existe pas
+    Et L'utilisateur "boo" n'existe pas
     Quand J'ajoute un utilisateur "boo" en tant que "Fantome" avec le mot de passe "uiggiug54" avec comme année "2027-2028"
     Alors J'ai un message d'erreur qui dit que le role n'existe pas
   
