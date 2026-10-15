@@ -152,4 +152,19 @@ class MessagesTest {
 
         assertTrue(text.contains("toto"));
     }
+
+        @Test
+    void shouldContainMyModulesPageTexts() {
+        assertFalse(message("my.modules.title").isBlank());
+        assertFalse(message("my.modules.all.title").isBlank());
+        assertFalse(message("my.modules.filter.title").isBlank());
+        assertFalse(message("my.modules.filter.all").isBlank());
+        assertFalse(message("my.modules.filter.created").isBlank());
+        assertFalse(message("my.modules.filter.enrolled").isBlank());
+        assertFalse(message("my.modules.editor").isBlank());
+        assertFalse(message("my.modules.empty.all").isBlank());
+        assertFalse(message("my.modules.empty.created").isBlank());
+        assertFalse(message("my.modules.empty.enrolled").isBlank());
+        assertFalse(message("my.modules.empty.admin").isBlank());
+    }
 }
