@@ -38,6 +38,13 @@ public class DataInitializer implements CommandLineRunner {
             admin.setRole(Role.ADMIN);
             userRepository.save(admin);
 
+            UserEntity responsable = new UserEntity();
+            responsable.setEmail("resp@example.com");
+            responsable.setPasswordHash(passwordEncoder.encode("resp1234"));
+            responsable.setUsername("resp");
+            responsable.setRole(Role.RESPONSABLE);
+            userRepository.save(responsable);
+
             UserEntity user1 = new UserEntity();
             user1.setEmail("user1@example.com");
             user1.setPasswordHash(passwordEncoder.encode("user1123"));
@@ -47,6 +54,13 @@ public class DataInitializer implements CommandLineRunner {
             user1.setLevel(StudyLevel.L1);
             user1.setGroupName("A");
             userRepository.save(user1);
+
+            UserEntity prof = new UserEntity();
+            prof.setEmail("prof@example.com");
+            prof.setPasswordHash(passwordEncoder.encode("prof123"));
+            prof.setUsername("prof");
+            prof.setRole(Role.PROF);
+            userRepository.save(prof);
 
             System.out.println(">>> Comptes créés !");
         } else {

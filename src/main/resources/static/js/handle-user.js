@@ -62,7 +62,7 @@ function checkUsername() {
   checkTimer = setTimeout(async function () {
     try {
       const response = await fetch(
-        "/members/username-check?username=" + encodeURIComponent(username),
+        "/members/enteredUsername-check?enteredUsername=" + encodeURIComponent(username),
         { headers: { Accept: "application/json" } },
       );
 

@@ -95,7 +95,7 @@ class UserControllerTest {
         )
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("name=\"email\"")))
-                .andExpect(content().string(containsString("name=\"username\"")))
+                .andExpect(content().string(containsString("name=\"enteredUsername\"")))
                 .andExpect(content().string(containsString("name=\"year\"")))
                 .andExpect(content().string(containsString("name=\"group\"")))
                 .andExpect(content().string(not(containsString("value=\"ADMIN\""))))
@@ -121,7 +121,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -164,7 +164,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "used@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "used")
+                        .param("enteredUsername", "used")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -189,7 +189,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "a b!")
+                        .param("enteredUsername", "a b!")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -211,7 +211,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026")
                         .param("level", "M1")
                         .param("group", "Z")
@@ -232,7 +232,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026").param("level", "M1").param("level", "M1")
                         .param("group", "A")
         )
@@ -254,7 +254,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "DIRECTEUR")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -272,7 +272,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "abc")
                         .param("group", "A")
         )
@@ -293,7 +293,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "PROF")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -315,7 +315,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "admin2@test.com")
                         .param("role", "ADMIN")
-                        .param("username", "admin2")
+                        .param("enteredUsername", "admin2")
                         .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
@@ -338,7 +338,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026").param("level", "M3")
                         .param("group", "A")
         )
@@ -354,7 +354,7 @@ class UserControllerTest {
     void usernameCheckShouldSayAvailable() throws Exception {
         when(handleUserService.isUsernameAvailable("jkamel")).thenReturn(true);
 
-        mockMvc.perform(get("/members/username-check").param("username", "jkamel"))
+        mockMvc.perform(get("/members/enteredUsername-check").param("enteredUsername", "jkamel"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.available").value(true))
                 .andExpect(jsonPath("$.suggestion").value("jkamel"));
@@ -366,7 +366,7 @@ class UserControllerTest {
         when(handleUserService.isUsernameAvailable("jkamel")).thenReturn(false);
         when(handleUserService.suggestUsername("jkamel")).thenReturn("jkamel1");
 
-        mockMvc.perform(get("/members/username-check").param("username", "jkamel"))
+        mockMvc.perform(get("/members/enteredUsername-check").param("enteredUsername", "jkamel"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.available").value(false))
                 .andExpect(jsonPath("$.suggestion").value("jkamel1"));
@@ -424,5 +424,167 @@ class UserControllerTest {
                         .flashAttr("deletedUsername", "memb"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("User memb was deleted.")));
+    }
+
+    // ===== POST /members/{id}/role : Prof <-> Responsable Module =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldChangeRoleAndRedirectWithSuccessMessage() throws Exception {
+        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
+        when(handleUserService.changeRole(7L, Role.RESPONSABLE)).thenReturn("toto");
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "RESPONSABLE"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"))
+                .andExpect(flash().attribute("successKey", "success.member.role.changed"))
+                .andExpect(flash().attribute("changedUsername", "toto"));
+
+        verify(handleUserService).changeRole(7L, Role.RESPONSABLE);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRefuseEmptyRoleWhenChangingRole() throws Exception {
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", " "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"))
+                .andExpect(flash().attribute("errorKey", "error.user.role.empty"));
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRefuseUnknownRoleWhenChangingRole() throws Exception {
+        when(roleService.exists("FANTOME")).thenReturn(false);
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "FANTOME"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("errorKey", "error.user.role.invalid"));
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowErrorWhenRoleChangeIsRefused() throws Exception {
+        mockValidRole("ADMIN", Role.ADMIN);
+        when(handleUserService.changeRole(7L, Role.ADMIN))
+                .thenThrow(new InvalidUserDataException("role", "error.user.role.change.admin"));
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "ADMIN"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members"))
+                .andExpect(flash().attribute("errorKey", "error.user.role.change.admin"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowDatabaseErrorWhenRoleCannotBeSaved() throws Exception {
+        mockValidRole("PROF", Role.PROF);
+        when(handleUserService.changeRole(7L, Role.PROF))
+                .thenThrow(new DataAccessResourceFailureException("db down"));
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "PROF"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("errorKey", "error.user.role.change.database"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowRoleSelectOnlyForTeachers() throws Exception {
+        UserEntity toto = new UserEntity("toto@example.com", "hash", "toto", Role.PROF, null, null);
+        toto.setId(7L);
+        UserEntity student = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, null, null);
+        student.setId(8L);
+        when(handleUserService.findAllUsers()).thenReturn(List.of(toto, student));
+        when(roleService.getTeacherRoles()).thenReturn(List.of(Role.PROF, Role.RESPONSABLE));
+
+        mockMvc.perform(get("/members").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("/members/7/role")))
+                .andExpect(content().string(not(containsString("/members/8/role"))))
+                .andExpect(content().string(containsString("Module manager")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowRoleChangedMessageAfterRedirect() throws Exception {
+        when(handleUserService.findAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/members")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .flashAttr("successKey", "success.member.role.changed")
+                        .flashAttr("changedUsername", "toto"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("The role of toto was changed.")));
+    }
+
+    // ===== GET /members?role=... : filter by role =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldFilterMembersByRole() throws Exception {
+        UserEntity toto = new UserEntity("toto@example.com", "hash", "toto", Role.PROF, null, null);
+        toto.setId(7L);
+        mockValidRole("PROF", Role.PROF);
+        when(handleUserService.findUsersByRole(Role.PROF)).thenReturn(List.of(toto));
+
+        mockMvc.perform(get("/members").param("role", "PROF").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("selectedFilter", "PROF"))
+                .andExpect(content().string(containsString("data-email=\"toto@example.com\"")));
+
+        verify(handleUserService, never()).findAllUsers();
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowAllMembersWhenFilterIsUnknown() throws Exception {
+        when(roleService.exists("FANTOME")).thenReturn(false);
+        when(handleUserService.findAllUsers()).thenReturn(List.of());
+
+        mockMvc.perform(get("/members").param("role", "FANTOME").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("selectedFilter", ""))
+                .andExpect(content().string(containsString("No members yet.")));
+
+        verify(handleUserService, never()).findUsersByRole(any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldSayNoMemberWithThisRole() throws Exception {
+        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
+        when(handleUserService.findUsersByRole(Role.RESPONSABLE)).thenReturn(List.of());
+
+        mockMvc.perform(get("/members").param("role", "RESPONSABLE").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("No members with this role.")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldKeepTheFilterAfterChangingRole() throws Exception {
+        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
+        when(handleUserService.changeRole(7L, Role.RESPONSABLE)).thenReturn("toto");
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "RESPONSABLE")
+                        .param("filter", "PROF"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/members?role=PROF"));
     }
 }

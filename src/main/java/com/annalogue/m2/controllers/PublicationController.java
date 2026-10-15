@@ -70,9 +70,9 @@ public class PublicationController {
 		if (authentication != null) {
 			userService.findByEmail(authentication.getName()).ifPresent(
 					userEntity -> {
-                        model.addAttribute("username", userEntity.getUsername());
-                        model.addAttribute("modules", inscriptionService.getAllModulesEditable(userEntity));
-                    });
+						var modules = inscriptionService.getAllModulesEditable(userEntity);
+						model.addAttribute("modules", modules);
+					});
 		}
 
 		model.addAttribute("fileType", FileType.values());
@@ -92,8 +92,10 @@ public class PublicationController {
 
 		try {
 			publicationService.saveMultipartFile(file, name, description, moduleId, authorEmail, fileType);
+			moduleService.findById(moduleId).ifPresent(module -> 
+				redirectAttributes.addFlashAttribute("createdModuleName", module.getName()));
 		} catch (UploadFileException e) {
-			redirectAttributes.addFlashAttribute("error", e.getMessage());
+			redirectAttributes.addFlashAttribute("errorKey", e.getMessage());
 			redirectAttributes.addFlashAttribute("name", name);
 			redirectAttributes.addFlashAttribute("description", description);
 			redirectAttributes.addFlashAttribute("moduleId", moduleId);
@@ -101,7 +103,7 @@ public class PublicationController {
 			return "redirect:/upload";
 		}
 
-		redirectAttributes.addFlashAttribute("success", "success.upload.file");
+		redirectAttributes.addFlashAttribute("successKey", "success.upload.file");
 		return "redirect:/upload";
 	}
 

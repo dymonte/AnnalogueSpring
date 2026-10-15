@@ -126,4 +126,45 @@ class MessagesTest {
         assertFalse(message("my.modules.role.ETUDIANT").isBlank());
         assertFalse(message("my.modules.role.INTERVENANT").isBlank());
     }
+
+    @Test
+    void shouldContainResponsableRoleMessages() {
+        assertFalse(message("role.RESPONSABLE").isBlank());
+        assertFalse(message("members.role.change").isBlank());
+        assertFalse(message("members.filter.role").isBlank());
+        assertFalse(message("members.filter.all").isBlank());
+        assertFalse(message("members.filter.submit").isBlank());
+        assertFalse(message("members.filter.empty").isBlank());
+        assertFalse(message("error.user.role.change.notfound").isBlank());
+        assertFalse(message("error.user.role.change.admin").isBlank());
+        assertFalse(message("error.user.role.change.admin.user").isBlank());
+        assertFalse(message("error.user.role.change.notallowed").isBlank());
+        assertFalse(message("error.user.role.change.modules").isBlank());
+        assertFalse(message("error.user.role.change.database").isBlank());
+    }
+
+    @Test
+    void shouldInsertUsernameInRoleChangedMessage() {
+        String text = messageSource.getMessage(
+                "success.member.role.changed",
+                new Object[]{"toto"},
+                Locale.ENGLISH);
+
+        assertTrue(text.contains("toto"));
+    }
+
+        @Test
+    void shouldContainMyModulesPageTexts() {
+        assertFalse(message("my.modules.title").isBlank());
+        assertFalse(message("my.modules.all.title").isBlank());
+        assertFalse(message("my.modules.filter.title").isBlank());
+        assertFalse(message("my.modules.filter.all").isBlank());
+        assertFalse(message("my.modules.filter.created").isBlank());
+        assertFalse(message("my.modules.filter.enrolled").isBlank());
+        assertFalse(message("my.modules.editor").isBlank());
+        assertFalse(message("my.modules.empty.all").isBlank());
+        assertFalse(message("my.modules.empty.created").isBlank());
+        assertFalse(message("my.modules.empty.enrolled").isBlank());
+        assertFalse(message("my.modules.empty.admin").isBlank());
+    }
 }

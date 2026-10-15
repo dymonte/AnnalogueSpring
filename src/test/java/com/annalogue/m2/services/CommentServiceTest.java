@@ -1,0 +1,102 @@
+package com.annalogue.m2.services;
+
+import com.annalogue.m2.models.CommentEntity;
+import com.annalogue.m2.models.PublicationEntity;
+import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.CommentRepository;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CommentServiceTest {
+
+    @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
+    private IUserService userService;
+
+    @Mock
+    private IPublicationService publicationService;
+
+    @InjectMocks
+    private CommentService commentService;
+
+    @Test
+    void shouldAddComment() {
+
+        UserEntity author = mock(UserEntity.class);
+        PublicationEntity publication = mock(PublicationEntity.class);
+
+        when(userService.findById(1L)).thenReturn(Optional.of(author));
+        when(publicationService.findById(2L)).thenReturn(Optional.of(publication));
+        when(commentRepository.save(any(CommentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CommentEntity result = commentService.addComment("Super !", 1L, 2L);
+
+        ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
+        verify(commentRepository).save(captor.capture());
+
+        CommentEntity saved = captor.getValue();
+        assertEquals("Super !", saved.getContent());
+        assertEquals(author, saved.getAuthorComment());
+        assertEquals(publication, saved.getPublication());
+        assertEquals(saved, result);
+    }
+
+    @Test
+    void shouldThrowWhenUserNotFound() {
+
+        when(userService.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class,
+                () -> commentService.addComment("Super !", 1L, 2L));
+
+        verifyNoInteractions(publicationService);
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldThrowWhenPublicationNotFound() {
+
+        when(userService.findById(1L)).thenReturn(Optional.of(mock(UserEntity.class)));
+        when(publicationService.findById(2L)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalStateException.class,
+                () -> commentService.addComment("Super !", 1L, 2L));
+
+        verify(commentRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldDeleteComment() {
+
+        when(commentRepository.existsById(3L)).thenReturn(true);
+
+        commentService.deleteComment(3L);
+
+        verify(commentRepository).deleteById(3L);
+    }
+
+    @Test
+    void shouldThrowWhenDeletingUnknownComment() {
+
+        when(commentRepository.existsById(3L)).thenReturn(false);
+
+        assertThrows(IllegalStateException.class,
+                () -> commentService.deleteComment(3L));
+
+        verify(commentRepository, never()).deleteById(anyLong());
+    }
+}

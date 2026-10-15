@@ -3,10 +3,13 @@ package com.annalogue.m2.services;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.UserRepository;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -65,6 +68,22 @@ public class UserService implements IUserService {
         userRepository.flush();
     }
 
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || Objects.equals(authentication.getPrincipal(), "anonymousUser")) {
+            throw new IllegalStateException("No users logged in");
+        }
 
+        return authentication.getName();
+    }
+
+    public UserEntity getCurrentUser() {
+        String email = getCurrentUserEmail();
+
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalStateException("Logged-in user not found"));
+    }
 }

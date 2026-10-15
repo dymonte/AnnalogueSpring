@@ -14,13 +14,13 @@
 <div class="container mt-5">
     <h2 class="mb-4">Upload a file</h2>
 
-    <div th:if="${error}" class="alert alert-danger" role="alert">
-        <span th:text="#{${error}}"></span>
-    </div>
+    <th:block th:if="${successKey}">
+        <div th:replace="~{fragments/alerts :: success(#{${successKey}(${createdModuleName})})}"></div>
+    </th:block>
 
-    <div th:if="${success}" class="alert alert-success" role="alert">
-        <span th:text="#{${success}}"></span>
-    </div>
+    <th:block th:if="${errorKey}">
+        <div th:replace="~{fragments/alerts :: error(#{${errorKey}})}"></div>
+    </th:block>
 
     <form action="/files" method="POST" enctype="multipart/form-data" class="w-50">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${isAdmin} ? #{my.modules.all.title} : #{my.modules.title}">My modules</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</head>
+
+<body class="bg-light">
+    <div th:insert="~{navbar.html}"></div>
+
+    <div class="container py-4">
+
+        <!-- module created (flash from POST /modules/add) -->
+        <th:block th:if="${successKey}">
+            <div th:replace="~{fragments/alerts :: success(#{${successKey}(${createdModuleName})})}"></div>
+        </th:block>
+        <!-- password changed (flash from POST /change-password) -->
+        <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+            <h1 class="h3 mb-0" th:text="${isAdmin} ? #{my.modules.all.title} : #{my.modules.title}">My modules</h1>
+            <div class="d-flex gap-2">
+                <a th:unless="${isAdmin}" href="/change-password" class="btn btn-outline-secondary"
+                    th:text="#{home.change.password}">Change password</a>
+                <a th:if="${canCreateModule}" id="create-module" href="/modules/add" class="btn btn-primary"
+                    th:text="#{home.create.module}">Create a module</a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- side filter (not for the admin catalogue) -->
+            <aside th:unless="${isAdmin}" class="col-md-3">
+                <h2 class="h6 text-muted text-uppercase" th:text="#{my.modules.filter.title}">Show</h2>
+                <div class="list-group">
+                    <a id="filter-all" th:href="@{/home(filter='all')}" th:classappend="${filter == 'all'} ? 'active'"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span th:text="#{my.modules.filter.all}">All</span>
+                        <span class="badge bg-secondary rounded-pill" th:text="${countAll}">0</span>
+                    </a>
+                    <a id="filter-created" th:if="${canCreateModule or countCreated > 0}"
+                        th:href="@{/home(filter='created')}" th:classappend="${filter == 'created'} ? 'active'"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span th:text="#{my.modules.filter.created}">Created by me</span>
+                        <span class="badge bg-secondary rounded-pill" th:text="${countCreated}">0</span>
+                    </a>
+                    <a id="filter-enrolled" th:href="@{/home(filter='enrolled')}"
+                        th:classappend="${filter == 'enrolled'} ? 'active'"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span th:text="#{my.modules.filter.enrolled}">Enrolled in</span>
+                        <span class="badge bg-secondary rounded-pill" th:text="${countEnrolled}">0</span>
+                    </a>
+                </div>
+            </aside>
+
+            <!-- modules -->
+            <main th:class="${isAdmin} ? 'col-12' : 'col-md-9'">
+                <p th:if="${#lists.isEmpty(modules)}" id="no-module" class="text-muted"
+                    th:text="${isAdmin} ? #{my.modules.empty.admin} : #{${'my.modules.empty.' + filter}}">
+                    No module.
+                </p>
+
+                <div th:unless="${#lists.isEmpty(modules)}" class="list-group shadow-sm">
+                    <a th:each="module : ${modules}" th:href="@{/modules/{id}(id=${module.id})}"
+                        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <span class="module-name fw-semibold" th:text="${module.name}">Module</span>
+                        <span>
+                            <!-- place of the user in the module: Created by me / Student / Lecturer -->
+                            <span th:if="${module.roleKey != null}" class="badge module-label"
+                                th:classappend="${module.responsible} ? 'bg-primary' : 'bg-info text-dark'"
+                                th:text="#{${module.roleKey}}">Label</span>
+                            <span th:if="${module.editor}" class="badge bg-warning text-dark module-editor"
+                                th:text="#{my.modules.editor}">Editor</span>
+                        </span>
+                    </a>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- « + » button: create a publication (or a module for a Responsable Module) -->
+    <button type="button" th:if="${canCreateModuleAndPublication}"
+        class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow fs-2 d-flex align-items-center justify-content-center"
+        style="width: 3.5rem; height: 3.5rem;" data-bs-toggle="modal" data-bs-target="#createModal"
+        th:aria-label="#{home.create.title}" th:text="#{home.upload}">+</button>
+
+    <div th:if="${canCreateModuleAndPublication}" class="modal fade" id="createModal" tabindex="-1"
+        aria-labelledby="createModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title fs-5" id="createModalLabel" th:text="#{home.create.title}">What would you
+                        like to create?</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        th:aria-label="#{home.create.close}"></button>
+                </div>
+                <div class="modal-body d-grid gap-2">
+                    <a href="/upload" class="btn btn-primary" th:text="#{home.create.publication}">Create a
+                        publication</a>
+                    <a href="/modules/add" th:if="${canCreateModule}" class="btn btn-outline-primary"
+                        th:text="#{home.create.module}">Create a module</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
