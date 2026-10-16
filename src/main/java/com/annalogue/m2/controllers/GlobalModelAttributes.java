@@ -6,18 +6,30 @@ import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import com.annalogue.m2.services.INotificationService;
+import org.springframework.beans.factory.ObjectProvider;
+
 
 @ControllerAdvice
 public class GlobalModelAttributes {
 
     @Autowired
     private IUserService userService;
+    @Autowired
+    private ObjectProvider<INotificationService> notificationService;
+
 
     @ModelAttribute
     public void addGlobalAttributes(Authentication authentication, Model model) {
         if (authentication != null) {
-            userService.findByEmail(authentication.getName()).ifPresent(
-                    userEntity -> model.addAttribute("username", userEntity.getUsername()));
+            userService.findByEmail(authentication.getName()).ifPresent(userEntity -> {
+                model.addAttribute("username", userEntity.getUsername());
+
+                INotificationService service = notificationService.getIfAvailable();
+                if (service != null) {
+                    model.addAttribute("unseenNotifications", service.countUnseen(userEntity.getId()));
+                }
+            });
         }
     }
 }
