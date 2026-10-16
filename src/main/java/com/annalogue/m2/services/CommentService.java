@@ -1,10 +1,12 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
 import com.annalogue.m2.models.CommentEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.CommentRepository;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,5 +49,15 @@ public class CommentService implements ICommentService {
         }
 
         commentRepository.deleteById(idComment);
+    }
+
+    @Override
+    public Resource loadAsResource(long idComment) throws StorageFileNotFoundException {
+        CommentEntity comment = commentRepository.findById(idComment).orElseThrow(() -> new StorageFileNotFoundException());
+        String stringPath = comment.getPath();
+        if (stringPath == null) {
+            return null;
+        }
+        return filesService.loadAsResource(stringPath);
     }
 }

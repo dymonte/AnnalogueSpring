@@ -62,24 +62,9 @@ public class PublicationService implements IPublicationService {
 	}
 
 	public Resource loadAsResource(Long id) throws StorageFileNotFoundException {
-		String stringPath = publicationRepository.findById(id).map(PublicationEntity::getFilePath).orElse(null);
-		try {
-			if (stringPath == null) {
-				throw new StorageFileNotFoundException();
-			}
-			Path file = Path.of(stringPath);
-			Resource resource = new FileSystemResource(file);
-			if (resource.exists() || resource.isReadable()) {
-				return resource;
-			} else {
-				throw new StorageFileNotFoundException();
+		String stringPath = publicationRepository.findById(id).map(PublicationEntity::getFilePath).orElseThrow(StorageFileNotFoundException::new);
 
-			}
-		}
-		catch (MalformedURLException e) {
-			throw new StorageFileNotFoundException();
-		}
-
+        return filesService.loadAsResource(stringPath);
 	}
 
 	public void addPublication(PublicationEntity publication) {

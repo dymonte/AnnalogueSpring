@@ -1,13 +1,18 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
 import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.nio.file.Path;
 
 @Service
 public class FilesService implements IFilesService{
@@ -53,6 +58,25 @@ public class FilesService implements IFilesService{
             i++;
         }
         return fullPath;
+    }
+
+    public Resource loadAsResource(String stringPath) throws StorageFileNotFoundException {
+        try {
+            if (stringPath == null) {
+                throw new StorageFileNotFoundException();
+            }
+            Path file = Path.of(stringPath);
+            Resource resource = new FileSystemResource(file);
+            if (resource.exists() || resource.isReadable()) {
+                return resource;
+            } else {
+                throw new StorageFileNotFoundException();
+
+            }
+        }
+        catch (MalformedURLException e) {
+            throw new StorageFileNotFoundException();
+        }
     }
 
 }
