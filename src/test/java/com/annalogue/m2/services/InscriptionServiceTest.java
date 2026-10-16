@@ -36,6 +36,9 @@ class InscriptionServiceTest {
     @Mock
     private ModuleRepository moduleRepository;
 
+    @Mock
+    private INotificationService notificationService;
+
     @InjectMocks
     private InscriptionService inscriptionService;
 
@@ -423,6 +426,29 @@ class InscriptionServiceTest {
 
     }
 
+    @Test
+    void shouldNotifyTheEnrolledUser() {
+        when(userRepository.findByEmail("fmaiou@ufr.com")).thenReturn(Optional.of(fmaiou));
+        when(moduleRepository.findById(10L)).thenReturn(Optional.of(tf));
+        when(inscriptionRepository.findByUserId(2L)).thenReturn(List.of());
+        when(inscriptionRepository.save(any(InscriptionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
+        inscriptionService.save(fbouquet, "fmaiou@ufr.com", 10L);
+
+        verify(notificationService).notifyEnrollment(fmaiou, tf);
+    }
+
+    @Test
+    void shouldNotNotifyWhenUserAlreadyEnrolled() {
+        when(userRepository.findByEmail("fmaiou@ufr.com")).thenReturn(Optional.of(fmaiou));
+        when(moduleRepository.findById(10L)).thenReturn(Optional.of(tf));
+        when(inscriptionRepository.findByUserId(2L)).thenReturn(List.of(tf_fmaiou));
+
+        assertThrows(UserAlreadyEnrolledException.class,
+                () -> inscriptionService.save(fbouquet, "fmaiou@ufr.com", 10L));
+
+        verify(notificationService, never()).notifyEnrollment(any(), any());
+    }
 
 }

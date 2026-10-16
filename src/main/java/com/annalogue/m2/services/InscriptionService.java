@@ -27,6 +27,7 @@ public class InscriptionService implements IInscriptionService{
     private final ModuleRepository moduleRepository;
     private final UserRepository userRepository;
     private final PublicationRepository publicationRepository;
+    private final INotificationService notificationService;
 
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
@@ -34,11 +35,13 @@ public class InscriptionService implements IInscriptionService{
             InscriptionRepository inscriptionRepository,
             ModuleRepository moduleRepository,
             UserRepository userRepository,
-            PublicationRepository publicationRepository) {
+            PublicationRepository publicationRepository,
+            INotificationService notificationService) {
         this.inscriptionRepository = inscriptionRepository;
         this.moduleRepository = moduleRepository;
         this.userRepository = userRepository;
         this.publicationRepository = publicationRepository;
+        this.notificationService = notificationService;
     }
     @Override
     public Optional<InscriptionEntity> findById(Long id) {
@@ -192,7 +195,11 @@ public class InscriptionService implements IInscriptionService{
         inscription.setInscriptionType(inscriptionType);
         inscription.setEditor(member.getId().equals(module.getResponsible().getId()));
 
-        return inscriptionRepository.save(inscription);
+        InscriptionEntity saved = inscriptionRepository.save(inscription);
+
+        notificationService.notifyEnrollment(member, module);
+
+        return saved;
     }
 
     public boolean canAccessFile(String email, Long fileId) throws UserNotFoundException, StorageFileNotFoundException {

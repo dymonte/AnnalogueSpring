@@ -44,6 +44,8 @@ public class PublicationServiceTest {
 
     @Mock
     private IFilesService filesService;
+	@Mock
+    private INotificationService notificationService;
 
 	@InjectMocks
 	private PublicationService publicationService;
@@ -173,5 +175,31 @@ public class PublicationServiceTest {
 
 		Mockito.verify(filesService, Mockito.times(1)).saveMultipartFile(Mockito.any());
 
+	}
+	@Test
+	void testAddPublicationNotifiesTheModule() throws UploadFileException {
+		MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
+		Mockito.when(moduleService.findById(Mockito.anyLong())).thenReturn(Optional.of(new ModuleEntity()));
+		Mockito.when(userService.findByEmail(Mockito.anyString())).thenReturn(Optional.of(new UserEntity()));
+		Mockito.when(inscriptionService.hasWriterAccess(Mockito.any(), Mockito.any())).thenReturn(true);
+		Mockito.when(filesService.saveMultipartFile(Mockito.any())).thenReturn(new File("/tmp/test-uploads/testFile.pdf"));
+
+		publicationService.saveMultipartFile(multipartFile, "testFile", "testDescription", 1L, "test@test.com", FileType.CM);
+
+		Mockito.verify(notificationService).notifyPublicationAdded(Mockito.any(PublicationEntity.class));
+	}
+
+	@Test
+	void testNoNotificationWhenUploadIsForbidden() throws UploadFileException {
+		MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
+		Mockito.when(moduleService.findById(Mockito.anyLong())).thenReturn(Optional.of(new ModuleEntity()));
+		Mockito.when(userService.findByEmail(Mockito.anyString())).thenReturn(Optional.of(new UserEntity()));
+		Mockito.when(inscriptionService.hasWriterAccess(Mockito.any(), Mockito.any())).thenReturn(false);
+
+		assertThrows(UploadFileException.class, () ->
+				publicationService.saveMultipartFile(multipartFile, "testFile", "testDescription", 1L, "test@test.com", FileType.CM));
+
+		Mockito.verify(notificationService, never()).notifyPublicationAdded(Mockito.any());
+		Mockito.verify(filesService, never()).saveMultipartFile(Mockito.any());
 	}
 }

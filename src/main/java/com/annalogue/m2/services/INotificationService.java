@@ -1,6 +1,9 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.NotificationEntity;
+import com.annalogue.m2.models.PublicationEntity;
+import com.annalogue.m2.models.UserEntity;
 
 import java.util.List;
 
@@ -11,4 +14,10 @@ public interface INotificationService {
     long countUnseen(Long userId);
 
     int markAllAsSeen(Long userId);
+
+    void notifyAccountCreated(UserEntity user);
+
+    void notifyEnrollment(UserEntity user, ModuleEntity module);
+
+    void notifyPublicationAdded(PublicationEntity publication);
 }
