@@ -41,7 +41,7 @@ public class FilesService implements IFilesService{
         }
 
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename == null) {
+        if (originalFilename == null || originalFilename.isEmpty()) {
             throw new UploadFileException("error.upload.filename.missing");
         }
         File fullPath = new File(uploadDirectory, originalFilename);
