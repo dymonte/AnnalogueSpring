@@ -4,6 +4,7 @@ import com.annalogue.m2.models.ModuleEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,5 +22,7 @@ public interface ModuleRepository extends JpaRepository<ModuleEntity, Long> {
     List<ModuleEntity> findByResponsibleIdOrderByNameAsc(Long responsibleId);
      // true if the user is still the responsible of at least one module
     boolean existsByResponsibleId(Long responsibleId);
+
+    List<ModuleEntity> findAllByNameIgnoreCase(String query);
 
 }
