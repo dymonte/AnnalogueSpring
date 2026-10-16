@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -42,6 +41,9 @@ public class PublicationServiceTest {
 	@Mock
 	private IInscriptionService inscriptionService;
 
+    @Mock
+    private IFilesService filesService;
+
 	@InjectMocks
 	private PublicationService publicationService;
 	private AutoCloseable mocks;
@@ -49,9 +51,6 @@ public class PublicationServiceTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		mocks = MockitoAnnotations.openMocks(this);
-		Field uploadDirField = PublicationService.class.getDeclaredField("uploadDir");
-		uploadDirField.setAccessible(true);
-		uploadDirField.set(publicationService, "/tmp/test-uploads");
 
 		File testUploadDir = new File("/tmp/test-uploads");
 		if (!testUploadDir.exists()) {
@@ -97,6 +96,9 @@ public class PublicationServiceTest {
 		Mockito.when(passwordEncoder.encode(Mockito.anyString())).thenReturn("encodedPassword");
 
 		Mockito.when(inscriptionService.hasWriterAccess(Mockito.any(), Mockito.any())).thenReturn(true);
+
+		File mockFile = new File("/tmp/test-uploads/testFile.pdf");
+		Mockito.when(filesService.saveMultipartFile(Mockito.any())).thenReturn(mockFile);
 
 		publicationService.saveMultipartFile(multipartFile, "testFile", "testDescription", 1L, "test@test.com", FileType.CM);
 
@@ -149,14 +151,9 @@ public class PublicationServiceTest {
 		MultipartFile multipartFile = Mockito.mock(MultipartFile.class);
 		Mockito.when(multipartFile.getOriginalFilename()).thenReturn("testFile.pdf");
 		Mockito.when(multipartFile.getSize()).thenReturn(100L);
-		Mockito.doAnswer(invocation -> {
-			File dest = invocation.getArgument(0);
-			dest.createNewFile();
-			return null;
-		}).when(multipartFile).transferTo(Mockito.any(File.class));
 
 		File testFileNew = new File("/tmp/test-uploads/testFile-1.pdf");
-
+		Mockito.when(filesService.saveMultipartFile(Mockito.any())).thenReturn(testFileNew);
 
 		ModuleEntity moduleEntity = new ModuleEntity();
 		Mockito.when(moduleService.findById(Mockito.anyLong())).thenReturn(Optional.of(moduleEntity));
@@ -172,8 +169,7 @@ public class PublicationServiceTest {
 
 		Mockito.verify(publicationRepository, Mockito.times(1)).save(Mockito.any(PublicationEntity.class));
 
-		assertTrue(testFileNew.exists());
-
+		Mockito.verify(filesService, Mockito.times(1)).saveMultipartFile(Mockito.any());
 
 	}
 }

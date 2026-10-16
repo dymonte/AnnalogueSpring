@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.UploadFileException;
 import com.annalogue.m2.models.CommentEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
@@ -10,7 +11,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -29,11 +33,14 @@ class CommentServiceTest {
     @Mock
     private IPublicationService publicationService;
 
+    @Mock
+    private IFilesService filesService;
+
     @InjectMocks
     private CommentService commentService;
 
     @Test
-    void shouldAddComment() {
+    void shouldAddComment() throws UploadFileException {
 
         UserEntity author = mock(UserEntity.class);
         PublicationEntity publication = mock(PublicationEntity.class);
@@ -43,7 +50,7 @@ class CommentServiceTest {
         when(commentRepository.save(any(CommentEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CommentEntity result = commentService.addComment("Super !", 1L, 2L);
+        CommentEntity result = commentService.addComment("Super !", 1L, 2L, null);
 
         ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
         verify(commentRepository).save(captor.capture());
@@ -60,8 +67,8 @@ class CommentServiceTest {
 
         when(userService.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class,
-                () -> commentService.addComment("Super !", 1L, 2L));
+        assertThrows(UploadFileException.class,
+                () -> commentService.addComment("Super !", 1L, 2L, null));
 
         verifyNoInteractions(publicationService);
         verify(commentRepository, never()).save(any());
@@ -73,8 +80,8 @@ class CommentServiceTest {
         when(userService.findById(1L)).thenReturn(Optional.of(mock(UserEntity.class)));
         when(publicationService.findById(2L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalStateException.class,
-                () -> commentService.addComment("Super !", 1L, 2L));
+        assertThrows(UploadFileException.class,
+                () -> commentService.addComment("Super !", 1L, 2L, null));
 
         verify(commentRepository, never()).save(any());
     }
@@ -98,5 +105,31 @@ class CommentServiceTest {
                 () -> commentService.deleteComment(3L));
 
         verify(commentRepository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void shouldSaveFileWhenAddingCommentWithFile() throws UploadFileException {
+
+        UserEntity author = mock(UserEntity.class);
+        PublicationEntity publication = mock(PublicationEntity.class);
+        File savedFile = mock(File.class);
+        when(savedFile.toString()).thenReturn("/uploads/test.txt");
+
+        when(userService.findById(1L)).thenReturn(Optional.of(author));
+        when(publicationService.findById(2L)).thenReturn(Optional.of(publication));
+        when(filesService.saveMultipartFile(any(MultipartFile.class))).thenReturn(savedFile);
+        when(commentRepository.save(any(CommentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        MultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
+
+        CommentEntity result = commentService.addComment("Super !", 1L, 2L, file);
+
+        verify(filesService).saveMultipartFile(file);
+        ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
+        verify(commentRepository).save(captor.capture());
+
+        CommentEntity saved = captor.getValue();
+        assertEquals("/uploads/test.txt", saved.getPath());
     }
 }
