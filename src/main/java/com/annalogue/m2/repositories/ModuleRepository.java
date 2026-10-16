@@ -1,10 +1,12 @@
 package com.annalogue.m2.repositories;
 
 import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +25,7 @@ public interface ModuleRepository extends JpaRepository<ModuleEntity, Long> {
      // true if the user is still the responsible of at least one module
     boolean existsByResponsibleId(Long responsibleId);
 
-    List<ModuleEntity> findAllByNameIgnoreCase(String query);
 
+    @Query("SELECT DISTINCT m FROM ModuleEntity m JOIN InscriptionEntity i ON i.module = m WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', :query, '%')) AND i.user.id = :userId")
+    List<ModuleEntity> findModulesByQueryAndUserId(@Param("query") String query, @Param("userId") Long userId);
 }
