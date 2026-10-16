@@ -44,7 +44,7 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/home"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -66,7 +66,7 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/members/add"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -180,7 +180,7 @@ class SecurityIntegrationTest {
                                 .session(session)
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -200,7 +200,7 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/members"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -250,7 +250,7 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/modules/add"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -258,7 +258,7 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/modules"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     // ===== TFAN26-125 (ADMIN-02): only the admin changes a role =====

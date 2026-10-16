@@ -17,6 +17,7 @@ public class UserService implements IUserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -26,7 +27,8 @@ public class UserService implements IUserService {
         return userRepository.findByEmail(email);
     }
 
-    // several users can have the same username: use the email or the id to find one user
+    // several users can have the same username: use the email or the id to find one
+    // user
     public List<UserEntity> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
@@ -49,10 +51,12 @@ public class UserService implements IUserService {
     public void deleteAll() {
         userRepository.deleteAll();
     }
+
     public boolean existsByUsername(String username) {
         return userRepository.existsByUsername(username);
     }
-        // all users, sorted by username
+
+    // all users, sorted by username
     public List<UserEntity> findAll() {
         return userRepository.findAllByOrderByUsernameAsc();
     }
@@ -85,5 +89,12 @@ public class UserService implements IUserService {
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalStateException("Logged-in user not found"));
+    }
+
+    public List<UserEntity> findByGroup(String group) {
+        if (group == null || group.isBlank()) {
+            return List.of();
+        }
+        return userRepository.findByGroupNameIgnoreCaseOrderByUsernameAsc(group.trim());
     }
 }

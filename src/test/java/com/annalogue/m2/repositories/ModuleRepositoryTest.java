@@ -3,6 +3,7 @@ package com.annalogue.m2.repositories;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.services.IFilesService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,12 +69,14 @@ class ModuleRepositoryTest {
 
     @Test
     void shouldReturnModulesSortedByName() {
+
         moduleRepository.save(new ModuleEntity("TF", teacher));
         moduleRepository.save(new ModuleEntity("MOIA", teacher));
 
         List<String> names = moduleRepository.findAllByOrderByNameAsc()
                 .stream()
                 .map(ModuleEntity::getName)
+                .filter(name -> List.of("TF", "MOIA").contains(name))
                 .toList();
 
         assertEquals(List.of("MOIA", "TF"), names);

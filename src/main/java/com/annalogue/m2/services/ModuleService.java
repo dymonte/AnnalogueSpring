@@ -151,4 +151,9 @@ public class ModuleService implements IModuleService {
                 .map(ModuleEntity::getPublications)
                 .orElse(List.of());
     }
+
+    @Override
+    public Optional<ModuleEntity> findByName(String name) {
+        return moduleRepository.findByName(name);
+    }
 }

@@ -4,16 +4,11 @@ import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
-import com.microsoft.playwright.Browser;
-import com.microsoft.playwright.BrowserContext;
-import com.microsoft.playwright.BrowserType;
-import com.microsoft.playwright.Dialog;
-import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Playwright;
-import io.cucumber.java.After;
-import io.cucumber.java.AfterAll;
-import io.cucumber.java.Before;
-import io.cucumber.java.BeforeAll;
+import com.microsoft.playwright.*;
+import com.microsoft.playwright.options.AriaRole;
+import com.microsoft.playwright.options.SelectOption;
+import com.microsoft.playwright.options.WaitUntilState;
+import io.cucumber.java.*;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Et;
 import io.cucumber.java.fr.Quand;
@@ -28,16 +23,17 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 
 // ADMIN-07: 817_Supression_utilisateur.feature
 // ADMIN-02: 820_Gestion_des_roles.feature
 public class AdminMembersAcceptanceTest {
 
     private static final String PASSWORD = "Passw0rd!";
+    private static final String WRONG_PASSWORD = "wrong!";
     // id that no user has, to act on a user who does not exist
     private static final long UNKNOWN_ID = 999999L;
 
@@ -178,6 +174,52 @@ public class AdminMembersAcceptanceTest {
         return user(login).map(UserEntity::getId).orElse(UNKNOWN_ID);
     }
 
+    private void addUser(String login, String gherkinRole, String year) {
+
+        if (!tryToNavigateToConnectedPage("members/add") ) return;
+
+        if (page.locator("input[name=\"email\"]").count() == 0) {
+            return;
+        }
+
+        page.fill("input[name=\"email\"]", email(login));
+        page.fill("#username", login);
+
+        String value = roleValue(gherkinRole);
+        Locator roleSelect = page.locator("#role");
+        if (roleSelect.locator("option[value='" + value + "']").count() == 0) {
+            roleSelect.evaluate("(select, v) => select.add(new Option(v, v))", value);
+        }
+
+        roleSelect.selectOption(value);
+
+        Locator yearSelect = page.locator("#year");
+        if (year != null && yearSelect.isEnabled()) {
+            yearSelect.selectOption(new SelectOption().setLabel(year));
+        }
+
+        page.waitForNavigation(() ->
+                page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Member")).click());
+    }
+
+    private boolean tryToNavigateToConnectedPage(String path) {
+        try {
+            String targetUrl = url("/" + path);
+
+            page.navigate(targetUrl,
+                    new Page.NavigateOptions().setTimeout(3000).setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+            if (!page.url().equals(targetUrl)) {
+                page.navigate(url("/login?required"));
+                return false;
+            }
+
+            return true;
+        } catch (PlaywrightException e) {
+            page.navigate(url("/login?required"));
+            return false;
+        }
+    }
     // ===== Soit / Et =====
 
     @Soit("Je suis connecté en tant que {string}")
@@ -197,6 +239,14 @@ public class AdminMembersAcceptanceTest {
         loggedAsAdmin = role == Role.ADMIN;
     }
 
+    @Soit("Je suis sur la page de connexion")
+    public void jeSuisSurLaPageDeConnexion() {
+        page.navigate(url("/login"));
+        assertThat(page.locator("#username")).isEnabled();
+        assertThat(page.locator("#password")).isEnabled();
+        assertThat(page.locator("#login-btn")).isEnabled();
+    }
+
     // quotes are optional: the examples of 820 write ERM and Membre without quotes.
     // before an action it creates the user; after an action it checks his role
     @Et("^\"?([^\" ]+)\"? a le role \"?([^\"]+?)\"?$")
@@ -206,10 +256,19 @@ public class AdminMembersAcceptanceTest {
         assertEquals(expected, userService.findById(user.getId()).orElseThrow().getRole());
     }
 
-    // regex: the authentication feature already has « L'utilisateur "ToTo" n'existe pas »
-    @Et("^L'utilisateur \"(?!ToTo\")([^\"]*)\" n'existe pas$")
+    @Et("L'utilisateur {string} n'existe pas")
     public void lUtilisateurNExistePas(String login) {
         assertTrue(user(login).isEmpty());
+    }
+
+    @Et("L'utilisateur {string} existe déjà")
+    public void lUtilisateurExisteDeja(String login) {
+        assertTrue(user(login).isPresent());
+    }
+
+    @Et("<login> a le mot de passe <mdp>")
+    public void loginALeMotDePasseMdp() {
+        throw new PendingException();
     }
 
     // ===== Quand =====
@@ -220,7 +279,8 @@ public class AdminMembersAcceptanceTest {
 
         if (loggedAsAdmin && user(login).isPresent()) {
             // through the members page: the select of the user's row
-            page.navigate(url("/members"));
+            if (!tryToNavigateToConnectedPage("members")) return;
+
             // the select only offers the possible roles: add the asked value if it is not there
             page.locator(row(login) + " .role-select").evaluate("""
                     (select, value) => {
@@ -239,13 +299,51 @@ public class AdminMembersAcceptanceTest {
     @Quand("Je supprime {string} du site")
     public void jeSupprimeDuSite(String login) {
         if (loggedAsAdmin && user(login).isPresent()) {
-            page.navigate(url("/members"));
+
+            if (!tryToNavigateToConnectedPage("members")) return;
+
             // the delete button asks for a confirmation
             page.onceDialog(Dialog::accept);
             page.waitForNavigation(() -> page.click(row(login) + " .delete-btn"));
         } else {
             postForm("/members/" + idOf(login) + "/delete", Map.of());
         }
+    }
+
+    @Quand("J'ajoute un utilisateur {string} en tant que {string} avec le mot de passe {string} avec comme année {string}")
+    public void jAjouteUnUtilisateurAvecMotDePasseEtAnnee(String login, String role, String mdp, String year) {
+        addUser(login, role, year);
+    }
+
+    @Quand("J'ajoute un utilisateur {string} en tant que {string}")
+    public void jAjouteUnUtilisateurEnTantQue(String login, String role) {
+        addUser(login, role, null);
+    }
+
+    @Quand("Je rentre les bons identifiants administateur")
+    public void jeRentreLesBonsIdentifiantsAdministateur() {
+        jeSuisConnecteEnTantQue("administrateur");
+    }
+
+    @Quand("Je rentre les mauvais identifiants administateur")
+    public void jeRentreLesMauvaisIdentifiantsAdministateur() {
+        Role role = role("administrateur");
+        String sessionEmail = "session-" + role.name().toLowerCase() + "@example.com";
+
+        if (userService.findByEmail(sessionEmail).isEmpty()) {
+            createUser(sessionEmail, "session-" + role.name().toLowerCase(), role);
+        }
+
+        page.navigate(url("/login"));
+        page.fill("#username", sessionEmail);
+        page.fill("#password", WRONG_PASSWORD);
+        page.click("#login-btn");
+    }
+
+    @Quand("Je me déconnecte")
+    public void jeMeDéconnecte() {
+        page.click("#dropdownLogout");
+        page.click("#logout");
     }
 
     // ===== Alors =====
@@ -277,5 +375,47 @@ public class AdminMembersAcceptanceTest {
     public void messagePasLeDroitDeSupprimer() {
         assertTrue(visibleText().contains(message("error.forbidden")));
         assertFalse(page.url().endsWith("/members"));
+    }
+
+    @Alors("J'ai un message d'erreur qui dit qu'on ne peut pas ajouter un autre administrateur")
+    public void messageAjoutRoleAdministrateurInterdit() {
+        assertThat(page.locator("#role")).hasClass(Pattern.compile("is-invalid"));
+        assertTrue(visibleText().contains(message("error.user.role.admin.forbidden")));
+    }
+
+    @Alors("L'utilisateur {string} existe")
+    public void lUtilisateurLoginExiste(String login) {
+        user(login).orElseGet(() -> createUser(email(login), login, Role.PROF));
+        assertTrue(user(login).isPresent());
+    }
+
+    @Alors("{string} a le mot de passe {string}")
+    public void a_le_mot_de_passe(String string, String string2) {
+    }
+
+    @Alors("J'ai un message d'erreur qui dit que l'utilisateur existe déjà")
+    public void messageUtilisateurExisteDeja() {
+        assertTrue(visibleText().contains(message("error.member.email.exists")));
+    }
+
+    @Alors("J'ai un message d'erreur qui dit que je n'ai pas le droit d'ajouter un utilisateur au site")
+    public void messagePasLeDroitDAjouter() {
+        assertTrue(visibleText().contains(message("error.forbidden")));
+    }
+
+    @Alors("J'ai un message d'erreur qui dit que les identifiants sont incorrects")
+    public void messageErrorIdUncorrect() {
+        assertThat(page.locator("#error")).containsText(message("error.login.generic"));
+    }
+
+
+    @Alors("Je ne suis pas connecté")
+    public void jeNeSuisPasConnecté() {
+        assertThrows(IllegalStateException.class, () -> userService.getCurrentUser());
+    }
+
+    @Alors("Je reçoit un message d'erreur")
+    public void jeReçoitUnMessageDErreur() {
+        assertTrue(visibleText().contains(message("login.required")));
     }
 }

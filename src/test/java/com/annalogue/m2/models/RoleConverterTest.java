@@ -13,7 +13,7 @@ class RoleConverterTest {
         assertEquals("admin", converter.convertToDatabaseColumn(Role.ADMIN));
         assertEquals("responsable", converter.convertToDatabaseColumn(Role.RESPONSABLE));
         assertEquals("prof", converter.convertToDatabaseColumn(Role.PROF));
-        assertEquals("étudiant", converter.convertToDatabaseColumn(Role.ETUDIANT));
+        assertEquals("etudiant", converter.convertToDatabaseColumn(Role.ETUDIANT));
     }
 
     @Test
@@ -21,7 +21,7 @@ class RoleConverterTest {
         assertEquals(Role.ADMIN, converter.convertToEntityAttribute("admin"));
         assertEquals(Role.RESPONSABLE, converter.convertToEntityAttribute("responsable"));
         assertEquals(Role.PROF, converter.convertToEntityAttribute("prof"));
-        assertEquals(Role.ETUDIANT, converter.convertToEntityAttribute("étudiant"));
+        assertEquals(Role.ETUDIANT, converter.convertToEntityAttribute("etudiant"));
     }
 
     @Test
