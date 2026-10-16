@@ -1,6 +1,7 @@
 package com.annalogue.m2.services;
 
 import com.annalogue.m2.dto.SearchResult;
+import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.PublicationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,11 @@ public class SearchService implements ISearchService {
     @Autowired
     private PublicationRepository publicationRepository;
 
-    private List<SearchResult> searchForModule(String query) {
-        return moduleRepository.findAllByNameIgnoreCase(query.trim())
+    @Autowired
+    private IUserService userService;
+
+    private List<SearchResult> searchForModule(String query, Long userId) {
+        return moduleRepository.findModulesByQueryAndUserId(query.trim(), userId)
                 .stream()
                 .map(module -> new SearchResult(
                         module.getName(),
@@ -29,8 +33,8 @@ public class SearchService implements ISearchService {
                 .toList();
     }
 
-    private List<SearchResult> searchForPublication(String query) {
-        return publicationRepository.findAllByNameIgnoreCase(query.trim())
+    private List<SearchResult> searchForPublication(String query, Long userId) {
+        return publicationRepository.findPublicationsByQueryAndUserId(query.trim(), userId)
                 .stream()
                 .map(publication -> new SearchResult(
                         publication.getName(),
@@ -46,6 +50,11 @@ public class SearchService implements ISearchService {
             return List.of();
         }
 
-        return Stream.concat(searchForModule(query).stream(), searchForPublication(query).stream()).toList();
+        UserEntity user = userService.getCurrentUser();
+
+        return Stream.concat(
+                searchForModule(query, user.getId()).stream(),
+                searchForPublication(query, user.getId()).stream()
+        ).toList();
     }
 }

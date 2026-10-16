@@ -3,9 +3,9 @@ package com.annalogue.m2.services;
 import com.annalogue.m2.dto.SearchResult;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
+import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.PublicationRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +26,9 @@ class SearchServiceTest {
     @Mock
     private PublicationRepository publicationRepository;
 
+    @Mock
+    private IUserService userService;
+
     @InjectMocks
     private SearchService searchService;
 
@@ -35,68 +38,99 @@ class SearchServiceTest {
 
         assertEquals(List.of(), results);
 
-        verifyNoInteractions(moduleRepository, publicationRepository);
+        verifyNoInteractions(
+                moduleRepository,
+                publicationRepository,
+                userService
+        );
     }
 
     @Test
     void searchShouldReturnEmptyListWhenQueryIsBlank() {
-        List<SearchResult> results = searchService.search("   ");
+        List<SearchResult> results = searchService.search("    ");
 
         assertEquals(List.of(), results);
 
-        verifyNoInteractions(moduleRepository, publicationRepository);
+        verifyNoInteractions(
+                moduleRepository,
+                publicationRepository,
+                userService
+        );
     }
 
     @Test
-    void searchShouldReturnModuleResults() {
+    void searchShouldReturnModuleResultsForCurrentUser() {
+        // Arrange
         String query = "Java";
+        Long userId = 10L;
 
+        UserEntity user = mock(UserEntity.class);
         ModuleEntity module = mock(ModuleEntity.class);
+
+        when(user.getId()).thenReturn(userId);
+        when(userService.getCurrentUser()).thenReturn(user);
 
         when(module.getName()).thenReturn("Java");
         when(module.getId()).thenReturn(1L);
 
-        when(moduleRepository.findAllByNameIgnoreCase("Java"))
+        when(moduleRepository
+                .findModulesByQueryAndUserId(query, userId))
                 .thenReturn(List.of(module));
 
-        when(publicationRepository.findAllByNameIgnoreCase("Java"))
+        when(publicationRepository
+                .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
+        // Act
         List<SearchResult> results = searchService.search(query);
 
+        // Assert
         assertEquals(1, results.size());
-
         assertEquals(
                 new SearchResult("Java", "Module", "/modules/1"),
                 results.get(0)
         );
 
-        verify(moduleRepository).findAllByNameIgnoreCase("Java");
-        verify(publicationRepository).findAllByNameIgnoreCase("Java");
+        verify(userService).getCurrentUser();
+
+        verify(moduleRepository)
+                .findModulesByQueryAndUserId(query, userId);
+
+        verify(publicationRepository)
+                .findPublicationsByQueryAndUserId(query, userId);
     }
 
     @Test
-    void searchShouldReturnPublicationResults() {
+    void searchShouldReturnPublicationResultsForCurrentUser() {
+        // Arrange
         String query = "Java";
+        Long userId = 10L;
 
+        UserEntity user = mock(UserEntity.class);
         ModuleEntity module = mock(ModuleEntity.class);
         PublicationEntity publication = mock(PublicationEntity.class);
+
+        when(user.getId()).thenReturn(userId);
+        when(userService.getCurrentUser()).thenReturn(user);
 
         when(module.getId()).thenReturn(2L);
 
         when(publication.getName()).thenReturn("Java Introduction");
         when(publication.getModule()).thenReturn(module);
 
-        when(moduleRepository.findAllByNameIgnoreCase("Java"))
+        when(moduleRepository
+                .findModulesByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
-        when(publicationRepository.findAllByNameIgnoreCase("Java"))
+        when(publicationRepository
+                .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of(publication));
 
+        // Act
         List<SearchResult> results = searchService.search(query);
 
+        // Assert
         assertEquals(1, results.size());
-
         assertEquals(
                 new SearchResult(
                         "Java Introduction",
@@ -106,17 +140,28 @@ class SearchServiceTest {
                 results.get(0)
         );
 
-        verify(moduleRepository).findAllByNameIgnoreCase("Java");
-        verify(publicationRepository).findAllByNameIgnoreCase("Java");
+        verify(userService).getCurrentUser();
+
+        verify(moduleRepository)
+                .findModulesByQueryAndUserId(query, userId);
+
+        verify(publicationRepository)
+                .findPublicationsByQueryAndUserId(query, userId);
     }
 
     @Test
-    void searchShouldCombineModuleAndPublicationResults() {
+    void searchShouldCombineModuleAndPublicationResultsForCurrentUser() {
+        // Arrange
         String query = "Java";
+        Long userId = 10L;
 
+        UserEntity user = mock(UserEntity.class);
         ModuleEntity module = mock(ModuleEntity.class);
         ModuleEntity publicationModule = mock(ModuleEntity.class);
         PublicationEntity publication = mock(PublicationEntity.class);
+
+        when(user.getId()).thenReturn(userId);
+        when(userService.getCurrentUser()).thenReturn(user);
 
         when(module.getName()).thenReturn("Java");
         when(module.getId()).thenReturn(1L);
@@ -126,14 +171,18 @@ class SearchServiceTest {
         when(publication.getName()).thenReturn("Java Introduction");
         when(publication.getModule()).thenReturn(publicationModule);
 
-        when(moduleRepository.findAllByNameIgnoreCase("Java"))
+        when(moduleRepository
+                .findModulesByQueryAndUserId(query, userId))
                 .thenReturn(List.of(module));
 
-        when(publicationRepository.findAllByNameIgnoreCase("Java"))
+        when(publicationRepository
+                .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of(publication));
 
+        // Act
         List<SearchResult> results = searchService.search(query);
 
+        // Assert
         assertEquals(2, results.size());
 
         assertEquals(
@@ -150,40 +199,80 @@ class SearchServiceTest {
                 results.get(1)
         );
 
-        verify(moduleRepository).findAllByNameIgnoreCase("Java");
-        verify(publicationRepository).findAllByNameIgnoreCase("Java");
+        verify(userService).getCurrentUser();
+
+        verify(moduleRepository)
+                .findModulesByQueryAndUserId(query, userId);
+
+        verify(publicationRepository)
+                .findPublicationsByQueryAndUserId(query, userId);
     }
 
     @Test
     void searchShouldTrimQueryBeforeSearching() {
-        String query = "  Java  ";
+        // Arrange
+        String query = "   Java   ";
+        Long userId = 10L;
 
-        when(moduleRepository.findAllByNameIgnoreCase("Java"))
+        UserEntity user = mock(UserEntity.class);
+
+        when(user.getId()).thenReturn(userId);
+        when(userService.getCurrentUser()).thenReturn(user);
+
+        when(moduleRepository
+                .findModulesByQueryAndUserId("Java", userId))
                 .thenReturn(List.of());
 
-        when(publicationRepository.findAllByNameIgnoreCase("Java"))
+        when(publicationRepository
+                .findPublicationsByQueryAndUserId("Java", userId))
                 .thenReturn(List.of());
 
+        // Act
         List<SearchResult> results = searchService.search(query);
 
+        // Assert
         assertEquals(List.of(), results);
 
-        verify(moduleRepository).findAllByNameIgnoreCase("Java");
-        verify(publicationRepository).findAllByNameIgnoreCase("Java");
+        verify(userService).getCurrentUser();
+
+        verify(moduleRepository)
+                .findModulesByQueryAndUserId("Java", userId);
+
+        verify(publicationRepository)
+                .findPublicationsByQueryAndUserId("Java", userId);
     }
 
     @Test
     void searchShouldReturnEmptyListWhenRepositoriesFindNothing() {
+        // Arrange
         String query = "Unknown";
+        Long userId = 10L;
 
-        when(moduleRepository.findAllByNameIgnoreCase("Unknown"))
+        UserEntity user = mock(UserEntity.class);
+
+        when(user.getId()).thenReturn(userId);
+        when(userService.getCurrentUser()).thenReturn(user);
+
+        when(moduleRepository
+                .findModulesByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
-        when(publicationRepository.findAllByNameIgnoreCase("Unknown"))
+        when(publicationRepository
+                .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
+        // Act
         List<SearchResult> results = searchService.search(query);
 
+        // Assert
         assertEquals(List.of(), results);
+
+        verify(userService).getCurrentUser();
+
+        verify(moduleRepository)
+                .findModulesByQueryAndUserId(query, userId);
+
+        verify(publicationRepository)
+                .findPublicationsByQueryAndUserId(query, userId);
     }
 }
