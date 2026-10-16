@@ -94,6 +94,8 @@ public class ModuleController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         model.addAttribute("module", module);
+
+        model.addAttribute("publications", module.getPublications());
         return "modules/detail";
     }
 
