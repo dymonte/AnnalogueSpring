@@ -44,7 +44,7 @@ public class ModuleService implements IModuleService {
 
     @Override
     @Transactional
-    public ModuleEntity createModule(String name) {
+    public ModuleEntity createModule(String name, UserEntity responsible) {
         if (name == null || name.isBlank()) {
             throw new InvalidModuleDataException("error.module.name.empty");
         }
@@ -54,18 +54,21 @@ public class ModuleService implements IModuleService {
         if (moduleName.length() > MAX_NAME_LENGTH) {
             throw new InvalidModuleDataException("error.module.name.tooLong");
         }
+
         if (moduleRepository.existsByNameIgnoreCase(moduleName)) {
             throw new InvalidModuleDataException("error.module.name.exists");
         }
 
-        UserEntity currentUser = iUserService.getCurrentUser();
-
-        ModuleEntity module = moduleRepository.save(new ModuleEntity(moduleName, currentUser));
+        ModuleEntity module = moduleRepository.save(
+                new ModuleEntity(moduleName, responsible)
+        );
 
         InscriptionEntity inscription = new InscriptionEntity();
-        inscription.setUser(currentUser);
+        inscription.setUser(responsible);
         inscription.setModule(module);
-        inscription.setInscriptionType(com.annalogue.m2.models.InscriptionType.INTERVENANT);
+        inscription.setInscriptionType(
+                com.annalogue.m2.models.InscriptionType.INTERVENANT
+        );
         inscription.setEditor(true);
         inscriptionRepository.save(inscription);
 
@@ -109,6 +112,11 @@ public class ModuleService implements IModuleService {
         return findAll().stream()
                 .map(module -> new UserModuleView(module.getId(), module.getName(), null, false))
                 .toList();
+    }
+
+    @Override
+    public Optional<ModuleEntity> findByName(String name) {
+        return moduleRepository.findByName(name);
     }
 
     @Override

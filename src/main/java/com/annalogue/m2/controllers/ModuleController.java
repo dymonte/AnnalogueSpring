@@ -1,7 +1,9 @@
 package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.dto.UserModuleView;
+import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,9 +31,10 @@ import java.util.List;
 public class ModuleController {
 
     private final IModuleService moduleService;
-
-    public ModuleController(IModuleService moduleService) {
+    private final IUserService userService;
+    public ModuleController(IModuleService moduleService, IUserService userService) {
         this.moduleService = moduleService;
+        this.userService = userService;
     }
 
     // catalogue of all the modules, for the admin only;
@@ -65,7 +68,8 @@ public class ModuleController {
                             Model model,
                             RedirectAttributes redirectAttributes) {
         try {
-            ModuleEntity module = moduleService.createModule(name);
+            UserEntity responsible = userService.getCurrentUser();
+            ModuleEntity module = moduleService.createModule(name, responsible);
 
             // redirect after success, so refreshing the page does not create the module twice
             redirectAttributes.addFlashAttribute("successKey", "success.module.created");

@@ -66,6 +66,12 @@ public class InscriptionService implements IInscriptionService{
     }
     @Override
     public void deleteById(Long id){inscriptionRepository.deleteById(id); }
+
+    @Override
+    public void deleteAll() {
+        inscriptionRepository.deleteAll();
+    }
+
     @Override
     public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
     @Override
