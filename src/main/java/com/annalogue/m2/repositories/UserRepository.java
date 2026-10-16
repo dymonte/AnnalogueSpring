@@ -14,10 +14,14 @@ public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
     boolean existsByEmail(String email);
 
-    // the username is not unique (only a warning in the form): several users can share it
+    // the username is not unique (only a warning in the form): several users can
+    // share it
     List<UserEntity> findByUsername(String username);
 
     boolean existsByUsername(String username);
-        // members list, sorted by username
+
+    // members list, sorted by username
     List<UserEntity> findAllByOrderByUsernameAsc();
+
+    List<UserEntity> findByGroupNameIgnoreCaseOrderByUsernameAsc(String groupName);
 }
