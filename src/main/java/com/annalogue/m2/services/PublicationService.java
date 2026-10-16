@@ -41,8 +41,9 @@ public class PublicationService implements IPublicationService {
     @Lazy
     private IInscriptionService inscriptionService;
 
-	@Value("${app.upload.dir}")
-	private String uploadDir;
+    @Autowired
+    private IFilesService filesService;
+
 
 	public List<PublicationEntity> findAll() {
 		return publicationRepository.findAll();
@@ -87,9 +88,6 @@ public class PublicationService implements IPublicationService {
 
 	public void saveMultipartFile(MultipartFile file, String name, String description, Long moduleId, String authorEmail, FileType fileType) throws UploadFileException {
 
-		if (file.getSize() > 10 * 1024 * 1024)
-			throw new UploadFileException("error.upload.file.size");
-
 		//find the author and module
 		UserEntity author = userService.findByEmail(authorEmail).orElseThrow(() -> new UploadFileException("error.upload.author.notfound"));
 
@@ -98,13 +96,9 @@ public class PublicationService implements IPublicationService {
 		if(!canUpload(author, module))
 			throw new UploadFileException("error.upload.forbidden");
 
-		File fullPath = getFullPath(file);
-		try {
-			file.transferTo(fullPath);
-		}
-		catch (IOException e) {
-			throw new UploadFileException("error.upload.failed");
-		}
+		File fullPath = filesService.saveMultipartFile(file);
+
+
 
 		PublicationEntity newPublication = new PublicationEntity(
 				name,
@@ -117,30 +111,7 @@ public class PublicationService implements IPublicationService {
 		addPublication(newPublication);
 	}
 
-	private @NonNull File getFullPath(MultipartFile file) throws UploadFileException {
 
-
-		//save the file in the storage
-		File uploadDirectory = new File(uploadDir);
-
-		if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
-			throw new UploadFileException("error.upload.cannotcreatedir");
-		}
-
-		String originalFilename = file.getOriginalFilename();
-		if (originalFilename == null) {
-			throw new UploadFileException("error.upload.filename.missing");
-		}
-		File fullPath = new File(uploadDirectory, originalFilename);
-
-		// avoid overwriting existing files by adding a number
-		int i = 1;
-		while (fullPath.exists()) {
-			fullPath = new File(uploadDirectory, originalFilename.substring(0, originalFilename.lastIndexOf('.')) + "-" + i + originalFilename.substring(originalFilename.lastIndexOf('.')));
-			i++;
-		}
-		return fullPath;
-	}
 
 	private boolean canUpload(UserEntity user, ModuleEntity module) {
 		return inscriptionService.hasWriterAccess(user, module);
