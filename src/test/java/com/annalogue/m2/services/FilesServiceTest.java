@@ -1,11 +1,13 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.io.Resource;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.mock.web.MockMultipartFile;
@@ -77,5 +79,27 @@ class FilesServiceTest {
 
         assertNotEquals(result1.getName(), result2.getName());
         assertTrue(result2.getName().startsWith("test-"));
+    }
+
+    @Test
+    void shouldLoadAsResourceSuccessfully() throws UploadFileException, IOException {
+        MultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "content".getBytes());
+        File savedFile = filesService.saveMultipartFile(file);
+
+        Resource resource = filesService.loadAsResource(savedFile.toString());
+
+        assertNotNull(resource);
+        assertTrue(resource.exists());
+        assertTrue(resource.isReadable());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenLoadingNullPath() {
+        assertThrows(StorageFileNotFoundException.class, () -> filesService.loadAsResource(null));
+    }
+
+    @Test
+    void shouldThrowExceptionWhenLoadingNonExistentFile() {
+        assertThrows(StorageFileNotFoundException.class, () -> filesService.loadAsResource("./test-uploads/nonexistent.txt"));
     }
 }

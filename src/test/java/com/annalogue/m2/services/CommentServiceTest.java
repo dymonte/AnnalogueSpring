@@ -1,5 +1,6 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
 import com.annalogue.m2.models.CommentEntity;
 import com.annalogue.m2.models.PublicationEntity;
@@ -11,6 +12,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -131,5 +133,42 @@ class CommentServiceTest {
 
         CommentEntity saved = captor.getValue();
         assertEquals("/uploads/test.txt", saved.getPath());
+    }
+
+    @Test
+    void shouldLoadAsResourceSuccessfully() throws StorageFileNotFoundException {
+        CommentEntity comment = mock(CommentEntity.class);
+        Resource mockResource = mock(Resource.class);
+
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+        when(comment.getPath()).thenReturn("/uploads/test.txt");
+        when(filesService.loadAsResource("/uploads/test.txt")).thenReturn(mockResource);
+
+        Resource result = commentService.loadAsResource(1L);
+
+        assertNotNull(result);
+        verify(commentRepository).findById(1L);
+        verify(filesService).loadAsResource("/uploads/test.txt");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenLoadingNonExistentComment() {
+        when(commentRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(StorageFileNotFoundException.class, () -> commentService.loadAsResource(1L));
+    }
+
+    @Test
+    void shouldReturnNullWhenCommentHasNoFile() throws StorageFileNotFoundException {
+        CommentEntity comment = mock(CommentEntity.class);
+
+        when(commentRepository.findById(1L)).thenReturn(Optional.of(comment));
+        when(comment.getPath()).thenReturn(null);
+
+        Resource result = commentService.loadAsResource(1L);
+
+        assertNull(result);
+        verify(commentRepository).findById(1L);
+        verify(filesService, never()).loadAsResource(any());
     }
 }

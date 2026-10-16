@@ -14,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.Resource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,8 +22,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 public class PublicationServiceTest {
 
@@ -106,41 +107,42 @@ public class PublicationServiceTest {
 	}
 
 	@Test
-	void testLoadAsResource() throws IOException {
-		File testFile = new File("/tmp/test-uploads/testFile.pdf");
-		testFile.createNewFile();
-
+	void testLoadAsResourceSuccessfully() throws StorageFileNotFoundException {
 		PublicationEntity publicationEntity = new PublicationEntity();
 		publicationEntity.setFilePath("/tmp/test-uploads/testFile.pdf");
-		Mockito.when(publicationRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(publicationEntity));
+		Resource mockResource = mock(Resource.class);
 
-		publicationService.loadAsResource(1L);
+		when(publicationRepository.findById(1L)).thenReturn(Optional.of(publicationEntity));
+		when(filesService.loadAsResource("/tmp/test-uploads/testFile.pdf")).thenReturn(mockResource);
 
-		Mockito.verify(publicationRepository, Mockito.times(1)).findById(Mockito.anyLong());
+		Resource result = publicationService.loadAsResource(1L);
 
-	}
-
-
-	@Test
-	void testLoadAsResourceWithNotFoundException() {
-		assertThrows(StorageFileNotFoundException.class, () -> {
-			publicationService.loadAsResource(1L);
-		});
-
-		Mockito.verify(publicationRepository, Mockito.times(1)).findById(Mockito.anyLong());
+		assertNotNull(result);
+		verify(publicationRepository).findById(1L);
+		verify(filesService).loadAsResource("/tmp/test-uploads/testFile.pdf");
 	}
 
 	@Test
-	void testLoadAsResourceWithIOException() {
+	void testLoadAsResourceWithNullPath() throws StorageFileNotFoundException {
 		PublicationEntity publicationEntity = new PublicationEntity();
-		publicationEntity.setFilePath("/tmp/test-uploads/testFile.pdf");
-		Mockito.when(publicationRepository.findById(Mockito.anyLong())).thenReturn(Optional.of(publicationEntity));
+		publicationEntity.setFilePath(null);
 
-		assertThrows(StorageFileNotFoundException.class, () -> {
-			publicationService.loadAsResource(1L);
-		});
+		when(publicationRepository.findById(1L)).thenReturn(Optional.of(publicationEntity));
 
-		Mockito.verify(publicationRepository, Mockito.times(1)).findById(Mockito.anyLong());
+		assertThrows(StorageFileNotFoundException.class, () -> publicationService.loadAsResource(1L));
+
+		verify(publicationRepository).findById(1L);
+		verify(filesService, never()).loadAsResource(any());
+	}
+
+	@Test
+	void testLoadAsResourceWithNonExistentPublication() throws StorageFileNotFoundException {
+		when(publicationRepository.findById(1L)).thenReturn(Optional.empty());
+
+		assertThrows(StorageFileNotFoundException.class, () -> publicationService.loadAsResource(1L));
+
+		verify(publicationRepository).findById(1L);
+		verify(filesService, never()).loadAsResource(any());
 	}
 
 	@Test
