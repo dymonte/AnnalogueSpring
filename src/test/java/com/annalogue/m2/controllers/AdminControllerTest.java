@@ -46,7 +46,7 @@ public class AdminControllerTest {
 	void adminUnauthenticatedShouldRedirectToLogin() throws Exception {
 		mockMvc.perform(get("/admin"))
 				.andExpect(status().is3xxRedirection())
-				.andExpect(redirectedUrl("/login"));
+				.andExpect(redirectedUrl("/login?required"));
 	}
 
 	@Test

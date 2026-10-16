@@ -66,7 +66,7 @@ class HomeControllerTest {
     void homeUnauthenticatedShouldRedirectToLogin() throws Exception {
         mockMvc.perform(get("/home"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
