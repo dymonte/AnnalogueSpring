@@ -35,6 +35,8 @@ class NotificationRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        userRepository.deleteAll();
+
         student = userRepository.save(
                 new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, 2026, "A"));
         responsible = userRepository.save(

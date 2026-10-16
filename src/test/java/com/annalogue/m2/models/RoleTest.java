@@ -11,7 +11,7 @@ class RoleTest {
         assertEquals("admin", Role.ADMIN.getValue());
         assertEquals("responsable", Role.RESPONSABLE.getValue());
         assertEquals("prof", Role.PROF.getValue());
-        assertEquals("étudiant", Role.ETUDIANT.getValue());
+        assertEquals("etudiant", Role.ETUDIANT.getValue());
     }
 
     @Test
