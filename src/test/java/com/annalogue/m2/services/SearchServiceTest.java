@@ -60,7 +60,6 @@ class SearchServiceTest {
 
     @Test
     void searchShouldReturnModuleResultsForCurrentUser() {
-        // Arrange
         String query = "Java";
         Long userId = 10L;
 
@@ -81,10 +80,8 @@ class SearchServiceTest {
                 .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
-        // Act
         List<SearchResult> results = searchService.search(query);
 
-        // Assert
         assertEquals(1, results.size());
         assertEquals(
                 new SearchResult("Java", "Module", "/modules/1"),
@@ -102,7 +99,6 @@ class SearchServiceTest {
 
     @Test
     void searchShouldReturnPublicationResultsForCurrentUser() {
-        // Arrange
         String query = "Java";
         Long userId = 10L;
 
@@ -126,10 +122,8 @@ class SearchServiceTest {
                 .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of(publication));
 
-        // Act
         List<SearchResult> results = searchService.search(query);
 
-        // Assert
         assertEquals(1, results.size());
         assertEquals(
                 new SearchResult(
@@ -151,7 +145,6 @@ class SearchServiceTest {
 
     @Test
     void searchShouldCombineModuleAndPublicationResultsForCurrentUser() {
-        // Arrange
         String query = "Java";
         Long userId = 10L;
 
@@ -179,10 +172,8 @@ class SearchServiceTest {
                 .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of(publication));
 
-        // Act
         List<SearchResult> results = searchService.search(query);
 
-        // Assert
         assertEquals(2, results.size());
 
         assertEquals(
@@ -210,7 +201,6 @@ class SearchServiceTest {
 
     @Test
     void searchShouldTrimQueryBeforeSearching() {
-        // Arrange
         String query = "   Java   ";
         Long userId = 10L;
 
@@ -227,10 +217,8 @@ class SearchServiceTest {
                 .findPublicationsByQueryAndUserId("Java", userId))
                 .thenReturn(List.of());
 
-        // Act
         List<SearchResult> results = searchService.search(query);
 
-        // Assert
         assertEquals(List.of(), results);
 
         verify(userService).getCurrentUser();
@@ -244,7 +232,6 @@ class SearchServiceTest {
 
     @Test
     void searchShouldReturnEmptyListWhenRepositoriesFindNothing() {
-        // Arrange
         String query = "Unknown";
         Long userId = 10L;
 
@@ -261,10 +248,8 @@ class SearchServiceTest {
                 .findPublicationsByQueryAndUserId(query, userId))
                 .thenReturn(List.of());
 
-        // Act
         List<SearchResult> results = searchService.search(query);
 
-        // Assert
         assertEquals(List.of(), results);
 
         verify(userService).getCurrentUser();

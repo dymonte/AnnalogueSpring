@@ -25,7 +25,6 @@ public interface ModuleRepository extends JpaRepository<ModuleEntity, Long> {
      // true if the user is still the responsible of at least one module
     boolean existsByResponsibleId(Long responsibleId);
 
-
     @Query("SELECT DISTINCT m FROM ModuleEntity m JOIN InscriptionEntity i ON i.module = m WHERE LOWER(m.name) LIKE LOWER(CONCAT('%', :query, '%')) AND i.user.id = :userId")
     List<ModuleEntity> findModulesByQueryAndUserId(@Param("query") String query, @Param("userId") Long userId);
 }
