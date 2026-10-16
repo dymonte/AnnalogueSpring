@@ -2,10 +2,7 @@ package com.annalogue.m2;
 
 import com.annalogue.m2.controllers.UserController;
 import com.annalogue.m2.ldap.SecurityConfig;
-import com.annalogue.m2.services.CustomUserDetailsService;
-import com.annalogue.m2.services.HandPasswordService;
-import com.annalogue.m2.services.HandleUserService;
-import com.annalogue.m2.services.RoleService;
+import com.annalogue.m2.services.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -39,6 +36,9 @@ public class PasswordChangeTest {
 
         @MockitoBean
         private CustomUserDetailsService customUserDetailsService;
+
+        @MockitoBean
+        private IUserService userService;
 
         @Test
         void shouldShowErrorWhenUserDoesNotExist() throws Exception {

@@ -1,6 +1,8 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.services.IModuleService;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,6 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 
 // all texts are message keys of messages.properties: the pages display them with #{${...}}
 @Controller
@@ -30,10 +34,23 @@ public class ModuleController {
         this.moduleService = moduleService;
     }
 
-    // list of all modules (catalogue)
+    // catalogue of all the modules, for the admin only;
+    // the teachers and the students see their modules on their home page
     @GetMapping
-    public String listModules(Model model) {
-        model.addAttribute("modules", moduleService.findAll());
+    public String listModules(Authentication authentication, Model model) {
+        if (!isAdmin(authentication)) {
+            return "redirect:/home";
+        }
+
+        List<UserModuleView> modules = moduleService.findAllModuleViews();
+
+        model.addAttribute("modules", modules);
+        model.addAttribute("filter", "all");
+        model.addAttribute("countAll", modules.size());
+        model.addAttribute("countCreated", 0);
+        model.addAttribute("countEnrolled", 0);
+        model.addAttribute("login", authentication.getName());
+        model.addAttribute("isAdmin", true);
         return "modules/list";
     }
 
@@ -53,7 +70,8 @@ public class ModuleController {
             // redirect after success, so refreshing the page does not create the module twice
             redirectAttributes.addFlashAttribute("successKey", "success.module.created");
             redirectAttributes.addFlashAttribute("createdModuleName", module.getName());
-            return "redirect:/modules";
+            // back to the home page, where the new module is listed
+            return "redirect:/home";
 
         } catch (InvalidModuleDataException e) {
             // empty, too long or already used name: shown under the name field
@@ -79,5 +97,11 @@ public class ModuleController {
 
         model.addAttribute("publications", module.getPublications());
         return "modules/detail";
+    }
+
+    private boolean isAdmin(Authentication authentication) {
+        return authentication != null
+                && authentication.getAuthorities().stream()
+                        .anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
     }
 }
