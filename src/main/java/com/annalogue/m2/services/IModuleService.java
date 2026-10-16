@@ -29,4 +29,6 @@ public interface IModuleService {
 
     public List<UserModuleView> findAllModuleViews();
 
+    public Optional<ModuleEntity> findByName(String name);
+
 }
