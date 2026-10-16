@@ -33,6 +33,11 @@ public class SecurityConfig {
                         .requestMatchers("/module-enrollments/{id}/toggle-editor").hasAnyRole("ADMIN", "RESPONSABLE")
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendRedirect("/login?required");
+                        })
+                )
                 .formLogin(form -> form
                         .loginPage("/login")
                         .defaultSuccessUrl("/home", true)

@@ -152,7 +152,7 @@ class InscriptionControllerTest {
 
         mockMvc.perform(get("/module-enrollments/new"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -199,7 +199,7 @@ class InscriptionControllerTest {
                         get("/module-enrollments")
 
                 ).andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -496,7 +496,7 @@ class InscriptionControllerTest {
                                 .param("emailUser", "fmaiou@ufr.com")
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
     }
 
     @Test
@@ -530,7 +530,7 @@ class InscriptionControllerTest {
                                 .with(csrf())
              )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
 
         verify(inscriptionService, never()).deleteById(id);
     }
@@ -637,7 +637,7 @@ class InscriptionControllerTest {
                                 .with(csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/login"));
+                .andExpect(redirectedUrl("/login?required"));
 
         verify(inscriptionService, never()).toggleEditor(id);
     }

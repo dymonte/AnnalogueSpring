@@ -7,6 +7,7 @@ import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.SelectOption;
+import com.microsoft.playwright.options.WaitUntilState;
 import io.cucumber.java.*;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Et;
@@ -25,9 +26,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 // ADMIN-07: 817_Supression_utilisateur.feature
 // ADMIN-02: 820_Gestion_des_roles.feature
@@ -176,7 +175,8 @@ public class AdminMembersAcceptanceTest {
     }
 
     private void addUser(String login, String gherkinRole, String year) {
-        page.navigate(url("/members/add"));
+
+        if (!tryToNavigateToConnectedPage("members/add") ) return;
 
         if (page.locator("input[name=\"email\"]").count() == 0) {
             return;
@@ -202,6 +202,24 @@ public class AdminMembersAcceptanceTest {
                 page.getByRole(AriaRole.BUTTON, new Page.GetByRoleOptions().setName("Add Member")).click());
     }
 
+    private boolean tryToNavigateToConnectedPage(String path) {
+        try {
+            String targetUrl = url("/" + path);
+
+            page.navigate(targetUrl,
+                    new Page.NavigateOptions().setTimeout(3000).setWaitUntil(WaitUntilState.DOMCONTENTLOADED));
+
+            if (!page.url().equals(targetUrl)) {
+                page.navigate(url("/login?required"));
+                return false;
+            }
+
+            return true;
+        } catch (PlaywrightException e) {
+            page.navigate(url("/login?required"));
+            return false;
+        }
+    }
     // ===== Soit / Et =====
 
     @Soit("Je suis connecté en tant que {string}")
@@ -238,12 +256,10 @@ public class AdminMembersAcceptanceTest {
         assertEquals(expected, userService.findById(user.getId()).orElseThrow().getRole());
     }
 
-    // regex: the authentication feature already has « L'utilisateur "ToTo" n'existe pas »
     @Et("L'utilisateur {string} n'existe pas")
     public void lUtilisateurNExistePas(String login) {
         assertTrue(user(login).isEmpty());
     }
-
 
     @Et("L'utilisateur {string} existe déjà")
     public void lUtilisateurExisteDeja(String login) {
@@ -263,7 +279,8 @@ public class AdminMembersAcceptanceTest {
 
         if (loggedAsAdmin && user(login).isPresent()) {
             // through the members page: the select of the user's row
-            page.navigate(url("/members"));
+            if (!tryToNavigateToConnectedPage("members")) return;
+
             // the select only offers the possible roles: add the asked value if it is not there
             page.locator(row(login) + " .role-select").evaluate("""
                     (select, value) => {
@@ -282,7 +299,9 @@ public class AdminMembersAcceptanceTest {
     @Quand("Je supprime {string} du site")
     public void jeSupprimeDuSite(String login) {
         if (loggedAsAdmin && user(login).isPresent()) {
-            page.navigate(url("/members"));
+
+            if (!tryToNavigateToConnectedPage("members")) return;
+
             // the delete button asks for a confirmation
             page.onceDialog(Dialog::accept);
             page.waitForNavigation(() -> page.click(row(login) + " .delete-btn"));
@@ -323,7 +342,8 @@ public class AdminMembersAcceptanceTest {
 
     @Quand("Je me déconnecte")
     public void jeMeDéconnecte() {
-        page.locator("#logout").click();
+        page.click("#dropdownLogout");
+        page.click("#logout");
     }
 
     // ===== Alors =====
@@ -369,7 +389,6 @@ public class AdminMembersAcceptanceTest {
         assertTrue(user(login).isPresent());
     }
 
-
     @Alors("{string} a le mot de passe {string}")
     public void a_le_mot_de_passe(String string, String string2) {
     }
@@ -390,4 +409,13 @@ public class AdminMembersAcceptanceTest {
     }
 
 
+    @Alors("Je ne suis pas connecté")
+    public void jeNeSuisPasConnecté() {
+        assertThrows(IllegalStateException.class, () -> userService.getCurrentUser());
+    }
+
+    @Alors("Je reçoit un message d'erreur")
+    public void jeReçoitUnMessageDErreur() {
+        assertTrue(visibleText().contains(message("login.required")));
+    }
 }
