@@ -50,7 +50,8 @@ class HandleUserServiceTest {
 
     @Mock
     private ModuleRepository moduleRepository;
-
+    @Mock
+    private INotificationService notificationService;
     @InjectMocks
     private HandleUserService handleUserService;
 
@@ -485,5 +486,27 @@ class HandleUserServiceTest {
         when(userService.findByRole(Role.PROF)).thenReturn(teachers);
 
         assertEquals(teachers, handleUserService.findUsersByRole(Role.PROF));
+    }
+
+
+        // ===== Notification of the new user (NOTIF-02) =====
+
+    @Test
+    void shouldNotifyTheNewUser() {
+        handleUserService.addUser("new@example.com", Role.PROF, "newuser", null, null, null);
+
+        ArgumentCaptor<UserEntity> captor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(notificationService).notifyAccountCreated(captor.capture());
+        assertEquals("new@example.com", captor.getValue().getEmail());
+    }
+
+    @Test
+    void shouldNotNotifyWhenEmailAlreadyExists() {
+        when(userService.existsByEmail("test@example.com")).thenReturn(true);
+
+        assertThrows(RuntimeException.class,
+                () -> handleUserService.addUser("test@example.com", Role.ETUDIANT, "test", 2026, "M1", "A"));
+
+        verify(notificationService, never()).notifyAccountCreated(any());
     }
 }

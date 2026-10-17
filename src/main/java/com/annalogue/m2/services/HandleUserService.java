@@ -31,16 +31,19 @@ public class HandleUserService {
     private final MailService mailService;
     private final PasswordEncoder passwordEncoder;
     private final ModuleRepository moduleRepository;
+    private final INotificationService notificationService;
 
     public HandleUserService(
             UserService userService,
             MailService mailService,
             PasswordEncoder passwordEncoder,
-            ModuleRepository moduleRepository) {
+            ModuleRepository moduleRepository,
+            INotificationService notificationService) {
         this.userService = userService;
         this.mailService = mailService;
         this.passwordEncoder = passwordEncoder;
         this.moduleRepository = moduleRepository;
+        this.notificationService = notificationService;
     }
 
     // year = start of the academic year (2026 for 2026-2027), level = L1, L2, L3, M1, M2
@@ -81,6 +84,8 @@ public class HandleUserService {
         user.setLevel(isStudent ? StudyLevel.fromString(level) : null);
 
         userService.save(user);
+        
+        notificationService.notifyAccountCreated(user);
 
         // the original temporary password is sent, not the hashed one
         mailService.sendCredentials(normalizedEmail, chosenUsername, temporaryPassword);

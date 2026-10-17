@@ -25,6 +25,9 @@ class NotificationRepositoryTest {
     private NotificationRepository notificationRepository;
 
     @Autowired
+    private ModuleRepository moduleRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -35,10 +38,15 @@ class NotificationRepositoryTest {
 
     @BeforeEach
     void setUp() {
+        moduleRepository.deleteAll();
+        userRepository.deleteAll();
+        notificationRepository.deleteAll();
+        String uniqueEmail = System.currentTimeMillis() + "@example.com";
+
         student = userRepository.save(
-                new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, 2026, "A"));
+                new UserEntity("memb" + uniqueEmail, "hash", "memb", Role.ETUDIANT, 2026, "A"));
         responsible = userRepository.save(
-                new UserEntity("resp@example.com", "hash", "resp", Role.RESPONSABLE, null, null));
+                new UserEntity("resp" + uniqueEmail, "hash", "resp", Role.RESPONSABLE, null, null));
     }
 
     private NotificationEntity save(UserEntity user, NotificationType type, String content, boolean seen) {
@@ -64,7 +72,7 @@ class NotificationRepositoryTest {
 
         assertEquals(NotificationType.PUBLICATION_ADDED, found.getType());
         assertEquals("MOIA", found.getContent());
-        assertEquals("memb@example.com", found.getRecipient().getEmail());
+        assertTrue(found.getRecipient().getEmail().matches("memb.*@example.com"));
         assertFalse(found.isSeen());
     }
 

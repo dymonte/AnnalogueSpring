@@ -38,6 +38,9 @@ public class PublicationService implements IPublicationService {
     @Autowired
     private IFilesService filesService;
 
+    @Autowired
+    private INotificationService notificationService;
+
 
 	public List<PublicationEntity> findAll() {
 		return publicationRepository.findAll();
@@ -88,6 +91,8 @@ public class PublicationService implements IPublicationService {
 				fullPath.toString()
 		);
 		addPublication(newPublication);
+
+		notificationService.notifyPublicationAdded(newPublication);
 	}
 
 	@Override
