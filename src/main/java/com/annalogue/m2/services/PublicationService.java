@@ -7,19 +7,13 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.repositories.PublicationRepository;
-import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.FileSystemResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
-import java.io.IOException;
-import java.net.MalformedURLException;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
@@ -96,6 +90,10 @@ public class PublicationService implements IPublicationService {
 		addPublication(newPublication);
 	}
 
+	@Override
+	public Optional<PublicationEntity> findByName(String name) {
+		return publicationRepository.findByName(name);
+	}
 
 
 	private boolean canUpload(UserEntity user, ModuleEntity module) {

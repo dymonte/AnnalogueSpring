@@ -26,7 +26,6 @@ public interface IInscriptionService {
 
     public List<InscriptionEntity> findByEditorTrue();
 
-
     @Transactional
     public InscriptionEntity save(UserEntity currentUser, String userEmail, Long moduleId);
 
@@ -46,4 +45,8 @@ public interface IInscriptionService {
 
     @Transactional
     public boolean toggleEditor(Long inscriptionId);
+
+    List<ModuleEntity> getModulesAsIntervenant(UserEntity user);
+
+    void deleteAll();
 }

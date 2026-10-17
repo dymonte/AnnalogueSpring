@@ -26,4 +26,6 @@ public interface IPublicationService {
 	Resource loadAsResource(Long id) throws StorageFileNotFoundException;
 
 	void saveMultipartFile(MultipartFile file, String name, String description, Long moduleId, String authorEmail, FileType fileType) throws UploadFileException;
+
+	Optional<PublicationEntity> findByName(String name);
 }
