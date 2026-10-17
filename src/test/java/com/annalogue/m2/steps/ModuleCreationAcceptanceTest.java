@@ -131,4 +131,24 @@ public class ModuleCreationAcceptanceTest {
         assertEquals("403", page().locator("#error-code").innerText().trim());
         assertEquals(message("error.forbidden"), page().locator("#forbidden-msg").innerText().trim());
     }
+
+    // 4
+
+    @Quand("je valide le formulaire sans renseigner de titre de module")
+    public void ValidFormwithoutName() {
+        page().navigate(url("/modules/add"));
+        page().locator("#name").evaluate("input => input.removeAttribute('required')");
+        page().locator("form[action='/modules/add'] button[type=submit]").click();
+        page().locator("#name-error").waitFor();
+    }
+
+    @Alors("le module n'est pas créé")
+    public void ModuleIsntCreated() {
+        assertTrue(moduleService.findAll().isEmpty());
+    }
+
+    @Et("un message d'erreur signale que le nom du module est obligatoire")
+    public void ErrorMessageNotcreated() {
+        assertEquals(message("error.module.name.empty"), page().locator("#name-error").innerText().trim());
+    }
 }
