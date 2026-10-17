@@ -1,0 +1,29 @@
+<div th:fragment="searchBar"
+     class="flex-grow-1 mx-lg-3 my-3 my-lg-0">
+
+    <form th:action="@{/search}"
+          method="get"
+          class="d-flex"
+          role="search">
+
+        <div class="input-group">
+            <span class="input-group-text bg-light border-end-0">
+                <i class="bi bi-search text-secondary"></i>
+            </span>
+
+            <input
+                    class="form-control bg-light border-start-0"
+                    type="search"
+                    name="query"
+                    placeholder="Search publications or modules..."
+                    aria-label="Search publications or modules"
+                    th:value="${query}"
+                    required>
+
+            <button class="btn btn-primary px-3" type="submit">
+                Search
+            </button>
+        </div>
+    </form>
+
+</div>

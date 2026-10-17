@@ -1,0 +1,53 @@
+<div th:fragment="searchResults">
+
+    <p class="text-secondary"
+       th:if="${!#strings.isEmpty(query)}">
+        Search results for
+        <strong th:text="${query}"></strong>
+    </p>
+
+    <!-- No results -->
+    <div class="alert alert-info"
+         th:if="${#lists.isEmpty(results)}">
+        <i class="bi bi-info-circle me-2"></i>
+        No results found. Try another search.
+    </div>
+
+    <!-- Results list -->
+    <div class="list-group shadow-sm"
+         th:if="${!#lists.isEmpty(results)}">
+
+        <a th:each="result : ${results}"
+           th:href="${result.url}"
+           class="list-group-item list-group-item-action p-3">
+
+            <div class="d-flex align-items-center">
+
+                <div class="me-3">
+                    <i class="bi bi-journal-bookmark fs-3 text-primary"
+                       th:if="${result.type == 'Module'}"></i>
+
+                    <i class="bi bi-file-earmark-text fs-3 text-success"
+                       th:if="${result.type == 'Publication'}"></i>
+                </div>
+
+                <div class="flex-grow-1">
+                    <h5 class="mb-1" th:text="${result.title}">
+                        Result title
+                    </h5>
+
+                    <span class="badge"
+                          th:classappend="${result.type == 'Module'} ? ' text-bg-primary' : ' text-bg-success'"
+                          th:text="${result.type}">
+                        Module
+                    </span>
+                </div>
+
+                <i class="bi bi-chevron-right text-secondary"></i>
+
+            </div>
+        </a>
+
+    </div>
+
+</div>
