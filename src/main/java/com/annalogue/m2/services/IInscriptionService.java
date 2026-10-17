@@ -49,6 +49,4 @@ public interface IInscriptionService {
     public boolean toggleEditor(Long inscriptionId);
 
     List<ModuleEntity> getModulesAsIntervenant(UserEntity user);
-
-    void deleteAll();
 }

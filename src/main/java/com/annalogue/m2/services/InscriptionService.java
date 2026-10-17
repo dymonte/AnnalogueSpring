@@ -272,8 +272,4 @@ public class InscriptionService implements IInscriptionService{
                 .collect(Collectors.toList());
     }
 
-    @Override
-    public void deleteAll() {
-        inscriptionRepository.deleteAll();
-    }
 }
