@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.util.Locale;
-
+import com.annalogue.m2.models.NotificationType;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -166,5 +166,13 @@ class MessagesTest {
         assertFalse(message("my.modules.empty.created").isBlank());
         assertFalse(message("my.modules.empty.enrolled").isBlank());
         assertFalse(message("my.modules.empty.admin").isBlank());
+    }
+    @Test
+    void shouldContainTheTextOfEachNotificationType() {
+        for (NotificationType type : NotificationType.values()) {
+            assertFalse(message(type.getMessageKey()).isBlank());
+        }
+        assertTrue(messageSource.getMessage("notification.MODULE_ENROLLMENT", new Object[] {"TF"}, Locale.ENGLISH)
+                .contains("TF"));
     }
 }
