@@ -1,8 +1,10 @@
 package com.annalogue.m2.services;
 
+import com.annalogue.m2.exceptions.NotificationStateException;
 import com.annalogue.m2.models.*;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.NotificationRepository;
+import com.annalogue.m2.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +17,14 @@ public class NotificationService implements INotificationService {
 
     private final NotificationRepository notificationRepository;
     private final InscriptionRepository inscriptionRepository;
+    private final UserRepository userRepository;
 
     public NotificationService(NotificationRepository notificationRepository,
-                               InscriptionRepository inscriptionRepository) {
+                               InscriptionRepository inscriptionRepository,
+                               UserRepository userRepository) {
         this.notificationRepository = notificationRepository;
         this.inscriptionRepository = inscriptionRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -45,6 +50,9 @@ public class NotificationService implements INotificationService {
 
     @Override
     public void notifyEnrollment(UserEntity user, ModuleEntity module) {
+        if (!user.isNotificationsEnabled()) {
+            return;
+        }
         notificationRepository.save(
                 new NotificationEntity(user, NotificationType.MODULE_ENROLLMENT, module.getName()));
     }
@@ -65,9 +73,35 @@ public class NotificationService implements INotificationService {
         }
 
         List<NotificationEntity> notifications = recipients.values().stream()
+                .filter(UserEntity::isNotificationsEnabled)
                 .map(user -> new NotificationEntity(user, NotificationType.PUBLICATION_ADDED, module.getName()))
                 .toList();
 
         notificationRepository.saveAll(notifications);
+    }
+
+    @Override
+    @Transactional
+    public void enableNotifications(Long userId) {
+        changeState(userId, true);
+    }
+
+    @Override
+    @Transactional
+    public void disableNotifications(Long userId) {
+        changeState(userId, false);
+    }
+
+    private void changeState(Long userId, boolean enabled) {
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotificationStateException("error.notification.user.notfound"));
+        if (user.isNotificationsEnabled() == enabled) {
+            throw new NotificationStateException(enabled
+                    ? "error.notification.already.enabled"
+                    : "error.notification.already.disabled");
+        }
+
+        user.setNotificationsEnabled(enabled);
+        userRepository.save(user);
     }
 }

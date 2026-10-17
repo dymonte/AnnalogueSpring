@@ -25,6 +25,7 @@ public class GlobalModelAttributes {
             userService.findByEmail(authentication.getName()).ifPresent(userEntity -> {
                 model.addAttribute("username", userEntity.getUsername());
 
+                model.addAttribute("notificationsEnabled", userEntity.isNotificationsEnabled());
                 INotificationService service = notificationService.getIfAvailable();
                 if (service != null) {
                     model.addAttribute("unseenNotifications", service.countUnseen(userEntity.getId()));

@@ -40,6 +40,10 @@ public class UserEntity {
     @Column(name = "group_name", length = 100)
     private String groupName;
 
+
+    @Column(name = "notifications_enabled", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private boolean notificationsEnabled = true;
+
     @OneToMany(mappedBy = "responsible")
     private List<ModuleEntity> responsibleModules;
 
@@ -138,5 +142,13 @@ public class UserEntity {
 
     public void setResponsibleModules(List<ModuleEntity> responsibleModules) {
         this.responsibleModules = responsibleModules;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
     }
 }
