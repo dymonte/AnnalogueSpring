@@ -27,7 +27,7 @@ public class CommentController {
         this.publicationService = publicationService;
     }
 
-    @PostMapping("publication/{id}/addComment")
+    @PostMapping("/publications/{id}/add-comment")
     public String addComment(@PathVariable("id") long publicationId,
                              @RequestParam(value="content") String content,
                              @RequestParam(value="file") MultipartFile file,
@@ -53,5 +53,6 @@ public class CommentController {
         commentService.deleteComment(commentId);
         return "redirect:/";
     }
+
 
 }

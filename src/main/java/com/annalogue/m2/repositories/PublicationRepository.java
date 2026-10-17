@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import javax.swing.text.html.parser.Entity;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PublicationRepository extends JpaRepository<PublicationEntity, Long> {
@@ -23,4 +24,6 @@ public interface PublicationRepository extends JpaRepository<PublicationEntity, 
 
 	@Query("SELECT DISTINCT p FROM PublicationEntity p JOIN p.module m JOIN InscriptionEntity i ON i.module = m WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) AND i.user.id = :userId")
 	List<PublicationEntity> findPublicationsByQueryAndUserId(@Param("query") String query, @Param("userId") Long userId);
+
+	Optional<PublicationEntity> findByName(String name);
 }

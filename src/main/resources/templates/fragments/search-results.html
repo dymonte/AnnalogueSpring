@@ -14,7 +14,7 @@
     </div>
 
     <!-- Results list -->
-    <div class="list-group shadow-sm"
+    <div id="result-list" class="list-group shadow-sm"
          th:if="${!#lists.isEmpty(results)}">
 
         <a th:each="result : ${results}"

@@ -24,281 +24,308 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Collections;
 import java.util.List;
+import com.annalogue.m2.dto.GroupEnrollmentResult;
 
 @Controller
 public class InscriptionController {
 
-    private static final String FORM_VIEW =
-            "modules/add_member_module";
+        private static final String FORM_VIEW = "modules/add_member_module";
 
-    private final UserService userService;
-    private final IInscriptionService inscriptionService;
-    private final NotifyService notifyService;
+        private final UserService userService;
+        private final IInscriptionService inscriptionService;
+        private final NotifyService notifyService;
 
-    public InscriptionController(
-            UserService userService,
-            IInscriptionService inscriptionService,
-            NotifyService notifyService) {
+        public InscriptionController(
+                        UserService userService,
+                        IInscriptionService inscriptionService,
+                        NotifyService notifyService) {
 
-        this.userService = userService;
-        this.inscriptionService = inscriptionService;
-        this.notifyService = notifyService;
-    }
-
-    @GetMapping("/module-enrollments/new")
-    public String showEnrollmentForm(Model model) {
-        getModules(model);
-        return FORM_VIEW;
-    }
-
-    @PostMapping("/module-enrollments/new")
-    public String registerUser(
-            @RequestParam Long moduleId,
-            @RequestParam String emailUser,
-            Model model,
-            RedirectAttributes redirectAttributes) {
-
-        try {
-            UserEntity currentUser = getCurrentUser();
-
-            inscriptionService.save(
-                    currentUser,
-                    emailUser,
-                    moduleId
-            );
-
-            redirectAttributes.addFlashAttribute(
-                    "success",
-                    notifyService.getMessage(
-                            "success.inscription.created"
-                    )
-            );
-
-            return "redirect:/module-enrollments";
-
-        } catch (ModuleNotFoundException e) {
-
-            addError(
-                    model,
-                    "moduleIdError",
-                    e.getMessageKey()
-            );
-
-        } catch (ModuleNotManagedException e) {
-
-            addError(
-                    model,
-                    "moduleIdError",
-                    e.getMessageKey()
-            );
-
-        } catch (EmailNotFoundException e) {
-
-            addError(
-                    model,
-                    "emailUserError",
-                    e.getMessageKey()
-            );
-
-        } catch (UserAlreadyEnrolledException e) {
-
-            addError(
-                    model,
-                    "userAlreadyRegisterError",
-                    e.getMessageKey()
-            );
-
-        } catch (UsernameNotFoundException e) {
-
-            addError(
-                    model,
-                    "error",
-                    "error.inscription.prof.not.found"
-            );
-
-        } catch (IllegalArgumentException e) {
-
-            String key = e.getMessage();
-
-            switch (key) {
-                case "error.inscription.user.role.invalid", "error.inscription.email.invalid",
-                     "error.inscription.email.required" -> addError(model, "emailUserError", key);
-                case "error.inscription.module.required" -> addError(
-                        model,
-                        "moduleIdError",
-                        key
-                );
-                case null, default -> addError(
-                        model,
-                        "error",
-                        "error.request.invalid"
-                );
-            }
-
-        } catch (Exception e) {
-
-
-            addError(
-                    model,
-                    "error",
-                    "error.server"
-            );
+                this.userService = userService;
+                this.inscriptionService = inscriptionService;
+                this.notifyService = notifyService;
         }
 
-        return reloadForm(model, emailUser, moduleId);
-    }
+        @GetMapping("/module-enrollments/new")
+        public String showEnrollmentForm(Model model) {
+                getModules(model);
+                return FORM_VIEW;
+        }
 
-    @PostMapping("/module-enrollments/{id}/delete")
-    public String removeEnrollment(
-            @PathVariable Long id,
-            RedirectAttributes redirectAttributes) {
-        try {
-            UserEntity currentUser = getCurrentUser();
-            boolean isManagedEnrollment = inscriptionService
-                    .findInscriptions(currentUser)
-                    .stream()
-                    .anyMatch(inscription -> inscription.getId().equals(id));
+        @PostMapping("/module-enrollments/new")
+        public String registerUser(
+                        @RequestParam Long moduleId,
+                        @RequestParam String emailUser,
+                        Model model,
+                        RedirectAttributes redirectAttributes) {
 
-            if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
-                redirectAttributes.addFlashAttribute(
-                        "error",
-                        notifyService.getMessage("error.inscription.not.found")
-                );
+                try {
+                        UserEntity currentUser = getCurrentUser();
+
+                        inscriptionService.save(
+                                        currentUser,
+                                        emailUser,
+                                        moduleId);
+
+                        redirectAttributes.addFlashAttribute(
+                                        "success",
+                                        notifyService.getMessage(
+                                                        "success.inscription.created"));
+
+                        return "redirect:/module-enrollments";
+
+                } catch (ModuleNotFoundException e) {
+
+                        addError(
+                                        model,
+                                        "moduleIdError",
+                                        e.getMessageKey());
+
+                } catch (ModuleNotManagedException e) {
+
+                        addError(
+                                        model,
+                                        "moduleIdError",
+                                        e.getMessageKey());
+
+                } catch (EmailNotFoundException e) {
+
+                        addError(
+                                        model,
+                                        "emailUserError",
+                                        e.getMessageKey());
+
+                } catch (UserAlreadyEnrolledException e) {
+
+                        addError(
+                                        model,
+                                        "userAlreadyRegisterError",
+                                        e.getMessageKey());
+
+                } catch (UsernameNotFoundException e) {
+
+                        addError(
+                                        model,
+                                        "error",
+                                        "error.inscription.prof.not.found");
+
+                } catch (IllegalArgumentException e) {
+
+                        String key = e.getMessage();
+
+                        switch (key) {
+                                case "error.inscription.user.role.invalid", "error.inscription.email.invalid",
+                                                "error.inscription.email.required" ->
+                                        addError(model, "emailUserError", key);
+                                case "error.inscription.module.required" -> addError(
+                                                model,
+                                                "moduleIdError",
+                                                key);
+                                case null, default -> addError(
+                                                model,
+                                                "error",
+                                                "error.request.invalid");
+                        }
+
+                } catch (Exception e) {
+
+                        addError(
+                                        model,
+                                        "error",
+                                        "error.server");
+                }
+
+                return reloadForm(model, emailUser, moduleId);
+        }
+
+        // TFAN26-106: registers all the members of a group in a module
+        @PostMapping("/module-enrollments/group")
+        public String registerGroup(
+                        @RequestParam(required = false) Long moduleId,
+                        @RequestParam(required = false) String group,
+                        RedirectAttributes redirectAttributes) {
+
+                try {
+                        UserEntity currentUser = getCurrentUser();
+
+                        GroupEnrollmentResult result = inscriptionService.saveGroup(currentUser, group, moduleId);
+
+                        redirectAttributes.addFlashAttribute(
+                                        "success",
+                                        notifyService.getMessage(
+                                                        "success.inscription.group.created",
+                                                        result.added(),
+                                                        result.alreadyRegistered()));
+
+                } catch (ModuleNotFoundException e) {
+                        addFlashError(redirectAttributes, e.getMessageKey());
+
+                } catch (ModuleNotManagedException e) {
+                        addFlashError(redirectAttributes, e.getMessageKey());
+
+                } catch (UsernameNotFoundException e) {
+                        addFlashError(redirectAttributes, "error.inscription.prof.not.found");
+
+                } catch (IllegalArgumentException e) {
+                        String key = e.getMessage();
+
+                        switch (key) {
+                                case "error.inscription.module.required",
+                                                "error.inscription.group.required",
+                                                "error.inscription.group.not.found" ->
+                                        addFlashError(redirectAttributes, key);
+                                case null, default ->
+                                        addFlashError(redirectAttributes, "error.request.invalid");
+                        }
+
+                } catch (Exception e) {
+                        addFlashError(redirectAttributes, "error.server");
+                }
+
                 return "redirect:/module-enrollments";
-            }
+        }
 
-            inscriptionService.deleteById(id);
+        @PostMapping("/module-enrollments/{id}/delete")
+        public String removeEnrollment(
+                        @PathVariable Long id,
+                        RedirectAttributes redirectAttributes) {
+                try {
+                        UserEntity currentUser = getCurrentUser();
+                        boolean isManagedEnrollment = inscriptionService
+                                        .findInscriptions(currentUser)
+                                        .stream()
+                                        .anyMatch(inscription -> inscription.getId().equals(id));
 
-            redirectAttributes.addFlashAttribute(
-                    "success",
-                    notifyService.getMessage("success.inscription.deleted")
-            );
+                        if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
+                                redirectAttributes.addFlashAttribute(
+                                                "error",
+                                                notifyService.getMessage("error.inscription.not.found"));
+                                return "redirect:/module-enrollments";
+                        }
 
-        } catch (UsernameNotFoundException e) {
-        redirectAttributes.addFlashAttribute(
-                "error",
-                notifyService.getMessage("error.inscription.prof.not.found")
-        );
-    }
-        return "redirect:/module-enrollments";
-    }
+                        inscriptionService.deleteById(id);
 
-    @PostMapping("/module-enrollments/{id}/toggle-editor")
-    public String toggleEditor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        try {
-            UserEntity currentUser = getCurrentUser();
-            boolean isManagedEnrollment = inscriptionService
-                    .findInscriptions(currentUser)
-                    .stream()
-                    .anyMatch(inscription -> inscription.getId().equals(id));
+                        redirectAttributes.addFlashAttribute(
+                                        "success",
+                                        notifyService.getMessage("success.inscription.deleted"));
 
-            if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
-                redirectAttributes.addFlashAttribute(
-                        "error",
-                        notifyService.getMessage("error.inscription.not.found")
-                );
+                } catch (UsernameNotFoundException e) {
+                        redirectAttributes.addFlashAttribute(
+                                        "error",
+                                        notifyService.getMessage("error.inscription.prof.not.found"));
+                }
                 return "redirect:/module-enrollments";
-            }
-            boolean isEditor = inscriptionService.toggleEditor(id);
-
-            String messageKey = isEditor
-                    ? "success.inscription.editor.enabled"
-                    : "success.inscription.editor.disabled";
-
-            redirectAttributes.addFlashAttribute(
-                    "success",
-                    notifyService.getMessage(messageKey)
-            );
-
-        } catch (UsernameNotFoundException e) {
-            redirectAttributes.addFlashAttribute(
-                    "error",
-                    notifyService.getMessage("error.inscription.prof.not.found")
-            );
-        }
-        return "redirect:/module-enrollments";
-    }
-
-    @GetMapping("/module-enrollments")
-    public String listModuleEnrollments(Model model) {
-        UserEntity currentUser = getCurrentUser();
-
-        List<InscriptionEntity> inscriptions =
-                inscriptionService.findInscriptions(currentUser);
-
-        model.addAttribute("inscriptions", inscriptions);
-
-        return "modules/register_members_view";
-    }
-
-    private UserEntity getCurrentUser() {
-        Authentication auth = SecurityContextHolder
-                .getContext()
-                .getAuthentication();
-
-        if (auth == null
-                || !auth.isAuthenticated()
-                || auth.getName() == null
-                || "anonymousUser".equals(auth.getName())) {
-
-            throw new UsernameNotFoundException(
-                    "error.inscription.prof.not.found"
-            );
         }
 
-        return userService.findByEmail(auth.getName())
-                .orElseThrow(() ->
-                        new UsernameNotFoundException(
-                                "error.inscription.prof.not.found"
-                        )
-                );
-    }
+        @PostMapping("/module-enrollments/{id}/toggle-editor")
+        public String toggleEditor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+                try {
+                        UserEntity currentUser = getCurrentUser();
+                        boolean isManagedEnrollment = inscriptionService
+                                        .findInscriptions(currentUser)
+                                        .stream()
+                                        .anyMatch(inscription -> inscription.getId().equals(id));
 
-    private void getModules(Model model) {
-        try {
-            UserEntity currentUser = getCurrentUser();
+                        if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
+                                redirectAttributes.addFlashAttribute(
+                                                "error",
+                                                notifyService.getMessage("error.inscription.not.found"));
+                                return "redirect:/module-enrollments";
+                        }
+                        boolean isEditor = inscriptionService.toggleEditor(id);
 
-            List<ModuleEntity> modules =
-                    currentUser.getResponsibleModules();
+                        String messageKey = isEditor
+                                        ? "success.inscription.editor.enabled"
+                                        : "success.inscription.editor.disabled";
 
-            model.addAttribute("modules", modules);
+                        redirectAttributes.addFlashAttribute(
+                                        "success",
+                                        notifyService.getMessage(messageKey));
 
-        } catch (UsernameNotFoundException e) {
-
-            model.addAttribute(
-                    "modules",
-                    Collections.emptyList()
-            );
-
-            addError(
-                    model,
-                    "error",
-                    "error.inscription.prof.not.found"
-            );
+                } catch (UsernameNotFoundException e) {
+                        redirectAttributes.addFlashAttribute(
+                                        "error",
+                                        notifyService.getMessage("error.inscription.prof.not.found"));
+                }
+                return "redirect:/module-enrollments";
         }
-    }
 
-    private String reloadForm(
-            Model model,
-            String emailUser,
-            Long moduleId) {
+        @GetMapping("/module-enrollments")
+        public String listModuleEnrollments(Model model) {
+                UserEntity currentUser = getCurrentUser();
 
-        model.addAttribute("emailUser", emailUser);
-        model.addAttribute("selectedModuleId", moduleId);
+                List<InscriptionEntity> inscriptions = inscriptionService.findInscriptions(currentUser);
 
-        getModules(model);
+                model.addAttribute("inscriptions", inscriptions);
 
-        return FORM_VIEW;
-    }
+                return "modules/register_members_view";
+        }
 
-    private void addError(
-            Model model,
-            String attributeName,
-            String messageKey) {
+        private UserEntity getCurrentUser() {
+                Authentication auth = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
 
-        model.addAttribute(
-                attributeName,
-                notifyService.getMessage(messageKey)
-        );
-    }
+                if (auth == null
+                                || !auth.isAuthenticated()
+                                || auth.getName() == null
+                                || "anonymousUser".equals(auth.getName())) {
+
+                        throw new UsernameNotFoundException(
+                                        "error.inscription.prof.not.found");
+                }
+
+                return userService.findByEmail(auth.getName())
+                                .orElseThrow(() -> new UsernameNotFoundException(
+                                                "error.inscription.prof.not.found"));
+        }
+
+        private void getModules(Model model) {
+                try {
+                        UserEntity currentUser = getCurrentUser();
+
+                        List<ModuleEntity> modules = currentUser.getResponsibleModules();
+
+                        model.addAttribute("modules", modules);
+
+                } catch (UsernameNotFoundException e) {
+
+                        model.addAttribute(
+                                        "modules",
+                                        Collections.emptyList());
+
+                        addError(
+                                        model,
+                                        "error",
+                                        "error.inscription.prof.not.found");
+                }
+        }
+
+        private String reloadForm(
+                        Model model,
+                        String emailUser,
+                        Long moduleId) {
+
+                model.addAttribute("emailUser", emailUser);
+                model.addAttribute("selectedModuleId", moduleId);
+
+                getModules(model);
+
+                return FORM_VIEW;
+        }
+
+        private void addError(
+                        Model model,
+                        String attributeName,
+                        String messageKey) {
+
+                model.addAttribute(
+                                attributeName,
+                                notifyService.getMessage(messageKey));
+        }
+
+        private void addFlashError(RedirectAttributes redirectAttributes, String messageKey) {
+                redirectAttributes.addFlashAttribute(
+                                "error",
+                                notifyService.getMessage(messageKey));
+        }
 }

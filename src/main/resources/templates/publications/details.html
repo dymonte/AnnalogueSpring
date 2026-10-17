@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title th:text="${publication.name}">Publication Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        .comments-scroll {
+            max-height: 500px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 0.5rem;
+            border: 1px solid #dee2e6;
+            border-radius: 0.5rem;
+        }
+
+        .comment-content {
+            min-width: 0;
+        }
+
+        .comment-text {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            word-break: normal;
+        }
+    </style>
+</head>
+
+<body>
+<div th:insert="~{navbar.html}"></div>
+
+<div class="container mt-5">
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+            <i class="bi bi-file-earmark-text me-2"></i>
+            <span th:text="${publication.name}"></span>
+        </div>
+
+        <div class="card-body">
+
+            <p>
+                <i class="bi bi-card-text me-2"></i>
+                <strong>Description:</strong>
+                <span th:text="${publication.description != null
+                        ? publication.description : 'No description available'}"></span>
+            </p>
+
+            <p>
+                <i class="bi bi-file-earmark me-2"></i>
+                <strong>File Type:</strong>
+                <span th:text="${publication.fileType}"></span>
+            </p>
+
+            <p>
+                <i class="bi bi-calendar3 me-2"></i>
+                <strong>Publication Date:</strong>
+                <span th:text="${publication.createdAt != null
+                        ? #temporals.format(publication.createdAt, 'MM/dd/yyyy HH:mm')
+                        : 'Not available'}"></span>
+            </p>
+
+            <p>
+                <i class="bi bi-person me-2"></i>
+                <strong>Author:</strong>
+                <span th:if="${publication.author != null}"
+                      th:text="${publication.author.email}"></span>
+                <span th:unless="${publication.author != null}">
+                    Not available
+                </span>
+            </p>
+
+            <!-- Publication actions -->
+            <div class="d-flex gap-2 mt-4">
+                <a th:href="@{/files/{id}(id=${publication.id})}"
+                   class="btn btn-primary"
+                   title="Download publication"
+                   aria-label="Download publication">
+                    <i class="bi bi-download"></i>
+                </a>
+
+                <a href="javascript:history.back()"
+                   class="btn btn-outline-secondary"
+                   title="Go back"
+                   aria-label="Go back">
+                    <i class="bi bi-arrow-left"></i>
+                </a>
+            </div>
+
+            <hr class="my-4">
+
+            <!-- Add a comment -->
+            <section class="mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-chat-square-text me-2"></i>
+                    Add a comment
+                </h5>
+
+                <form th:action="@{/publications/{id}/add-comment(id=${publication.id})}"
+                      method="post"
+                      enctype="multipart/form-data">
+
+
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Your comment</label>
+                        <textarea id="content"
+                                  name="content"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="10000"
+                                  placeholder="Write your comment..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="file" class="form-label">
+                            <i class="bi bi-paperclip me-1"></i>
+                            Attach a file (optional)
+                        </label>
+
+                        <input type="file"
+                               id="file"
+                               name="file"
+                               class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-2"></i>
+                        Submit comment
+                    </button>
+                </form>
+            </section>
+
+            <hr class="my-4">
+
+            <!-- Comments list -->
+            <section>
+                <h5 class="mb-3">
+                    <i class="bi bi-chat-left-text me-2"></i>
+                    Comments
+                    <span class="badge bg-secondary"
+                          th:text="${comments.size()}">0</span>
+                </h5>
+
+                <div th:if="${comments.isEmpty()}"
+                     class="alert alert-light border">
+                    <i class="bi bi-chat-dots me-2"></i>
+                    No comments yet. Be the first to comment!
+                </div>
+
+                <!-- Scrollable comments container -->
+                <div th:unless="${comments.isEmpty()}"
+                     class="comments-scroll">
+
+                    <article class="card mb-3"
+                             th:each="comment : ${comments}">
+
+                        <div class="card-body">
+                            <div class="d-flex align-items-start">
+
+                                <i class="bi bi-person-circle fs-3 text-secondary me-3"></i>
+
+                                <div class="flex-grow-1 comment-content">
+
+                                    <div class="d-flex justify-content-between
+                                    align-items-start flex-wrap gap-2">
+
+                                        <strong th:text="${comment.authorComment != null
+                                    ? comment.authorComment.email
+                                    : 'Unknown user'}">
+                                            Author
+                                        </strong>
+                                    </div>
+
+                                    <!-- Long text wraps instead of overflowing -->
+                                    <p class="mt-2 mb-2 comment-text"
+                                       th:text="${comment.content}">
+                                        Comment content
+                                    </p>
+
+                                    <!-- Comment actions -->
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+
+                                        <!-- Download attachment -->
+                                        <a th:if="${comment.path != null and !comment.path.isEmpty()}"
+                                           th:href="@{/comments/{id}/file(id=${comment.id})}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Download attachment"
+                                           aria-label="Download attachment">
+                                            <i class="bi bi-paperclip"></i>
+                                        </a>
+
+                                        <!-- Delete comment -->
+                                        <form th:action="@{/publications/{pubId}/comments/{commentId}/delete(
+                         pubId=${publication.id},
+                         commentId=${comment.id})}"
+                                              method="post"
+                                              onsubmit="return confirm('Are you sure you want to delete this comment?');">
+
+                                            <input type="hidden"
+                                                   th:if="${_csrf != null}"
+                                                   th:name="${_csrf.parameterName}"
+                                                   th:value="${_csrf.token}">
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Delete comment"
+                                                    aria-label="Delete comment">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+
+
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+            </section>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
