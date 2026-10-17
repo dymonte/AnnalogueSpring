@@ -139,6 +139,15 @@ public class UserAcceptanceTest {
         assertTrue(userService.existsByEmail(email(login)));
     }
 
+    @Soit("L'utilisateur {string} possède un compte <role> ayant comme mot de passe {string}")
+    public void lUtilisateurPossèdeUnCompteRoleAyantCommeMotDePasse(String login, String password) {
+        if(!userService.existsByEmail(email(login))) {
+            userService.save(new UserEntity(email(login), passwordEncoder.encode(password), login, Role.ETUDIANT, null, null));
+        };
+
+        assertTrue(userService.existsByEmail(email(login)));
+    }
+
     @Et("{string} a accès au module {string}")
     public void aAccèsAuModule(String login, String module) {
         ModuleEntity moduleEntity = moduleService.findByName(module).orElseGet(() -> createModule(module));
@@ -230,6 +239,18 @@ public class UserAcceptanceTest {
         page.waitForURL(url("/home"));
     }
 
+    @Quand("je m{string}identifiant {string} et le mot de passe {string}")
+    public void jeMAuthentifieAvecLIdentifiantEtLeMotDePasse(String arg0, String arg1) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Quand("je m{string}identifiant {string}")
+    public void jeMAuthentifieAvecLIdentifiant(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
     // ===== Alors =====
 
     @Alors("le document {string} est affiché dans les résultats")
@@ -246,5 +267,17 @@ public class UserAcceptanceTest {
     @Alors("aucun document n'est affiché dans les résultats")
     public void aucunDocumentNEstAffichéDansLesRésultats() {
         assertTrue(page.locator("#result-list").count() == 0);
+    }
+
+    @Alors("je suis connecté en tant que {string} avec le rôle <role>")
+    public void jeSuisConnectéEnTantQueAvecLeRôleRole(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("j{string}erreur")
+    public void jAiUnMessageDErreur() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
     }
 }
