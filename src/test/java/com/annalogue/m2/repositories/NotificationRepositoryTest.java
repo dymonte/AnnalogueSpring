@@ -25,6 +25,9 @@ class NotificationRepositoryTest {
     private NotificationRepository notificationRepository;
 
     @Autowired
+    private ModuleRepository moduleRepository;
+
+    @Autowired
     private UserRepository userRepository;
 
     @Autowired
@@ -35,8 +38,9 @@ class NotificationRepositoryTest {
 
     @BeforeEach
     void setUp() {
-        notificationRepository.deleteAll();
+        moduleRepository.deleteAll();
         userRepository.deleteAll();
+        notificationRepository.deleteAll();
         String uniqueEmail = System.currentTimeMillis() + "@example.com";
 
         student = userRepository.save(
