@@ -77,6 +77,7 @@ class InscriptionServiceGroupTest {
 
         assertEquals(2, result.added());
         assertEquals(0, result.alreadyRegistered());
+        assertTrue(result.alreadyRegisteredNames().isEmpty());
 
         verify(inscriptionRepository).saveAll(savedCaptor.capture());
         List<InscriptionEntity> saved = savedCaptor.getValue();
@@ -103,6 +104,7 @@ class InscriptionServiceGroupTest {
 
         assertEquals(1, result.added());
         assertEquals(1, result.alreadyRegistered());
+        assertEquals(List.of("anna"), result.alreadyRegisteredNames());
 
         verify(inscriptionRepository).saveAll(savedCaptor.capture());
         assertEquals(1, savedCaptor.getValue().size());
@@ -122,6 +124,22 @@ class InscriptionServiceGroupTest {
 
         assertEquals(0, result.added());
         assertEquals(2, result.alreadyRegistered());
+        assertEquals(List.of("anna", "zoe"), result.alreadyRegisteredNames());
+    }
+
+    @Test
+    void shouldUseTheEmailWhenAlreadyRegisteredMemberHasNoUsername() {
+        anna.setUsername(null);
+        InscriptionEntity annaInTf = new InscriptionEntity(InscriptionType.ETUDIANT, anna, tf);
+
+        when(moduleRepository.findById(100L)).thenReturn(Optional.of(tf));
+        when(userRepository.findByGroupNameIgnoreCaseOrderByUsernameAsc("G1"))
+                .thenReturn(List.of(anna, zoe));
+        when(inscriptionRepository.findByModuleId(100L)).thenReturn(List.of(annaInTf));
+
+        GroupEnrollmentResult result = inscriptionService.saveGroup(responsible, "G1", 100L);
+
+        assertEquals(List.of("anna@ufr.com"), result.alreadyRegisteredNames());
     }
 
     @Test
