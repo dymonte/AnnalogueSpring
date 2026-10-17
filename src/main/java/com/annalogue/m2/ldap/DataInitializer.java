@@ -14,8 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import com.annalogue.m2.models.StudyLevel;
 
-import java.util.Optional;
-
 @Component
 @Profile("!test")
 public class DataInitializer implements CommandLineRunner {
@@ -24,7 +22,8 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final ModuleRepository moduleRepository;
 
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder, ModuleRepository moduleRepository) {
+    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder,
+            ModuleRepository moduleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.moduleRepository = moduleRepository;
@@ -37,18 +36,17 @@ public class DataInitializer implements CommandLineRunner {
         }
 
         userRepository.save(
-                new UserEntity(email, passwordEncoder.encode(password), username, role, null, null)
-        );
+                new UserEntity(email, passwordEncoder.encode(password), username, role, null, null));
 
         System.out.println(">>> USER: " + username + ", " + email + ", " + role.getValue() + ", created");
     }
 
     private void createModule(String name) {
-        if (moduleRepository.existsByNameIgnoreCase(name)) return;
+        if (moduleRepository.existsByNameIgnoreCase(name))
+            return;
 
         moduleRepository.save(
-                new ModuleEntity(name, userRepository.findByEmail("resp@example.com").get())
-        );
+                new ModuleEntity(name, userRepository.findByEmail("resp@example.com").get()));
     }
 
     @Override

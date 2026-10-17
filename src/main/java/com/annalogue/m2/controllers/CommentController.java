@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @Controller
 public class CommentController {
 
@@ -25,7 +27,7 @@ public class CommentController {
         this.publicationService = publicationService;
     }
 
-    @PostMapping("publication/{id}/addCommentToPublication")
+    @PostMapping("/publications/{id}/add-comment")
     public String addCommentToPublication(@PathVariable("id") long publicationId,
                              @RequestParam(value="content") String content,
                              @RequestParam(value="file") MultipartFile file,
