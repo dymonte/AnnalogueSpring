@@ -16,7 +16,6 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -112,11 +111,6 @@ public class ModuleService implements IModuleService {
         return findAll().stream()
                 .map(module -> new UserModuleView(module.getId(), module.getName(), null, false))
                 .toList();
-    }
-
-    @Override
-    public Optional<ModuleEntity> findByName(String name) {
-        return moduleRepository.findByName(name);
     }
 
     @Override
