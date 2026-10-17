@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -58,6 +59,8 @@ class NotificationControllerTest {
                 .andExpect(model().attribute("notifications", notifications))
                 .andExpect(model().attribute("unseenNotifications", 0L))
                 .andExpect(model().attribute("isAdmin", false));
+
+        assertTrue(notifications.getFirst().isSeen());
     }
 
     @Test

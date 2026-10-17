@@ -1,5 +1,6 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.services.INotificationService;
 import com.annalogue.m2.services.IUserService;
 import com.annalogue.m2.services.NotifyService;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ public class AuthControllerTest {
 
     @MockitoBean
     private IUserService userService;
+
+    @MockitoBean
+    private INotificationService notificationService;
 
     @Test
     public void loginShouldReturnLoginView() throws Exception {

@@ -52,6 +52,9 @@ class InscriptionControllerTest {
     @MockitoBean
     private NotifyService notifyService;
 
+    @MockitoBean
+    private INotificationService notificationService;
+
     private UserEntity fmaiou;
     private UserEntity achevlot;
     private UserEntity fbouquet;
