@@ -2,6 +2,8 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
+import java.util.List;
+
 @Entity
 public class CorrectionEntity {
 
@@ -19,6 +21,9 @@ public class CorrectionEntity {
     @ManyToOne
     @JoinColumn(name = "publication_id")
     private PublicationEntity publication;
+
+    @OneToMany(mappedBy = "correction")
+    private List<CommentEntity> comments;
 
     @Column(name = "path")
     private String path;
@@ -71,5 +76,13 @@ public class CorrectionEntity {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public List<CommentEntity> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<CommentEntity> comments) {
+        this.comments = comments;
     }
 }

@@ -22,6 +22,10 @@ public class CommentEntity {
     @JoinColumn(name = "publication_id")
     private PublicationEntity publication;
 
+    @ManyToOne
+    @JoinColumn(name = "correction_id")
+    private CorrectionEntity correction;
+
     @Column(name = "path", nullable = true)
     private String path;
 
@@ -35,6 +39,13 @@ public class CommentEntity {
         this.content = content;
         this.authorComment = author;
         this.publication = publication;
+        this.path = path;
+    }
+
+    public CommentEntity(String content, UserEntity author, CorrectionEntity correction, String path) {
+        this.content = content;
+        this.authorComment = author;
+        this.correction = correction;
         this.path = path;
     }
 
@@ -72,5 +83,13 @@ public class CommentEntity {
 
     public void setPath(String path) {
         this.path = path;
+    }
+
+    public CorrectionEntity getCorrection() {
+        return correction;
+    }
+
+    public void setCorrection(CorrectionEntity correction) {
+        this.correction = correction;
     }
 }
