@@ -67,7 +67,7 @@ class CommentControllerTest {
     @Test
     void shouldDeleteCommentAndRedirect() {
 
-        String view = commentController.deleteComment(3L, 1L, redirectAttribute);
+        String view = commentController.deleteComment(1L, 3L, redirectAttribute);
 
         assertEquals("redirect:/", view);
         verify(commentService).deleteComment(3L);
