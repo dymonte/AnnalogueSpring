@@ -16,6 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -36,6 +38,8 @@ class ModuleFormErrorsTest {
 
     @MockitoBean
     private IUserService userService;
+    private final UserEntity teacher =
+            new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
 
     @Test
     void emptyFormShouldShowNoError() throws Exception {
@@ -45,11 +49,16 @@ class ModuleFormErrorsTest {
                 .andExpect(content().string(not(containsString("alert-danger"))));
     }
 
-    /*@Test
+    @Test
     void shouldShowEmptyNameErrorUnderTheField() throws Exception {
-        when(userService.getCurrentUser()).thenReturn(any(UserEntity.class));
-        when(moduleService.createModule(any(), any(UserEntity.class)))
-                .thenThrow(new InvalidModuleDataException("error.module.name.empty"));
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule(
+                eq("   "),
+                eq(teacher)
+        )).thenThrow(
+                new InvalidModuleDataException("error.module.name.empty")
+        );
 
         mockMvc.perform(post("/modules/add")
                         .param("name", "   ")
@@ -57,22 +66,40 @@ class ModuleFormErrorsTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("is-invalid")))
                 .andExpect(content().string(containsString("invalid-feedback")))
-                .andExpect(content().string(containsString("The module name is required.")));
-    }*/
+                .andExpect(content().string(
+                        containsString("The module name is required.")
+                ));
 
-    /*@Test
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule("   ", teacher);
+    }
+
+    @Test
     void shouldShowTooLongNameError() throws Exception {
-        when(userService.getCurrentUser()).thenReturn(any(UserEntity.class));
-        when(moduleService.createModule(any(), any(UserEntity.class)))
-                .thenThrow(new InvalidModuleDataException("error.module.name.tooLong"));
+        String longName = "M".repeat(256);
+
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule(
+                eq(longName),
+                eq(teacher)
+        )).thenThrow(
+                new InvalidModuleDataException("error.module.name.tooLong")
+        );
 
         mockMvc.perform(post("/modules/add")
-                        .param("name", "M".repeat(256))
+                        .param("name", longName)
                         .with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString(
-                        "The module name must be at most 255 characters.")));
-    }*/
+                .andExpect(content().string(
+                        containsString(
+                                "The module name must be at most 255 characters."
+                        )
+                ));
+
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule(longName, teacher);
+    }
 
     @Test
     void shouldShowNameAlreadyUsedErrorAndKeepTheTypedName() throws Exception {

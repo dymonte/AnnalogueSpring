@@ -501,7 +501,6 @@ public class RegisterUserAcceptanceTest {
     @Alors("l'action m'est refusée")
     public void action_est_refusee(){
         assertEquals("http://localhost:" + port + "/module-enrollments/new" ,page.url());
-        //assertTrue(page.locator("#moduleIdError").isVisible());
 
     }
 
