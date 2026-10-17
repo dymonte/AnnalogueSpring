@@ -2,6 +2,7 @@ package com.annalogue.m2.steps;
 
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
@@ -42,6 +43,9 @@ public class AdminMembersAcceptanceTest {
 
     @Autowired
     private IModuleService moduleService;
+
+    @Autowired
+    private IInscriptionService inscriptionService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -89,6 +93,7 @@ public class AdminMembersAcceptanceTest {
         if (context != null) {
             context.close();
         }
+        inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();
     }

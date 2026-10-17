@@ -2,7 +2,9 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.exceptions.StorageFileNotFoundException;
 import com.annalogue.m2.exceptions.UploadFileException;
+import com.annalogue.m2.models.CommentEntity;
 import com.annalogue.m2.models.FileType;
+import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IPublicationService;
@@ -20,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 @Controller
@@ -106,5 +111,31 @@ public class PublicationController {
 		redirectAttributes.addFlashAttribute("successKey", "success.upload.file");
 		return "redirect:/upload";
 	}
+
+    @GetMapping("/publications/{id}/details")
+    public String showPublicationDetails(
+            @PathVariable Long id,
+            Model model) {
+
+        PublicationEntity pub = publicationService.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("error.publication.not.found")
+                );
+        List<CommentEntity> comments =
+                new ArrayList<>(pub.getComments());
+
+        comments.sort(
+                Comparator.comparing(
+                        CommentEntity::getId,
+                        Comparator.reverseOrder()
+                )
+        );
+
+        model.addAttribute("publication", pub);
+        model.addAttribute("comments", comments);
+        model.addAttribute("publication", pub);
+
+        return "publications/details";
+    }
 
 }

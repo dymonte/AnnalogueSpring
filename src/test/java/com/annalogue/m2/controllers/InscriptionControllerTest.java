@@ -684,53 +684,50 @@ class InscriptionControllerTest {
                 .andExpect(flash().attributeExists("error"))
                 .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
 
-        verify(inscriptionService, never()).toggleEditor(id);
-    }
+                verify(inscriptionService, never()).toggleEditor(id);
+        }
 
-    @Test
-    void shouldDenyToggleEditorWhenInscriptionModuleNotExiste() throws Exception {
-        when(userService.findByEmail("fbouquet@ufr.com"))
-                .thenReturn(Optional.of(fbouquet));
+        @Test
+        void shouldDenyToggleEditorWhenInscriptionModuleNotExiste() throws Exception {
+                when(userService.findByEmail("fbouquet@ufr.com"))
+                                .thenReturn(Optional.of(fbouquet));
 
-        when(inscriptionService.findInscriptions(fbouquet))
-                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
+                when(inscriptionService.findInscriptions(fbouquet))
+                                .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
-        when(inscriptionService.existsById(5L)).thenReturn(false);
-        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
-                "Enrollment not found or you are not authorized to modify or delete it."
-        );
-        mockMvc.perform(
-                        post("/module-enrollments/{id}/delete", 5L)
-                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
-                                .with(csrf())
-                )
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/module-enrollments"))
-                .andExpect(flash().attributeExists("error"))
-                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to modify or delete it."));
+                when(inscriptionService.existsById(5L)).thenReturn(false);
+                when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
+                                "Enrollment not found or you are not authorized to modify or delete it.");
+                mockMvc.perform(
+                                post("/module-enrollments/{id}/delete", 5L)
+                                                .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
+                                                .with(csrf()))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(redirectedUrl("/module-enrollments"))
+                                .andExpect(flash().attributeExists("error"))
+                                .andExpect(flash().attribute("error",
+                                                "Enrollment not found or you are not authorized to modify or delete it."));
 
-        verify(inscriptionService, never()).toggleEditor(5L);
-    }
+                verify(inscriptionService, never()).toggleEditor(5L);
+        }
 
-    @Test
-    void shouldDenyProfessorAccessToRegisterPageGet() throws Exception {
-        mockMvc.perform(
-                        get("/module-enrollments/new")
-                                .with(user("achevlot@ufr.com").roles("PROF"))
-                )
-                .andExpect(status().isForbidden());
-    }
+        @Test
+        void shouldDenyProfessorAccessToRegisterPageGet() throws Exception {
+                mockMvc.perform(
+                                get("/module-enrollments/new")
+                                                .with(user("achevlot@ufr.com").roles("PROF")))
+                                .andExpect(status().isForbidden());
+        }
 
-    @Test
-    void shouldDenyProfessorAccessToToggleEditor() throws Exception {
-        Long id = tf_achevlot.getId();
-        mockMvc.perform(
-                        post("/module-enrollments/{id}/toggle-editor", id)
-                                .with(user("achevlot@ufr.com").roles("PROF"))
-                                .with(csrf())
-                )
-                .andExpect(status().isForbidden());
+        @Test
+        void shouldDenyProfessorAccessToToggleEditor() throws Exception {
+                Long id = tf_achevlot.getId();
+                mockMvc.perform(
+                                post("/module-enrollments/{id}/toggle-editor", id)
+                                                .with(user("achevlot@ufr.com").roles("PROF"))
+                                                .with(csrf()))
+                                .andExpect(status().isForbidden());
 
-        verify(inscriptionService, never()).toggleEditor(id);
-    }
+                verify(inscriptionService, never()).toggleEditor(id);
+        }
 }
