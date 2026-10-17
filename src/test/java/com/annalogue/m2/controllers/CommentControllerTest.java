@@ -95,4 +95,5 @@ class CommentControllerTest {
         assertEquals("redirect:/modules/7", view);
         verify(commentService).addCommentToPublication("Great with file", 1L, 2L, file);
     }
+
 }
