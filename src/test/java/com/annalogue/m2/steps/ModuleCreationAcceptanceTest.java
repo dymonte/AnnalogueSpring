@@ -151,4 +151,31 @@ public class ModuleCreationAcceptanceTest {
     public void ErrorMessageNotcreated() {
         assertEquals(message("error.module.name.empty"), page().locator("#name-error").innerText().trim());
     }
+
+    // 5
+
+    @Soit("le module {string} déjà existant sur la plateforme")
+    public void ModuleExist(String name) {
+        UserEntity other = userService.save(new UserEntity(
+                "autre.responsable@example.com", passwordEncoder.encode("Passw0rd!"),
+                "autreresp", Role.RESPONSABLE, null, null));
+        moduleService.createModule(name, other);
+    }
+
+    @Quand("je tente de créer à nouveau un module nommé {string}")
+    public void CreateAnotherModule(String name) {
+        addModule(name);
+        page().locator("#name-error").waitFor();
+    }
+
+    @Alors("le second module n'est pas créé")
+    public void AnotherModuleNotCreated() {
+        assertEquals(1, moduleService.findAll().size());
+    }
+
+    @Et("un message d'erreur signale que le module {string} existe déjà")
+    public void ErrorMessageExistModule(String name) {
+        assertEquals(message("error.module.name.exists"), page().locator("#name-error").innerText().trim());
+        assertEquals(name, page().locator("#name").inputValue());
+    }
 }
