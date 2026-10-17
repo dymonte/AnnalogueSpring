@@ -96,6 +96,54 @@
                 </a>
             </div>
 
+            <hr class="my-4">
+
+            <!-- Add a comment -->
+            <section class="mb-4">
+                <h5 class="mb-3">
+                    <i class="bi bi-chat-square-text me-2"></i>
+                    Add a comment
+                </h5>
+
+                <form th:action="@{/publications/{id}/add-comment(id=${publication.id})}"
+                      method="post"
+                      enctype="multipart/form-data">
+
+
+                    <input type="hidden"
+                           th:if="${_csrf != null}"
+                           th:name="${_csrf.parameterName}"
+                           th:value="${_csrf.token}">
+
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Your comment</label>
+                        <textarea id="content"
+                                  name="content"
+                                  class="form-control"
+                                  rows="4"
+                                  maxlength="10000"
+                                  placeholder="Write your comment..."
+                                  required></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="file" class="form-label">
+                            <i class="bi bi-paperclip me-1"></i>
+                            Attach a file (optional)
+                        </label>
+
+                        <input type="file"
+                               id="file"
+                               name="file"
+                               class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-send me-2"></i>
+                        Submit comment
+                    </button>
+                </form>
+            </section>
 
             <hr class="my-4">
 
@@ -144,15 +192,40 @@
                                         Comment content
                                     </p>
 
-                                    <!-- Download attached file -->
-                                    <a th:if="${comment.path != null
-                                    and !comment.path.isEmpty()}"
-                                       th:href="@{/comments/{id}/file(id=${comment.id})}"
-                                       class="btn btn-sm btn-outline-primary"
-                                       title="Download attachment">
-                                        <i class="bi bi-paperclip me-1"></i>
-                                        Download attachment
-                                    </a>
+                                    <!-- Comment actions -->
+                                    <div class="d-flex flex-wrap gap-2 mt-3">
+
+                                        <!-- Download attachment -->
+                                        <a th:if="${comment.path != null and !comment.path.isEmpty()}"
+                                           th:href="@{/comments/{id}/file(id=${comment.id})}"
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Download attachment"
+                                           aria-label="Download attachment">
+                                            <i class="bi bi-paperclip"></i>
+                                        </a>
+
+                                        <!-- Delete comment -->
+                                        <form th:action="@{/publications/{pubId}/comments/{commentId}/delete(
+                         pubId=${publication.id},
+                         commentId=${comment.id})}"
+                                              method="post"
+                                              onsubmit="return confirm('Are you sure you want to delete this comment?');">
+
+                                            <input type="hidden"
+                                                   th:if="${_csrf != null}"
+                                                   th:name="${_csrf.parameterName}"
+                                                   th:value="${_csrf.token}">
+
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    title="Delete comment"
+                                                    aria-label="Delete comment">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+
+                                    </div>
+
 
                                 </div>
                             </div>
