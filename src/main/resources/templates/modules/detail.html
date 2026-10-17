@@ -23,6 +23,7 @@
                         <h5 class="card-title" th:text="${publication.name} + ' (' + ${publication.fileType} + ')'"></h5>
                         <p class="card-text" th:if="${publication.description != null}" th:text="${publication.description}"></p>
                         <a th:text="#{publication.download}" th:href="@{/files/{id}(id=${publication.id})}" class="btn btn-primary">Télécharger</a>
+                        <div th:replace="~{publication/add_correction :: addCorrection(${publication})}"></div>
                       </div>
                     </div>
                   </div>
