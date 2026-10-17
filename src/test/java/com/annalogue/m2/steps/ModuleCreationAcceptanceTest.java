@@ -102,4 +102,19 @@ public class ModuleCreationAcceptanceTest {
     public void ModuleIsInMyFields(String name) {
         assertTrue(createdModuleNames().contains(name));
     }
+
+
+    // 2
+
+    @Et("je gère déjà le module {string}")
+    public void ImResponsableForOtherModules(String name) {
+        moduleService.createModule(name, loginSteps.getLoggedUser());
+    }
+
+    @Et("les modules {string} et {string} apparaissent dans ma liste de gestion")
+    public void AllModulesIsInMyFields(String first, String second) {
+        List<String> names = createdModuleNames();
+        assertTrue(names.contains(first));
+        assertTrue(names.contains(second));
+    }
 }
