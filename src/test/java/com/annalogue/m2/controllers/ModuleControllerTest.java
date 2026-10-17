@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataAccessResourceFailureException;
 
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
@@ -22,7 +21,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -31,9 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ModuleControllerTest {
 
     private final IModuleService moduleService = mock(IModuleService.class);
-
-    @MockitoBean
-    private IUserService userService;
+    private final IUserService userService = mock(IUserService.class);
 
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
@@ -43,7 +39,7 @@ class ModuleControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new ModuleController(moduleService))
+                .standaloneSetup(new ModuleController(moduleService,userService))
                 .build();
     }
 
@@ -56,42 +52,77 @@ class ModuleControllerTest {
 
     @Test
     void shouldAddModuleAndRedirectWithSuccessMessage() throws Exception {
-        when(moduleService.createModule("MOIA")).thenReturn(new ModuleEntity("MOIA", teacher));
+        ModuleEntity createdModule = new ModuleEntity("MOIA", teacher);
+
+        when(userService.getCurrentUser()).thenReturn(teacher);
+        when(moduleService.createModule("MOIA", teacher))
+                .thenReturn(createdModule);
 
         mockMvc.perform(post("/modules/add").param("name", "MOIA"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/home"))
-                .andExpect(flash().attribute("successKey", "success.module.created"))
-                .andExpect(flash().attribute("createdModuleName", "MOIA"));
+                .andExpect(flash().attribute(
+                        "successKey", "success.module.created"))
+                .andExpect(flash().attribute(
+                        "createdModuleName", "MOIA"));
 
-        verify(moduleService).createModule("MOIA");
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule("MOIA", teacher);
     }
+
 
     @Test
     void shouldShowErrorWhenNameIsEmpty() throws Exception {
-        when(moduleService.createModule(any()))
-                .thenThrow(new InvalidModuleDataException("error.module.name.empty"));
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule(
+                eq(""),
+                eq(teacher)
+        )).thenThrow(
+                new InvalidModuleDataException("error.module.name.empty")
+        );
 
         mockMvc.perform(post("/modules/add").param("name", ""))
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add"))
-                .andExpect(model().attribute("nameErrorKey", "error.module.name.empty"));
+                .andExpect(model().attribute(
+                        "nameErrorKey",
+                        "error.module.name.empty"
+                ));
+
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule("", teacher);
     }
+
 
     @Test
     void shouldShowErrorWhenNameIsMissing() throws Exception {
-        when(moduleService.createModule(null))
-                .thenThrow(new InvalidModuleDataException("error.module.name.empty"));
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule(
+                isNull(),
+                eq(teacher)
+        )).thenThrow(
+                new InvalidModuleDataException("error.module.name.empty")
+        );
 
         mockMvc.perform(post("/modules/add"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add"))
-                .andExpect(model().attribute("nameErrorKey", "error.module.name.empty"));
+                .andExpect(model().attribute(
+                        "nameErrorKey",
+                        "error.module.name.empty"
+                ));
+
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule(null, teacher);
     }
 
     @Test
     void shouldShowErrorAndKeepNameWhenNameAlreadyExists() throws Exception {
-        when(moduleService.createModule("MOIA"))
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule("MOIA",teacher))
                 .thenThrow(new InvalidModuleDataException("error.module.name.exists"));
 
         mockMvc.perform(post("/modules/add").param("name", "MOIA"))
@@ -99,23 +130,31 @@ class ModuleControllerTest {
                 .andExpect(view().name("modules/add"))
                 .andExpect(model().attribute("nameErrorKey", "error.module.name.exists"))
                 .andExpect(model().attribute("name", "MOIA"));
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule("MOIA", teacher);
     }
 
     @Test
     void shouldShowErrorWhenNameIsTooLong() throws Exception {
         String longName = "M".repeat(256);
-        when(moduleService.createModule(longName))
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule(longName, teacher))
                 .thenThrow(new InvalidModuleDataException("error.module.name.tooLong"));
 
         mockMvc.perform(post("/modules/add").param("name", longName))
                 .andExpect(status().isOk())
                 .andExpect(view().name("modules/add"))
                 .andExpect(model().attribute("nameErrorKey", "error.module.name.tooLong"));
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule(longName, teacher);
     }
 
     @Test
     void shouldShowDatabaseErrorWhenSavingFails() throws Exception {
-        when(moduleService.createModule("MOIA"))
+        when(userService.getCurrentUser()).thenReturn(teacher);
+
+        when(moduleService.createModule("MOIA",teacher))
                 .thenThrow(new DataAccessResourceFailureException("Database down"));
 
         mockMvc.perform(post("/modules/add").param("name", "MOIA"))
@@ -123,6 +162,8 @@ class ModuleControllerTest {
                 .andExpect(view().name("modules/add"))
                 .andExpect(model().attribute("errorKey", "error.module.database"))
                 .andExpect(model().attribute("name", "MOIA"));
+        verify(userService).getCurrentUser();
+        verify(moduleService).createModule("MOIA", teacher);
     }
 
     // ===== GET /modules: catalogue for the admin, home page for the others =====
