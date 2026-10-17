@@ -117,4 +117,18 @@ public class ModuleCreationAcceptanceTest {
         assertTrue(names.contains(first));
         assertTrue(names.contains(second));
     }
+
+
+    // 3
+
+    @Quand("je tente d'accéder à la création de module")
+    public void AccesAddModule() {
+        page().navigate(url("/modules/add"));
+    }
+
+    @Et("un message d'erreur indique que seuls les responsables de module peuvent effectuer cette action")
+    public void AccesRefuseMessage() {
+        assertEquals("403", page().locator("#error-code").innerText().trim());
+        assertEquals(message("error.forbidden"), page().locator("#forbidden-msg").innerText().trim());
+    }
 }
