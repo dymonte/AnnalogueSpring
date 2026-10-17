@@ -54,9 +54,9 @@ class CommentControllerTest {
 
         when(publicationService.findById(2L)).thenReturn(Optional.of(publication));
 
-        String view = commentController.addComment(2L, "Great", null,  model);
+        String view = commentController.addCommentToPublication(2L, "Great", null,  model);
 
-        assertEquals("redirect:/modules/detail/7", view);
+        assertEquals("redirect:/modules/7", view);
         verify(commentService).addCommentToPublication("Great", 1L, 2L, null);
     }
 
@@ -86,9 +86,9 @@ class CommentControllerTest {
 
         MultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
 
-        String view = commentController.addComment(2L, "Great with file", file, model);
+        String view = commentController.addCommentToPublication(2L, "Great with file", file, model);
 
-        assertEquals("redirect:/modules/detail/7", view);
+        assertEquals("redirect:/modules/7", view);
         verify(commentService).addCommentToPublication("Great with file", 1L, 2L, file);
     }
 }
