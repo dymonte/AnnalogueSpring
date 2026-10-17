@@ -104,6 +104,81 @@
                 </li>
             </ul>
 
+            <!-- Notifications -->
+            <ul class="navbar-nav ms-lg-3 mt-3 mt-lg-0">
+                <li class="nav-item dropdown">
+
+                    <button class="btn btn-dark position-relative rounded-circle d-inline-flex align-items-center justify-content-center p-0"
+                            type="button"
+                            id="notificationDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            style="width: 2.5rem; height: 2.5rem;"
+                            th:aria-label="#{nav.notifications}">
+
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="1.125em"
+                             height="1.125em"
+                             fill="currentColor"
+                             viewBox="0 0 16 16"
+                             aria-hidden="true"
+                             focusable="false">
+                            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.104-14.995a1 1 0 0 0-.208 0A1.5 1.5 0 0 0 6.5 2.5v.386c-1.744.49-3 2.093-3 4.014 0 .89-.212 1.779-.626 2.566L2.29 10.5h11.42l-.584-1.034a5.43 5.43 0 0 1-.626-2.566c0-1.921-1.256-3.524-3-4.014V2.5a1.5 1.5 0 0 0-1.396-1.495z"/>
+                        </svg>
+
+                        <!-- Nombre de notifications non lues -->
+                        <span th:if="${unseenNotifications > 0}"
+                              class="position-absolute top-0 start-100 translate-middle
+                         badge rounded-pill bg-danger"
+                              th:text="${unseenNotifications}">0
+                        </span>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2
+                   notification-menu"
+                        aria-labelledby="notificationDropdown">
+
+                        <li>
+                            <h6 class="dropdown-header" th:text="#{nav.notifications}">Notifications</h6>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- Liste dynamique -->
+                        <li th:each="notification : ${notifications}">
+                            <div class="dropdown-item-text py-2"
+                                 th:classappend="${notification.seen} ? 'text-muted' : 'fw-semibold'">
+                                <div th:text="${#messages.msg(notification.type.messageKey, notification.content)}">
+                                    Notification
+                                </div>
+                                <small class="text-muted"
+                                       th:text="${#temporals.format(notification.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                    Date
+                                </small>
+                            </div>
+                        </li>
+
+                        <!-- Aucune notification -->
+                        <li th:if="${#lists.isEmpty(notifications)}">
+                            <span class="dropdown-item text-muted py-3" th:text="#{notification.empty}">
+                                No notifications
+                            </span>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <a class="dropdown-item text-center text-primary"
+                               th:href="@{/notifications}">
+                                <span th:text="#{notification.view.all}">View all notifications</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
+            </ul>
+
+
         </div>
     </div>
 
