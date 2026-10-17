@@ -418,4 +418,6 @@ public class AdminMembersAcceptanceTest {
     public void jeReçoitUnMessageDErreur() {
         assertTrue(visibleText().contains(message("login.required")));
     }
+
+
 }
