@@ -21,9 +21,12 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.annalogue.m2.dto.GroupEnrollmentResult;
+import java.util.Set;
+
 @Service
 @Transactional
-public class InscriptionService implements IInscriptionService{
+public class InscriptionService implements IInscriptionService {
 
     private final InscriptionRepository inscriptionRepository;
     private final ModuleRepository moduleRepository;
@@ -31,8 +34,7 @@ public class InscriptionService implements IInscriptionService{
     private final PublicationRepository publicationRepository;
     private final INotificationService notificationService;
 
-    private static final Pattern EMAIL_PATTERN =
-            Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+    private static final Pattern EMAIL_PATTERN = Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
     public InscriptionService(
             InscriptionRepository inscriptionRepository,
@@ -58,27 +60,29 @@ public class InscriptionService implements IInscriptionService{
     }
 
     @Override
-    public List<InscriptionEntity>  findByModuleId(Long id) {
+    public List<InscriptionEntity> findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
 
     @Override
-    public List<InscriptionEntity>   findByUserId(Long id) {
+    public List<InscriptionEntity> findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
 
     @Override
-    public List<InscriptionEntity> findByEditorFalse(){
+    public List<InscriptionEntity> findByEditorFalse() {
         return inscriptionRepository.findByEditorFalse();
     }
 
     @Override
-    public List<InscriptionEntity> findByEditorTrue(){
+    public List<InscriptionEntity> findByEditorTrue() {
         return inscriptionRepository.findByEditorTrue();
     }
 
     @Override
-    public void deleteById(Long id){inscriptionRepository.deleteById(id); }
+    public void deleteById(Long id) {
+        inscriptionRepository.deleteById(id);
+    }
 
     @Override
     public void deleteAll() {
@@ -86,21 +90,21 @@ public class InscriptionService implements IInscriptionService{
     }
 
     @Override
-    public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
+    public boolean existsById(Long id) {
+        return inscriptionRepository.existsById(id);
+    }
 
     @Override
     public List<InscriptionEntity> findInscriptions(UserEntity currentUser) {
 
         List<InscriptionEntity> inscriptions = new ArrayList<>();
 
-        List<ModuleEntity> responsibleModules =
-                currentUser.getResponsibleModules();
+        List<ModuleEntity> responsibleModules = currentUser.getResponsibleModules();
 
         for (ModuleEntity module : responsibleModules) {
 
             inscriptions.addAll(
-                    this.findByModuleId(module.getId())
-            );
+                    this.findByModuleId(module.getId()));
         }
 
         return inscriptions;
@@ -111,19 +115,15 @@ public class InscriptionService implements IInscriptionService{
     public boolean toggleEditor(Long inscriptionId) {
         InscriptionEntity inscription = inscriptionRepository
                 .findById(inscriptionId)
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "error.inscription.not.found"
-                        )
-                );
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "error.inscription.not.found"));
 
         boolean isResponsible = inscription.getUser().getId()
                 .equals(inscription.getModule().getResponsible().getId());
 
         if (isResponsible && inscription.isEditor()) {
             throw new IllegalArgumentException(
-                    "error.inscription.responsible.cannot.remove.editor"
-            );
+                    "error.inscription.responsible.cannot.remove.editor");
         }
 
         inscription.setEditor(!inscription.isEditor());
@@ -132,80 +132,65 @@ public class InscriptionService implements IInscriptionService{
 
     @Override
     @Transactional
-    public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId) {
+    public InscriptionEntity save(UserEntity currentUser, String userEmail, Long moduleId) {
 
         if (currentUser == null) {
             throw new IllegalArgumentException(
-                    "error.inscription.prof.not.found"
-            );
+                    "error.inscription.prof.not.found");
         }
 
         if (moduleId == null) {
             throw new IllegalArgumentException(
-                    "error.inscription.module.required"
-            );
+                    "error.inscription.module.required");
         }
 
         if (userEmail == null || userEmail.isBlank()) {
             throw new IllegalArgumentException(
-                    "error.inscription.email.required"
-            );
+                    "error.inscription.email.required");
         }
 
-        if(!EMAIL_PATTERN.matcher(userEmail.trim()).matches()){
+        if (!EMAIL_PATTERN.matcher(userEmail.trim()).matches()) {
             throw new IllegalArgumentException(
-                    "error.inscription.email.invalid"
-            );
+                    "error.inscription.email.invalid");
         }
 
         UserEntity member = userRepository.findByEmail(userEmail.trim())
-                .orElseThrow(() ->
-                        new EmailNotFoundException(
-                                "error.inscription.user.not.found"
-                        )
-                );
+                .orElseThrow(() -> new EmailNotFoundException(
+                        "error.inscription.user.not.found"));
 
         ModuleEntity module = moduleRepository.findById(moduleId)
-                .orElseThrow(() ->
-                        new ModuleNotFoundException(
-                                "error.inscription.module.not.found"
-                        )
-                );
+                .orElseThrow(() -> new ModuleNotFoundException(
+                        "error.inscription.module.not.found"));
 
         if (module.getResponsible() == null
                 || !module.getResponsible().getId()
-                .equals(currentUser.getId())) {
+                        .equals(currentUser.getId())) {
             throw new ModuleNotManagedException(
-                    "error.inscription.module.not.managed"
-            );
+                    "error.inscription.module.not.managed");
         }
 
-        boolean alreadyRegistered =
-                inscriptionRepository.findByUserId(member.getId())
-                        .stream()
-                        .anyMatch(inscription ->
-                                inscription.getModule() != null
-                                        && inscription.getModule().getId()
-                                        .equals(module.getId())
-                        );
+        boolean alreadyRegistered = inscriptionRepository.findByUserId(member.getId())
+                .stream()
+                .anyMatch(inscription -> inscription.getModule() != null
+                        && inscription.getModule().getId()
+                                .equals(module.getId()));
 
         if (alreadyRegistered) {
             throw new UserAlreadyEnrolledException(
-                    "error.inscription.user.already.registered"
-            );
+                    "error.inscription.user.already.registered");
         }
 
         InscriptionType inscriptionType;
 
-        // a Responsable Module is a teacher too: intervenant in the modules of the others
+        // a Responsable Module is a teacher too: intervenant in the modules of the
+        // others
         if (member.getRole() == Role.PROF || member.getRole() == Role.RESPONSABLE) {
             inscriptionType = InscriptionType.INTERVENANT;
         } else if (member.getRole() == Role.ETUDIANT) {
             inscriptionType = InscriptionType.ETUDIANT;
         } else {
             throw new IllegalArgumentException(
-                    "error.inscription.user.role.invalid"
-            );
+                    "error.inscription.user.role.invalid");
         }
 
         InscriptionEntity inscription = new InscriptionEntity();
@@ -223,9 +208,11 @@ public class InscriptionService implements IInscriptionService{
 
     @Override
     public boolean canAccessFile(String email, Long fileId) throws UserNotFoundException, StorageFileNotFoundException {
-        UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        ModuleEntity module =  publicationRepository.findById(fileId).orElseThrow(StorageFileNotFoundException::new).getModule();
+        ModuleEntity module = publicationRepository.findById(fileId).orElseThrow(StorageFileNotFoundException::new)
+                .getModule();
 
         return hasReaderAccess(user, module);
     }
@@ -270,6 +257,66 @@ public class InscriptionService implements IInscriptionService{
                 .map(InscriptionEntity::getModule)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    // TFAN26-106: registers all the members of a group in a module managed by the
+    // current user
+    @Override
+    @Transactional
+    public GroupEnrollmentResult saveGroup(UserEntity currentUser, String group, Long moduleId) {
+
+        if (currentUser == null) {
+            throw new IllegalArgumentException(
+                    "error.inscription.prof.not.found");
+        }
+
+        if (moduleId == null) {
+            throw new IllegalArgumentException(
+                    "error.inscription.module.required");
+        }
+
+        if (group == null || group.isBlank()) {
+            throw new IllegalArgumentException(
+                    "error.inscription.group.required");
+        }
+
+        ModuleEntity module = moduleRepository.findById(moduleId)
+                .orElseThrow(() -> new ModuleNotFoundException(
+                        "error.inscription.module.not.found"));
+
+        if (module.getResponsible() == null
+                || !module.getResponsible().getId()
+                        .equals(currentUser.getId())) {
+            throw new ModuleNotManagedException(
+                    "error.inscription.module.not.managed");
+        }
+
+        List<UserEntity> members = userRepository.findByGroupNameIgnoreCaseOrderByUsernameAsc(group.trim());
+
+        if (members.isEmpty()) {
+            throw new IllegalArgumentException(
+                    "error.inscription.group.not.found");
+        }
+
+        Set<Long> alreadyRegisteredIds = inscriptionRepository.findByModuleId(module.getId())
+                .stream()
+                .map(inscription -> inscription.getUser().getId())
+                .collect(Collectors.toSet());
+
+        List<InscriptionEntity> newInscriptions = new ArrayList<>();
+        for (UserEntity member : members) {
+            if (!alreadyRegisteredIds.contains(member.getId())) {
+                // only students have a group; the editor right stays off by default
+                newInscriptions.add(
+                        new InscriptionEntity(InscriptionType.ETUDIANT, member, module));
+            }
+        }
+
+        inscriptionRepository.saveAll(newInscriptions);
+
+        return new GroupEnrollmentResult(
+                newInscriptions.size(),
+                members.size() - newInscriptions.size());
     }
 
 }
