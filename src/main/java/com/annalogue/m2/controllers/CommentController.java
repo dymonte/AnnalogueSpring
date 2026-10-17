@@ -25,8 +25,8 @@ public class CommentController {
         this.publicationService = publicationService;
     }
 
-    @PostMapping("publication/{id}/addComment")
-    public String addComment(@PathVariable("id") long publicationId,
+    @PostMapping("publication/{id}/addCommentToPublication")
+    public String addCommentToPublication(@PathVariable("id") long publicationId,
                              @RequestParam(value="content") String content,
                              @RequestParam(value="file") MultipartFile file,
                              Model model) {
@@ -43,7 +43,28 @@ public class CommentController {
         if (publication == null) {
             return "redirect:/";
         }
-        return "redirect:/modules/detail/" + publication.getModule().getId();
+        return "redirect:/modules/" + publication.getModule().getId();
+    }
+
+    @PostMapping("publication/{id}/addCommentToCorrection")
+    public String addCommentToCorrection(@PathVariable("id") long correctionId,
+                             @RequestParam(value="content") String content,
+                             @RequestParam(value="file") MultipartFile file,
+                             Model model) {
+
+        UserEntity currentUser = userService.getCurrentUser();
+        CommentEntity comment = null;
+        try {
+            comment = commentService.addCommentToCorrection(content, currentUser.getId(), correctionId, file);
+        } catch (UploadFileException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+
+        PublicationEntity publication = publicationService.findById(correctionId).orElse(null);
+        if (publication == null) {
+            return "redirect:/";
+        }
+        return "redirect:/modules/" + publication.getModule().getId();
     }
 
     @PostMapping("deleteComment/{id}")
