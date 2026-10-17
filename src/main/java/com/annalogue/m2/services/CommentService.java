@@ -28,7 +28,7 @@ public class CommentService implements ICommentService {
     }
 
     @Override
-    public CommentEntity addComment(String content, long userId, long publicationId, MultipartFile file) throws UploadFileException {
+    public CommentEntity addCommentToPublication(String content, long userId, long publicationId, MultipartFile file) throws UploadFileException {
 
         UserEntity author = userService.findById(userId).orElseThrow(() -> new UploadFileException("error.upload.author.notfound"));
 
@@ -40,6 +40,11 @@ public class CommentService implements ICommentService {
         }
 
         return commentRepository.save(new CommentEntity(content, author, publication, path==null?null:path.toString()));
+    }
+
+    @Override
+    public CommentEntity addCommentToCorrection(String content, long userId, long correctionId, MultipartFile file) throws UploadFileException {
+        return null;
     }
 
     @Override

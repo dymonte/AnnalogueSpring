@@ -57,7 +57,7 @@ class CommentControllerTest {
         String view = commentController.addComment(2L, "Great", null,  model);
 
         assertEquals("redirect:/modules/detail/7", view);
-        verify(commentService).addComment("Great", 1L, 2L, null);
+        verify(commentService).addCommentToPublication("Great", 1L, 2L, null);
     }
 
     @Test
@@ -89,6 +89,6 @@ class CommentControllerTest {
         String view = commentController.addComment(2L, "Great with file", file, model);
 
         assertEquals("redirect:/modules/detail/7", view);
-        verify(commentService).addComment("Great with file", 1L, 2L, file);
+        verify(commentService).addCommentToPublication("Great with file", 1L, 2L, file);
     }
 }

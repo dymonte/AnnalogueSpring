@@ -12,8 +12,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
-
 @Controller
 public class CommentController {
 
@@ -36,7 +34,7 @@ public class CommentController {
         UserEntity currentUser = userService.getCurrentUser();
         CommentEntity comment = null;
         try {
-            comment = commentService.addComment(content, currentUser.getId(), publicationId, file);
+            comment = commentService.addCommentToPublication(content, currentUser.getId(), publicationId, file);
         } catch (UploadFileException e) {
             model.addAttribute("error", e.getMessage());
         }
