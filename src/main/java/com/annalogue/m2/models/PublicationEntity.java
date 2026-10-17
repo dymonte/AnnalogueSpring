@@ -22,6 +22,7 @@ public class PublicationEntity {
 		this.author = author;
 		this.filePath = filePath;
 		this.comments = new ArrayList<>();
+		this.corrections = new ArrayList<>();
 	}
 
 	@Id
@@ -53,6 +54,8 @@ public class PublicationEntity {
 	@OneToMany(mappedBy = "publication")
 	private List<CommentEntity> comments;
 
+	@OneToMany(mappedBy = "publication")
+	private List<CorrectionEntity> corrections;
 
 	public Long getId() {
 		return id;
@@ -122,5 +125,11 @@ public class PublicationEntity {
 		this.createdAt = createdAt;
 	}
 
+	public List<CorrectionEntity> getCorrections() {
+		return corrections;
+	}
 
+	public void setCorrections(List<CorrectionEntity> corrections) {
+		this.corrections = corrections;
+	}
 }
