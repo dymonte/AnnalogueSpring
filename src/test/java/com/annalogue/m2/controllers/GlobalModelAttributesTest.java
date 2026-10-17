@@ -1,90 +1,104 @@
 package com.annalogue.m2.controllers;
 
+import com.annalogue.m2.models.NotificationEntity;
+import com.annalogue.m2.models.NotificationType;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.INotificationService;
 import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.ui.ExtendedModelMap;
 
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class GlobalModelAttributesTest {
 
-    @Mock
-    private IUserService userService;
+    private final IUserService userService = mock(IUserService.class);
+    private final INotificationService notificationService = mock(INotificationService.class);
+    private final GlobalModelAttributes globalModelAttributes =
+            new GlobalModelAttributes(userService, notificationService);
 
-    @Mock
-    private ObjectProvider<INotificationService> notificationServiceProvider;
+    @Test
+    void shouldAddTheAuthenticatedUsersNotificationsAndUnreadCount() {
+        UserEntity user = student();
+        List<NotificationEntity> notifications =
+                List.of(new NotificationEntity(user, NotificationType.MODULE_ENROLLMENT, "MOIA"));
+        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        when(notificationService.findForUser(user.getId())).thenReturn(notifications);
+        when(notificationService.countUnseen(user.getId())).thenReturn(1L);
 
-    @Mock
-    private INotificationService notificationService;
+        ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication(user.getEmail()), model);
 
-    @InjectMocks
-    private GlobalModelAttributes globalModelAttributes;
-
-    private final UserEntity student =
-            new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, 2026, "A");
-
-    private UsernamePasswordAuthenticationToken auth() {
-        return new UsernamePasswordAuthenticationToken("memb@example.com", "pw", List.of());
+        assertEquals("student", model.get("username"));
+        assertEquals(notifications, model.get("notifications"));
+        assertEquals(1L, model.get("unseenNotifications"));
     }
 
     @Test
-    void shouldAddTheUsernameTheStateAndTheNumberOfUnseenNotifications() {
-        student.setId(5L);
-        when(userService.findByEmail("memb@example.com")).thenReturn(Optional.of(student));
-        when(notificationServiceProvider.getIfAvailable()).thenReturn(notificationService);
-        when(notificationService.countUnseen(5L)).thenReturn(3L);
+    void shouldSendThatTheNotificationsAreOnByDefault() {
+        UserEntity user = student();
+        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
         ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication(user.getEmail()), model);
 
-        globalModelAttributes.addGlobalAttributes(auth(), model);
-
-        assertEquals("memb", model.get("username"));
         assertEquals(true, model.get("notificationsEnabled"));
-        assertEquals(3L, model.get("unseenNotifications"));
     }
 
     @Test
     void shouldSendThatTheNotificationsAreOff() {
-        student.setNotificationsEnabled(false);
-        when(userService.findByEmail("memb@example.com")).thenReturn(Optional.of(student));
-        when(notificationServiceProvider.getIfAvailable()).thenReturn(null);
-        ExtendedModelMap model = new ExtendedModelMap();
+        UserEntity user = student();
+        user.setNotificationsEnabled(false);
+        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
-        globalModelAttributes.addGlobalAttributes(auth(), model);
+        ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication(user.getEmail()), model);
 
         assertEquals(false, model.get("notificationsEnabled"));
-        assertFalse(model.containsAttribute("unseenNotifications"));
     }
 
     @Test
-    void shouldAddNothingWhenNotLoggedIn() {
+    void shouldProvideEmptyNotificationDefaultsForAnonymousUsers() {
         ExtendedModelMap model = new ExtendedModelMap();
 
         globalModelAttributes.addGlobalAttributes(null, model);
 
-        assertTrue(model.isEmpty());
+        assertEquals(List.of(), model.get("notifications"));
+        assertEquals(0L, model.get("unseenNotifications"));
+        assertFalse(model.containsAttribute("username"));
+        assertFalse(model.containsAttribute("notificationsEnabled"));
+        verifyNoInteractions(userService, notificationService);
     }
 
     @Test
-    void shouldAddNothingWhenTheUserIsNotFound() {
-        when(userService.findByEmail("memb@example.com")).thenReturn(Optional.empty());
+    void shouldOnlyKeepTheDefaultsWhenTheUserIsNotFound() {
+        when(userService.findByEmail("student@example.com")).thenReturn(Optional.empty());
+
         ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication("student@example.com"), model);
 
-        globalModelAttributes.addGlobalAttributes(auth(), model);
+        assertEquals(List.of(), model.get("notifications"));
+        assertEquals(0L, model.get("unseenNotifications"));
+        assertFalse(model.containsAttribute("username"));
+        assertFalse(model.containsAttribute("notificationsEnabled"));
+        verifyNoInteractions(notificationService);
+    }
 
-        assertTrue(model.isEmpty());
+    private UserEntity student() {
+        UserEntity user = new UserEntity("student@example.com", "hash", "student", Role.ETUDIANT, 2026, "A");
+        user.setId(7L);
+        return user;
+    }
+
+    private UsernamePasswordAuthenticationToken authentication(String email) {
+        return new UsernamePasswordAuthenticationToken(
+                email, "pw", List.of(new SimpleGrantedAuthority("ROLE_ETUDIANT")));
     }
 }

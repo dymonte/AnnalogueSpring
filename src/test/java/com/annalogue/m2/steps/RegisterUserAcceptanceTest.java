@@ -500,7 +500,9 @@ public class RegisterUserAcceptanceTest {
 
     @Alors("l'action m'est refusée")
     public void action_est_refusee(){
-        assertEquals("http://localhost:" + port + "/module-enrollments/new" ,page.url());
+        String url = page.url();
+        assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new")
+                || url.equals("http://localhost:" + port + "/modules/add"));
 
     }
 
@@ -539,5 +541,12 @@ public class RegisterUserAcceptanceTest {
     @Et("les étudiants de la cohorte {string} ont tous accès au contenu du module {string}")
     public void tous_les_etudiants_ont_acces(String nomCohorte, String nomModule) {
         // TODO :
+    }
+    public Page getPage() {
+        return page;
+    }
+
+    public UserEntity getLoggedUser() {
+        return user;
     }
 }

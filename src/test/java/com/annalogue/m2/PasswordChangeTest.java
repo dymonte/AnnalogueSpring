@@ -40,6 +40,9 @@ public class PasswordChangeTest {
         @MockitoBean
         private IUserService userService;
 
+        @MockitoBean
+        private INotificationService notificationService;
+
         @Test
         void shouldShowErrorWhenUserDoesNotExist() throws Exception {
                 doThrow(new org.springframework.security.core.userdetails.UsernameNotFoundException(

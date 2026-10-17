@@ -34,6 +34,7 @@ public class NotificationController {
                 .map(found -> {
                     List<NotificationEntity> list = notificationService.findForUser(found.getId());
                     notificationService.markAllAsSeen(found.getId());
+                    list.forEach(notification -> notification.setSeen(true));
                     return list;
                 })
                 .orElse(List.of());
