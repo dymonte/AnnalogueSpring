@@ -1,13 +1,10 @@
 package com.annalogue.m2.services;
 
-
 import com.annalogue.m2.exceptions.*;
 import com.annalogue.m2.models.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.annalogue.m2.models.InscriptionEntity;
-import com.annalogue.m2.models.UserEntity;
-
+import com.annalogue.m2.dto.GroupEnrollmentResult;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,9 +15,9 @@ public interface IInscriptionService {
 
     public List<InscriptionEntity> findAll();
 
-    public List<InscriptionEntity>  findByModuleId(Long id);
+    public List<InscriptionEntity> findByModuleId(Long id);
 
-    public List<InscriptionEntity>   findByUserId(Long id);
+    public List<InscriptionEntity> findByUserId(Long id);
 
     public List<InscriptionEntity> findByEditorFalse();
 
@@ -49,4 +46,7 @@ public interface IInscriptionService {
     public boolean toggleEditor(Long inscriptionId);
 
     List<ModuleEntity> getModulesAsIntervenant(UserEntity user);
+
+    @Transactional
+    public GroupEnrollmentResult saveGroup(UserEntity currentUser, String group, Long moduleId);
 }
