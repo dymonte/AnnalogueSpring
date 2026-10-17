@@ -149,12 +149,14 @@ public class InscriptionController {
 
                         GroupEnrollmentResult result = inscriptionService.saveGroup(currentUser, group, moduleId);
 
-                        redirectAttributes.addFlashAttribute(
-                                        "success",
-                                        notifyService.getMessage(
-                                                        "success.inscription.group.created",
-                                                        result.added(),
-                                                        result.alreadyRegistered()));
+                        String message = result.alreadyRegisteredNames().isEmpty()
+                                        ? notifyService.getMessage("success.inscription.group.created",
+                                                        result.added(), result.alreadyRegistered())
+                                        : notifyService.getMessage("success.inscription.group.created.already",
+                                                        result.added(), result.alreadyRegistered(),
+                                                        String.join(", ", result.alreadyRegisteredNames()));
+
+                        redirectAttributes.addFlashAttribute("success", message);
 
                 } catch (ModuleNotFoundException e) {
                         addFlashError(redirectAttributes, e.getMessageKey());
