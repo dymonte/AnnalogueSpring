@@ -304,8 +304,12 @@ public class InscriptionService implements IInscriptionService {
                 .collect(Collectors.toSet());
 
         List<InscriptionEntity> newInscriptions = new ArrayList<>();
+        List<String> alreadyRegisteredNames = new ArrayList<>();
         for (UserEntity member : members) {
-            if (!alreadyRegisteredIds.contains(member.getId())) {
+            if (alreadyRegisteredIds.contains(member.getId())) {
+                // already in the module: not enrolled a second time, but reported
+                alreadyRegisteredNames.add(displayName(member));
+            } else {
                 // only students have a group; the editor right stays off by default
                 newInscriptions.add(
                         new InscriptionEntity(InscriptionType.ETUDIANT, member, module));
@@ -316,7 +320,15 @@ public class InscriptionService implements IInscriptionService {
 
         return new GroupEnrollmentResult(
                 newInscriptions.size(),
-                members.size() - newInscriptions.size());
+                alreadyRegisteredNames.size(),
+                alreadyRegisteredNames);
+    }
+
+    // the username if there is one (it is optional), else the email
+    private String displayName(UserEntity user) {
+        return user.getUsername() != null && !user.getUsername().isBlank()
+                ? user.getUsername()
+                : user.getEmail();
     }
 
 }

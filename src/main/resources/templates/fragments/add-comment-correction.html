@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="addCommentCorrection(correction, comments)" class="bg-light p-3 rounded-3 border">
+
+    <!-- Comments Header & List -->
+    <section class="mb-3">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="fw-semibold text-secondary small mb-0">
+                <i class="bi bi-chat-left-text me-1"></i>Comments
+            </h6>
+            <span class="badge bg-secondary rounded-pill" th:text="${comments != null ? comments.size() : 0}">0</span>
+        </div>
+
+        <!-- Empty Comments State -->
+        <div th:if="${comments == null or comments.isEmpty()}"
+             class="alert alert-white bg-white border text-muted small rounded-3 py-2 mb-0">
+            No comments yet. Be the first to join the discussion!
+        </div>
+
+        <!-- Comments Stream -->
+        <div th:unless="${comments == null or comments.isEmpty()}" class="d-flex flex-column gap-2">
+            <article class="card border bg-white rounded-3 shadow-none" th:each="comment : ${comments}">
+                <div class="card-body p-2 px-3">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-person-circle fs-5 text-secondary mt-1"></i>
+
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong class="small text-dark"
+                                        th:text="${comment.authorComment != null ? comment.authorComment.email : 'Unknown user'}">
+                                    Author
+                                </strong>
+                            </div>
+
+                            <p class="mt-1 mb-2 text-break text-secondary small" th:text="${comment.content}">
+                                Comment content...
+                            </p>
+
+                            <!-- Comment Actions -->
+                            <div class="d-flex flex-wrap gap-2">
+                                <a th:if="${comment.path != null and !comment.path.isEmpty()}"
+                                   th:href="@{/comments/{id}/file(id=${comment.id})}"
+                                   class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size: 0.75rem;"
+                                   title="Download attachment">
+                                    <i class="bi bi-paperclip"></i> Attachment
+                                </a>
+
+                                <form th:action="@{/publications/{pubId}/comments/{commentId}/delete(pubId=${correction.publication.id}, commentId=${comment.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Are you sure you want to delete this comment?');">
+
+                                    <input type="hidden"
+                                           th:if="${_csrf != null}"
+                                           th:name="${_csrf.parameterName}"
+                                           th:value="${_csrf.token}">
+
+                                    <button type="submit"
+                                            class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size: 0.75rem;"
+                                            title="Delete comment">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <!-- Collapsible Toggle Bar for Adding Comment -->
+    <div class="card border border-dashed bg-white shadow-none rounded-3">
+        <div class="card-body p-2 text-center">
+            <div class="py-1"
+                 role="button"
+                 tabindex="0"
+                 data-bs-toggle="collapse"
+                 th:data-bs-target="'#comment-form-' + ${correction.id}"
+                 th:aria-controls="'comment-form-' + ${correction.id}"
+                 aria-expanded="false"
+                 style="cursor: pointer;">
+                <span class="text-primary fw-bold">+</span>
+                <span class="fw-semibold text-primary small ms-1">Add a comment</span>
+            </div>
+
+            <!-- Collapsible Form -->
+            <div class="collapse mt-3 text-start" th:id="'comment-form-' + ${correction.id}">
+                <div class="border-top pt-3">
+                    <form th:action="@{/modules/{id}/add-comment-correction(id=${correction.id})}"
+                          method="post"
+                          enctype="multipart/form-data">
+
+                        <!-- CSRF Protection -->
+                        <input type="hidden"
+                               th:if="${_csrf != null}"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+
+                        <div class="mb-2">
+                            <label th:for="'content-' + ${correction.id}" class="form-label fw-medium small">
+                                Your comment
+                            </label>
+                            <textarea th:id="'content-' + ${correction.id}"
+                                      name="content"
+                                      class="form-control form-control-sm"
+                                      rows="2"
+                                      maxlength="10000"
+                                      placeholder="Write your comment..."
+                                      required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label th:for="'file-' + ${correction.id}" class="form-label small text-muted">
+                                <i class="bi bi-paperclip me-1"></i>Attach a file (optional)
+                            </label>
+                            <input type="file"
+                                   th:id="'file-' + ${correction.id}"
+                                   name="file"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-send me-1"></i> Submit Comment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

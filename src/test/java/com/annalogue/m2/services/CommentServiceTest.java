@@ -52,7 +52,7 @@ class CommentServiceTest {
         when(commentRepository.save(any(CommentEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        CommentEntity result = commentService.addComment("Super !", 1L, 2L, null);
+        CommentEntity result = commentService.addCommentToPublication("Super !", 1L, 2L, null);
 
         ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
         verify(commentRepository).save(captor.capture());
@@ -70,7 +70,7 @@ class CommentServiceTest {
         when(userService.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(UploadFileException.class,
-                () -> commentService.addComment("Super !", 1L, 2L, null));
+                () -> commentService.addCommentToPublication("Super !", 1L, 2L, null));
 
         verifyNoInteractions(publicationService);
         verify(commentRepository, never()).save(any());
@@ -83,7 +83,7 @@ class CommentServiceTest {
         when(publicationService.findById(2L)).thenReturn(Optional.empty());
 
         assertThrows(UploadFileException.class,
-                () -> commentService.addComment("Super !", 1L, 2L, null));
+                () -> commentService.addCommentToPublication("Super !", 1L, 2L, null));
 
         verify(commentRepository, never()).save(any());
     }
@@ -125,7 +125,7 @@ class CommentServiceTest {
 
         MultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
 
-        CommentEntity result = commentService.addComment("Super !", 1L, 2L, file);
+        CommentEntity result = commentService.addCommentToPublication("Super !", 1L, 2L, file);
 
         verify(filesService).saveMultipartFile(file);
         ArgumentCaptor<CommentEntity> captor = ArgumentCaptor.forClass(CommentEntity.class);
@@ -170,5 +170,33 @@ class CommentServiceTest {
         assertNull(result);
         verify(commentRepository).findById(1L);
         verify(filesService, never()).loadAsResource(any());
+    }
+
+    @Test
+    void shouldAddCommentWithoutFile() throws UploadFileException {
+
+        UserEntity author = mock(UserEntity.class);
+        PublicationEntity publication = mock(PublicationEntity.class);
+
+        when(userService.findById(1L))
+                .thenReturn(Optional.of(author));
+
+        when(publicationService.findById(2L))
+                .thenReturn(Optional.of(publication));
+
+        when(commentRepository.save(any(CommentEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        CommentEntity result = commentService.addCommentToPublication(
+                "Super !", 1L, 2L, null
+        );
+
+        assertEquals("Super !", result.getContent());
+        assertSame(author, result.getAuthorComment());
+        assertSame(publication, result.getPublication());
+        assertNull(result.getPath());
+
+        verify(filesService, never()).saveMultipartFile(any());
+        verify(commentRepository).save(any(CommentEntity.class));
     }
 }

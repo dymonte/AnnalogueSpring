@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -128,6 +129,30 @@ public class UserAcceptanceTest {
         return null;
     }
 
+    // role written in the Gherkin -> role of the application
+    private Role role(String gherkinRole) {
+        return switch (gherkinRole.trim().toLowerCase()) {
+            case "administrateur" -> Role.ADMIN;
+            case "responsable module", "responsable de module" -> Role.RESPONSABLE;
+            case "membre" -> Role.ETUDIANT;
+            default -> throw new IllegalArgumentException("Unknown role in the Gherkin: " + gherkinRole);
+        };
+    }
+
+    // fills the login form and waits for the result: /home if accepted, /login?error if refused
+    private void login(String login, String password) {
+        page.navigate(url("/login"));
+        page.fill("#username", email(login));
+        page.fill("#password", password);
+        page.click("#login-btn");
+        page.waitForURL(u -> u.contains("/home") || u.contains("/login?error"));
+    }
+
+    // http status of a page, to check what the connected user is allowed to open
+    private int statusOf(String path) {
+        return page.navigate(url(path)).status();
+    }
+
     // ===== Soit / Et =====
 
     @Soit("l'utilisateur {string} est inscrit au site")
@@ -135,6 +160,16 @@ public class UserAcceptanceTest {
         if(!userService.existsByEmail(email(login))) {
             createUser(email(login), login, Role.ETUDIANT);
         };
+
+        assertTrue(userService.existsByEmail(email(login)));
+    }
+
+    @Soit("L'utilisateur {string} possède un compte {string} ayant comme mot de passe {string}")
+    public void lUtilisateurPossèdeUnCompteAyantCommeMotDePasse(String login, String gherkinRole, String password) {
+        if (!userService.existsByEmail(email(login))) {
+            userService.save(new UserEntity(email(login), passwordEncoder.encode(password), login,
+                    role(gherkinRole), null, null));
+        }
 
         assertTrue(userService.existsByEmail(email(login)));
     }
@@ -230,6 +265,17 @@ public class UserAcceptanceTest {
         page.waitForURL(url("/home"));
     }
 
+    @Quand("je m'authentifie avec l'identifiant {string} et le mot de passe {string}")
+    public void jeMAuthentifieAvecLIdentifiantEtLeMotDePasse(String login, String password) {
+        login(login, password);
+    }
+
+    // the password field is required in the form: any password is sent, the account does not exist
+    @Quand("je m'authentifie avec l'identifiant {string}")
+    public void jeMAuthentifieAvecLIdentifiant(String login) {
+        login(login, PASSWORD);
+    }
+
     // ===== Alors =====
 
     @Alors("le document {string} est affiché dans les résultats")
@@ -246,5 +292,25 @@ public class UserAcceptanceTest {
     @Alors("aucun document n'est affiché dans les résultats")
     public void aucunDocumentNEstAffichéDansLesRésultats() {
         assertTrue(page.locator("#result-list").count() == 0);
+    }
+
+    @Alors("je suis connecté en tant que {string} avec le rôle {string}")
+    public void jeSuisConnectéEnTantQueAvecLeRôle(String login, String gherkinRole) {
+        Role expected = role(gherkinRole);
+
+        // the user is logged in: redirected to /home, his name is in the navbar
+        assertTrue(page.url().endsWith("/home"));
+        assertThat(page.locator("#dropdownLogout"))
+                .containsText(Pattern.compile(login, Pattern.CASE_INSENSITIVE));
+
+        // the role is the one of the account: what he can open depends on it (SecurityConfig)
+        assertEquals(expected == Role.ADMIN ? 200 : 403, statusOf("/admin"));
+        assertEquals(expected == Role.RESPONSABLE ? 200 : 403, statusOf("/modules/add"));
+    }
+
+    @Alors("j'ai un message d'erreur")
+    public void jAiUnMessageDErreur() {
+        assertTrue(page.url().contains("/login"));
+        assertThat(page.locator("#error")).containsText(message("error.login.generic"));
     }
 }

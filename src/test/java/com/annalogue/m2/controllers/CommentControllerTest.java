@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.multipart.MultipartFile;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.Optional;
 
@@ -36,6 +37,9 @@ class CommentControllerTest {
     @Mock
     private Model model;
 
+    @Mock
+    private RedirectAttributes redirectAttribute;
+
     @InjectMocks
     private CommentController commentController;
 
@@ -54,16 +58,16 @@ class CommentControllerTest {
 
         when(publicationService.findById(2L)).thenReturn(Optional.of(publication));
 
-        String view = commentController.addComment(2L, "Great", null,  model);
+        String view = commentController.addCommentToPublication(2L, "Great", null, redirectAttribute);
 
-        assertEquals("redirect:/modules/detail/7", view);
-        verify(commentService).addComment("Great", 1L, 2L, null);
+        assertEquals("redirect:/modules/7", view);
+        verify(commentService).addCommentToPublication("Great", 1L, 2L, null);
     }
 
     @Test
     void shouldDeleteCommentAndRedirect() {
 
-        String view = commentController.deleteStudent(3L);
+        String view = commentController.deleteComment(1L, 3L, redirectAttribute);
 
         assertEquals("redirect:/", view);
         verify(commentService).deleteComment(3L);
@@ -86,9 +90,10 @@ class CommentControllerTest {
 
         MultipartFile file = new MockMultipartFile("file", "test.txt", "text/plain", "test content".getBytes());
 
-        String view = commentController.addComment(2L, "Great with file", file, model);
+        String view = commentController.addCommentToPublication(2L, "Great with file", file, redirectAttribute);
 
-        assertEquals("redirect:/modules/detail/7", view);
-        verify(commentService).addComment("Great with file", 1L, 2L, file);
+        assertEquals("redirect:/modules/7", view);
+        verify(commentService).addCommentToPublication("Great with file", 1L, 2L, file);
     }
+
 }
