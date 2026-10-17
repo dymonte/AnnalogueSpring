@@ -8,10 +8,7 @@ import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
-import io.cucumber.java.After;
-import io.cucumber.java.AfterAll;
-import io.cucumber.java.Before;
-import io.cucumber.java.BeforeAll;
+import io.cucumber.java.*;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Quand;
 import io.cucumber.java.fr.Soit;
@@ -116,7 +113,7 @@ public class RegisterUserAcceptanceTest {
     }
 
     @Soit("je suis connecté en tant que {string} avec le rôle {string}")
-    public void je_suis_connecte_avec_le_role(String username, String role) {
+    public void je_suis_connecte_en_tant_que_avec_le_role(String username, String role) {
         Role r = switch (role.toLowerCase()) {
             case "administrateur" -> Role.ADMIN;
             case "responsable de module" -> Role.RESPONSABLE;
@@ -540,4 +537,5 @@ public class RegisterUserAcceptanceTest {
     public void tous_les_etudiants_ont_acces(String nomCohorte, String nomModule) {
         // TODO :
     }
+
 }
