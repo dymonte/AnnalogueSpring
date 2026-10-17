@@ -17,12 +17,12 @@
         <div class="card shadow-sm mx-auto text-center" style="max-width: 500px;">
             <div class="card-body p-5">
 
-                <h1 class="display-4 text-danger" th:text="${error_code}">Error</h1>
+                <h1 id ="error-code" class="display-4 text-danger" th:text="${error_code}">Error</h1>
 
                 <p class="h5 mb-3" th:text="#{error.page.heading}">Something went wrong!</p>
 
                 <p class="lead" th:if="${error_code == 404}" th:text="#{error.notfound}"></p>
-                <p class="lead" th:if="${error_code == 403}" th:text="#{error.forbidden}"></p>
+                <p id="forbidden-msg" class="lead" th:if="${error_code == 403}" th:text="#{error.forbidden}"></p>
                 <p class="lead" th:if="${error_code == 500}" th:text="#{error.server}"></p>
 
                 <p class="lead" th:if="${error_code != 404 and error_code != 403 and error_code != 500}"

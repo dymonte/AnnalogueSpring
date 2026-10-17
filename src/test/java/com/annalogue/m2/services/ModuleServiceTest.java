@@ -21,9 +21,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.List;
 import java.util.Optional;
@@ -57,43 +54,64 @@ class ModuleServiceTest {
         when(iUserService.getCurrentUser()).thenReturn(user);
     }
 
+
     // ===== Creation =====
 
     @Test
-    void shouldCreateModuleWithTrimmedNameAndLoggedInUserAsResponsible() {
-        loggedInAs(teacher);
+    void shouldCreateModuleWithTrimmedNameAndResponsible() {
+        when(moduleRepository.existsByNameIgnoreCase("MOIA"))
+                .thenReturn(false);
+
         when(moduleRepository.save(any(ModuleEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ModuleEntity created = moduleService.createModule("  MOIA  ");
+        when(inscriptionRepository.save(any(InscriptionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        ArgumentCaptor<ModuleEntity> captor = ArgumentCaptor.forClass(ModuleEntity.class);
-        verify(moduleRepository).save(captor.capture());
+        ModuleEntity created =
+                moduleService.createModule("  MOIA  ", teacher);
 
-        assertEquals("MOIA", captor.getValue().getName());
-        assertEquals(teacher, captor.getValue().getResponsible());
+        ArgumentCaptor<ModuleEntity> moduleCaptor =
+                ArgumentCaptor.forClass(ModuleEntity.class);
+
+        verify(moduleRepository).save(moduleCaptor.capture());
+
+        assertEquals("MOIA", moduleCaptor.getValue().getName());
+        assertEquals(teacher, moduleCaptor.getValue().getResponsible());
         assertEquals("MOIA", created.getName());
+
+        ArgumentCaptor<InscriptionEntity> inscriptionCaptor =
+                ArgumentCaptor.forClass(InscriptionEntity.class);
+
+        verify(inscriptionRepository).save(inscriptionCaptor.capture());
+
+        InscriptionEntity inscription = inscriptionCaptor.getValue();
+
+        assertEquals(teacher, inscription.getUser());
+        assertEquals(created, inscription.getModule());
+        assertEquals(InscriptionType.INTERVENANT,
+                inscription.getInscriptionType());
+        assertTrue(inscription.isEditor());
     }
 
     @Test
     void shouldSaveTheModuleOnlyOnce() {
-        loggedInAs(teacher);
+        when(moduleRepository.existsByNameIgnoreCase("MOIA"))
+                .thenReturn(false);
+
         when(moduleRepository.save(any(ModuleEntity.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
-        moduleService.createModule("MOIA");
+        when(inscriptionRepository.save(any(InscriptionEntity.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(moduleRepository, times(1)).save(any(ModuleEntity.class));
-    }
+        moduleService.createModule("MOIA", teacher);
 
-    @Test
-    void shouldPropagateExceptionWhenNobodyIsLoggedIn() {
-        when(iUserService.getCurrentUser())
-                .thenThrow(new IllegalStateException("No users logged in"));
+        verify(moduleRepository, times(1))
+                .save(any(ModuleEntity.class));
 
-        assertThrows(IllegalStateException.class, () -> moduleService.createModule("MOIA"));
-
-        verify(moduleRepository, never()).save(any());
+        verify(inscriptionRepository, times(1))
+                .save(any(InscriptionEntity.class));
     }
 
     @Test
@@ -113,7 +131,8 @@ class ModuleServiceTest {
 
     @Test
     void shouldRejectExistingName() {
-        when(moduleRepository.existsByNameIgnoreCase("MOIA")).thenReturn(true);
+        when(moduleRepository.existsByNameIgnoreCase("MOIA"))
+                .thenReturn(true);
 
         assertInvalid("error.module.name.exists", "MOIA");
     }
@@ -121,11 +140,16 @@ class ModuleServiceTest {
     private void assertInvalid(String expectedKey, String name) {
         InvalidModuleDataException exception = assertThrows(
                 InvalidModuleDataException.class,
-                () -> moduleService.createModule(name));
+                () -> moduleService.createModule(name, teacher)
+        );
 
         assertEquals(expectedKey, exception.getMessageKey());
-        verify(moduleRepository, never()).save(any());
+
+        verify(moduleRepository, never()).save(any(ModuleEntity.class));
+        verify(inscriptionRepository, never())
+                .save(any(InscriptionEntity.class));
     }
+
 
     // ===== Reading =====
 

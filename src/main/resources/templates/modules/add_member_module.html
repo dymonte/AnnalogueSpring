@@ -47,7 +47,7 @@
                                 </option>
                             </select>
 
-                            <div class="invalid-feedback"
+                            <div id="moduleIdError" class="invalid-feedback"
                                  th:if="${moduleIdError != null}"
                                  th:text="${moduleIdError}">
                             </div>
@@ -73,13 +73,13 @@
                                  th:text="${emailUserError}">
                             </div>
 
-                            <div class="invalid-feedback"
+                            <div id="userAlreadyRegisterError" class="invalid-feedback"
                                  th:if="${userAlreadyRegisterError != null}"
                                  th:text="${userAlreadyRegisterError}">
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button id="enrolle-btn" type="submit" class="btn btn-primary w-100">
                             Register
                         </button>
 
