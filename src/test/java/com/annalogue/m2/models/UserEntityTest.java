@@ -53,4 +53,22 @@ class UserEntityTest {
 
         assertEquals(StudyLevel.M1, user.getLevel());
     }
+
+    @Test
+    void shouldHaveNotificationsOnByDefault() {
+        UserEntity user = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, 2026, "A");
+
+        assertTrue(user.isNotificationsEnabled());
+    }
+
+    @Test
+    void shouldTurnNotificationsOffAndOn() {
+        UserEntity user = new UserEntity();
+
+        user.setNotificationsEnabled(false);
+        assertFalse(user.isNotificationsEnabled());
+
+        user.setNotificationsEnabled(true);
+        assertTrue(user.isNotificationsEnabled());
+    }
 }

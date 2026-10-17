@@ -20,4 +20,8 @@ public interface INotificationService {
     void notifyEnrollment(UserEntity user, ModuleEntity module);
 
     void notifyPublicationAdded(PublicationEntity publication);
+
+    void enableNotifications(Long userId);
+
+    void disableNotifications(Long userId);
 }

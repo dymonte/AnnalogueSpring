@@ -175,4 +175,17 @@ class MessagesTest {
         assertTrue(messageSource.getMessage("notification.MODULE_ENROLLMENT", new Object[] {"TF"}, Locale.ENGLISH)
                 .contains("TF"));
     }
+
+    @Test
+    void shouldContainNotificationSettingsMessages() {
+        assertFalse(message("notification.status.enabled").isBlank());
+        assertFalse(message("notification.status.disabled").isBlank());
+        assertFalse(message("notification.enable").isBlank());
+        assertFalse(message("notification.disable").isBlank());
+        assertFalse(message("success.notification.enabled").isBlank());
+        assertFalse(message("success.notification.disabled").isBlank());
+        assertFalse(message("error.notification.already.enabled").isBlank());
+        assertFalse(message("error.notification.already.disabled").isBlank());
+        assertFalse(message("error.notification.user.notfound").isBlank());
+    }
 }

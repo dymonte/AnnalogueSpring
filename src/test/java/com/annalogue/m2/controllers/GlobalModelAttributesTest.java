@@ -14,7 +14,7 @@ import org.springframework.ui.ExtendedModelMap;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class GlobalModelAttributesTest {
@@ -26,8 +26,7 @@ class GlobalModelAttributesTest {
 
     @Test
     void shouldAddTheAuthenticatedUsersNotificationsAndUnreadCount() {
-        UserEntity user = new UserEntity("student@example.com", "hash", "student", Role.ETUDIANT, 2026, "A");
-        user.setId(7L);
+        UserEntity user = student();
         List<NotificationEntity> notifications =
                 List.of(new NotificationEntity(user, NotificationType.MODULE_ENROLLMENT, "MOIA"));
         when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -43,6 +42,29 @@ class GlobalModelAttributesTest {
     }
 
     @Test
+    void shouldSendThatTheNotificationsAreOnByDefault() {
+        UserEntity user = student();
+        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication(user.getEmail()), model);
+
+        assertEquals(true, model.get("notificationsEnabled"));
+    }
+
+    @Test
+    void shouldSendThatTheNotificationsAreOff() {
+        UserEntity user = student();
+        user.setNotificationsEnabled(false);
+        when(userService.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication(user.getEmail()), model);
+
+        assertEquals(false, model.get("notificationsEnabled"));
+    }
+
+    @Test
     void shouldProvideEmptyNotificationDefaultsForAnonymousUsers() {
         ExtendedModelMap model = new ExtendedModelMap();
 
@@ -50,7 +72,29 @@ class GlobalModelAttributesTest {
 
         assertEquals(List.of(), model.get("notifications"));
         assertEquals(0L, model.get("unseenNotifications"));
+        assertFalse(model.containsAttribute("username"));
+        assertFalse(model.containsAttribute("notificationsEnabled"));
         verifyNoInteractions(userService, notificationService);
+    }
+
+    @Test
+    void shouldOnlyKeepTheDefaultsWhenTheUserIsNotFound() {
+        when(userService.findByEmail("student@example.com")).thenReturn(Optional.empty());
+
+        ExtendedModelMap model = new ExtendedModelMap();
+        globalModelAttributes.addGlobalAttributes(authentication("student@example.com"), model);
+
+        assertEquals(List.of(), model.get("notifications"));
+        assertEquals(0L, model.get("unseenNotifications"));
+        assertFalse(model.containsAttribute("username"));
+        assertFalse(model.containsAttribute("notificationsEnabled"));
+        verifyNoInteractions(notificationService);
+    }
+
+    private UserEntity student() {
+        UserEntity user = new UserEntity("student@example.com", "hash", "student", Role.ETUDIANT, 2026, "A");
+        user.setId(7L);
+        return user;
     }
 
     private UsernamePasswordAuthenticationToken authentication(String email) {
