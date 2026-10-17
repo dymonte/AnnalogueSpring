@@ -16,11 +16,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class InscriptionService implements IInscriptionService{
 
     private final InscriptionRepository inscriptionRepository;
@@ -31,6 +33,7 @@ public class InscriptionService implements IInscriptionService{
 
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
+
     public InscriptionService(
             InscriptionRepository inscriptionRepository,
             ModuleRepository moduleRepository,
@@ -43,30 +46,37 @@ public class InscriptionService implements IInscriptionService{
         this.publicationRepository = publicationRepository;
         this.notificationService = notificationService;
     }
+
     @Override
     public Optional<InscriptionEntity> findById(Long id) {
         return inscriptionRepository.findById(id);
     }
+
     @Override
     public List<InscriptionEntity> findAll() {
         return inscriptionRepository.findAll();
     }
+
     @Override
     public List<InscriptionEntity>  findByModuleId(Long id) {
         return inscriptionRepository.findByModuleId(id);
     }
+
     @Override
     public List<InscriptionEntity>   findByUserId(Long id) {
         return inscriptionRepository.findByUserId(id);
     }
 
+    @Override
     public List<InscriptionEntity> findByEditorFalse(){
         return inscriptionRepository.findByEditorFalse();
     }
 
+    @Override
     public List<InscriptionEntity> findByEditorTrue(){
         return inscriptionRepository.findByEditorTrue();
     }
+
     @Override
     public void deleteById(Long id){inscriptionRepository.deleteById(id); }
 
@@ -77,6 +87,7 @@ public class InscriptionService implements IInscriptionService{
 
     @Override
     public boolean existsById(Long id){return inscriptionRepository.existsById(id);}
+
     @Override
     public List<InscriptionEntity> findInscriptions(UserEntity currentUser) {
 
@@ -94,6 +105,7 @@ public class InscriptionService implements IInscriptionService{
 
         return inscriptions;
     }
+
     @Override
     @Transactional
     public boolean toggleEditor(Long inscriptionId) {
@@ -117,6 +129,7 @@ public class InscriptionService implements IInscriptionService{
         inscription.setEditor(!inscription.isEditor());
         return inscription.isEditor();
     }
+
     @Override
     @Transactional
     public InscriptionEntity save(UserEntity currentUser,String userEmail,Long moduleId) {
@@ -208,6 +221,7 @@ public class InscriptionService implements IInscriptionService{
         return saved;
     }
 
+    @Override
     public boolean canAccessFile(String email, Long fileId) throws UserNotFoundException, StorageFileNotFoundException {
         UserEntity user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -216,17 +230,20 @@ public class InscriptionService implements IInscriptionService{
         return hasReaderAccess(user, module);
     }
 
+    @Override
     public boolean hasWriterAccess(UserEntity user, ModuleEntity module) {
         InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
 
         return user.getRole() == Role.ADMIN || (inscription != null && inscription.isEditor());
     }
 
+    @Override
     public boolean hasReaderAccess(UserEntity user, ModuleEntity module) {
         InscriptionEntity inscription = inscriptionRepository.findByUserAndModule(user, module).orElse(null);
         return user.getRole() == Role.ADMIN || inscription != null; // all inscription are at least reader
     }
 
+    @Override
     public List<ModuleEntity> getAllModulesEditable(UserEntity user) {
         System.out.println("DEBUG getAllModulesEditable: User id = " + user.getId() + ", role = " + user.getRole());
 
@@ -240,4 +257,19 @@ public class InscriptionService implements IInscriptionService{
                 .map(InscriptionEntity::getModule)
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<ModuleEntity> getModulesAsIntervenant(UserEntity user) {
+        if (user == null) {
+            return List.of();
+        }
+
+        return inscriptionRepository.findByUserId(user.getId()).stream()
+                // Search by INSCRIPTION TYPE
+                .filter(inscription -> inscription.getInscriptionType() == InscriptionType.INTERVENANT)
+                .map(InscriptionEntity::getModule)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
 }
