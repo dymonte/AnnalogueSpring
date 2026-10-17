@@ -67,7 +67,7 @@ public class ModuleCreationAcceptanceTest {
         return messageSource.getMessage(key, args, Locale.ENGLISH);
     }
 
-    private void submitModuleForm(String name) {
+    private void addModule(String name) {
         page().navigate(url("/modules/add"));
         page().locator("#name").fill(name);
         page().locator("form[action='/modules/add'] button[type=submit]").click();
@@ -76,5 +76,30 @@ public class ModuleCreationAcceptanceTest {
     private List<String> createdModuleNames() {
         page().navigate(url("/home?filter=created"));
         return page().locator(".module-name").allInnerTexts();
+    }
+
+    // 1
+
+    @Quand("je crée un nouveau module intitulé {string}")
+    public void IcreateModule(String name) {
+        addModule(name);
+        page().waitForURL(url("/home"));
+    }
+
+    @Alors("le module {string} est créé dans le catalogue")
+    public void ModuleIsCreated(String name) {
+        assertTrue(moduleService.existsByName(name));
+        assertTrue(page().locator("body").innerText().contains(message("success.module.created", name)));
+    }
+
+    @Et("je suis désigné comme responsable du module {string}")
+    public void IsResponsable(String name) {
+        ModuleEntity module = moduleService.findByName(name).orElseThrow();
+        assertEquals(loginSteps.getLoggedUser().getEmail(), module.getResponsible().getEmail());
+    }
+
+    @Et("le module {string} apparaît dans ma liste de modules gérés")
+    public void ModuleIsInMyFields(String name) {
+        assertTrue(createdModuleNames().contains(name));
     }
 }
