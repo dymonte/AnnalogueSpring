@@ -8,8 +8,8 @@ import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.UserEntity;
 import com.annalogue.m2.services.IInscriptionService;
-import com.annalogue.m2.services.NotifyService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.INotifyService;
+import com.annalogue.m2.services.IUserService;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,14 +31,14 @@ public class InscriptionController {
 
         private static final String FORM_VIEW = "modules/add_member_module";
 
-        private final UserService userService;
+        private final IUserService userService;
         private final IInscriptionService inscriptionService;
-        private final NotifyService notifyService;
+        private final INotifyService notifyService;
 
         public InscriptionController(
-                        UserService userService,
+                        IUserService userService,
                         IInscriptionService inscriptionService,
-                        NotifyService notifyService) {
+                        INotifyService notifyService) {
 
                 this.userService = userService;
                 this.inscriptionService = inscriptionService;

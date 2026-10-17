@@ -4,8 +4,9 @@ import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.services.HandleUserService;
+import com.annalogue.m2.services.INotificationService;
+import com.annalogue.m2.services.IUserService;
 import com.annalogue.m2.services.RoleService;
-import com.annalogue.m2.services.UserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,7 +20,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import com.annalogue.m2.services.HandPasswordService;
 
-import java.util.Arrays;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
@@ -53,7 +53,10 @@ class UserControllerTest {
     private HandPasswordService handPasswordService;
 
     @MockitoBean
-    private UserService userService;
+    private IUserService userService;
+
+    @MockitoBean
+    private INotificationService notificationService;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;

@@ -2,7 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.services.IModuleService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.IUserService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -20,10 +20,10 @@ public class HomeController {
     static final String FILTER_CREATED = "created";
     static final String FILTER_ENROLLED = "enrolled";
 
-    private final UserService userService;
+    private final IUserService userService;
     private final IModuleService moduleService;
 
-    public HomeController(UserService userService, IModuleService moduleService) {
+    public HomeController(IUserService userService, IModuleService moduleService) {
         this.userService = userService;
         this.moduleService = moduleService;
     }
