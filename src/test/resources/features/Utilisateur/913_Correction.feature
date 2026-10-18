@@ -21,7 +21,7 @@ Fonctionnalité: Utilisateur - Correction
     | "Membre"              | "Etudiant"    |
      
   Scénario: ajout correction déjà existante membre
-    Soit Je suis connecté en tant que "user" avec le rôle <role>
+    Soit Je suis connecté en tant que "user" avec le rôle "Membre"
     Et Je suis inscrit au module "Test fonctionnel"
     Et Je suis sur la page du module "Test fonctionnel"
     Et Le sujet "Sujet1" existe sur le module "Test fonctionnel"

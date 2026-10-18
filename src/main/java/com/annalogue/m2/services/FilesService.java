@@ -39,7 +39,7 @@ public class FilesService implements IFilesService{
 
 
         //save the file in the storage
-        File uploadDirectory = new File(uploadDir);
+        File uploadDirectory = new File(uploadDir).getAbsoluteFile();
 
         if (!uploadDirectory.exists() && !uploadDirectory.mkdirs()) {
             throw new UploadFileException("error.upload.cannotcreatedir");
