@@ -118,7 +118,7 @@ public class UserAcceptanceTest {
         currentCorrection = null;
     }
 
-    @After
+    @After(order = 40000)
     public void teardownScenario() {
         if (context != null) {
             context.close();
