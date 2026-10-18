@@ -205,7 +205,6 @@ class ModuleControllerTest {
     @Test
     void shouldShowEmptyModulePage() throws Exception {
         ModuleEntity module = mock(ModuleEntity.class);
-
         when(module.getId()).thenReturn(1L);
         when(module.getName()).thenReturn("MOIA");
         when(module.getResponsible()).thenReturn(teacher);
@@ -234,7 +233,6 @@ class ModuleControllerTest {
     @Test
     void shouldShowFilledModulePage() throws Exception {
         ModuleEntity module = mock(ModuleEntity.class);
-
         when(module.getId()).thenReturn(1L);
         when(module.getName()).thenReturn("MOIA");
         when(module.getResponsible()).thenReturn(teacher);
@@ -269,5 +267,20 @@ class ModuleControllerTest {
 
         mockMvc.perform(get("/modules/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturn403WhenUserIsNotEnrolled() throws Exception {
+        ModuleEntity module = mock(ModuleEntity.class);
+        when(module.getResponsible()).thenReturn(teacher);
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+
+        UserEntity user = new UserEntity("user@example.com", "hash", "user", Role.PROF, null, null);
+        user.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(inscriptionService.hasReaderAccess(eq(user), any(ModuleEntity.class))).thenReturn(false);
+
+        mockMvc.perform(get("/modules/1"))
+                .andExpect(status().isForbidden());
     }
 }
