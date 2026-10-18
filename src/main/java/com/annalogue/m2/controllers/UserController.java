@@ -115,22 +115,7 @@ public class UserController {
         return "admin/add_member";
     }
         // members list with a delete button (admin only, see SecurityConfig: /members/**)
-    @GetMapping("/members")
-    public String listMembers(@RequestParam(required = false) String role, Model model) {
-        // empty or unknown filter: all the members
-        Role selectedRole = (role != null && !role.isBlank() && roleService.exists(role))
-                ? roleService.fromString(role)
-                : null;
 
-        model.addAttribute("users", selectedRole == null
-                ? handleUserService.findAllUsers()
-                : handleUserService.findUsersByRole(selectedRole));
-        model.addAttribute("filterRoles", roleService.getRoles());
-        model.addAttribute("selectedFilter", selectedRole == null ? "" : selectedRole.name());
-        // roles offered in the "change role" select of a teacher
-        model.addAttribute("teacherRoles", roleService.getTeacherRoles());
-        return "admin/members";
-    }
 
     // the user is identified by his id (the enteredUsername is not unique)
     @PostMapping("/members/{id}/delete")
@@ -150,7 +135,7 @@ public class UserController {
         }
 
         // back to the list in both cases, with the message
-        return "redirect:/members";
+        return "redirect:/home";
     }
 
     // the admin switches a teacher between Teacher and Module manager (admin only, see SecurityConfig: /members/**)
@@ -167,11 +152,11 @@ public class UserController {
 
         if (role == null || role.isBlank()) {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.empty");
-            return "redirect:/members";
+            return "redirect:/home";
         }
         if (!roleService.exists(role)) {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.invalid");
-            return "redirect:/members";
+            return "redirect:/home";
         }
 
         try {
@@ -188,7 +173,7 @@ public class UserController {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.change.database");
         }
 
-        return "redirect:/members";
+        return "redirect:/home";
     }
     // lists shown in the form's dropdowns
     private void addFormLists(Model model) {
