@@ -6,6 +6,7 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ class ModuleControllerTest {
 
     private final IModuleService moduleService = mock(IModuleService.class);
     private final IUserService userService = mock(IUserService.class);
-
+    private final IInscriptionService inscriptionService = mock(IInscriptionService.class);
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
 
@@ -39,7 +40,7 @@ class ModuleControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new ModuleController(moduleService,userService))
+                .standaloneSetup(new ModuleController(moduleService,userService, inscriptionService))
                 .build();
     }
 

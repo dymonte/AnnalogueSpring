@@ -542,6 +542,7 @@ public class RegisterUserAcceptanceTest {
     public void tous_les_etudiants_ont_acces(String nomCohorte, String nomModule) {
         // TODO :
     }
+
     public Page getPage() {
         return page;
     }
