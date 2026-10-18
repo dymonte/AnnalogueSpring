@@ -194,4 +194,12 @@ public class ModuleCreationAcceptanceTest {
         assertEquals(message("error.module.name.exists"), page().locator("#name-error").innerText().trim());
         assertEquals(name, page().locator("#name").inputValue());
     }
+
+    @Alors("l'action m'est refusée")
+    public void action_est_refusee(){
+        //syncWithLoggedUser();
+
+        String url = page().url();
+        assertEquals(url, "http://localhost:" + port + "/modules/add");
+    }
 }

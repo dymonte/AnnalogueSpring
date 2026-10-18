@@ -115,7 +115,7 @@ public class RegisterUserAcceptanceTest {
         }
     }
 
-    @Soit("Je Suis connecté en tant que {string} avec le rôle {string}")
+    @Soit("Étant connecté en tant que {string} avec le rôle {string}")
     public void Je_Suis_connecte_avec_le_role(String username, String role) {
         Role r = switch (role.toLowerCase()) {
             case "administrateur" -> Role.ADMIN;
@@ -498,13 +498,12 @@ public class RegisterUserAcceptanceTest {
         );
     }
 
-    @Alors("l'action m'est refusée")
+    @Alors("L’exécution de cette action m’est interdite")
     public void action_est_refusee(){
-        syncWithLoggedUser();
+        //syncWithLoggedUser();
 
         String url = page.url();
-        assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new")
-                || url.equals("http://localhost:" + port + "/modules/add"));
+        assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new"));
     }
 
     @Et("aucun membre n'est ajouté au module {string}")

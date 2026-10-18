@@ -115,7 +115,7 @@ public class UnregisterUserAcceptanceTest {
         }
     }
 
-    @Soit("je suis connecté en tant que {string} avec le rôle {string}")
+    @Soit("En tant que {string} avec le rôle {string}")
     public void je_suis_connecte_avec_le_role(String username, String role) {
         Role r = switch (role.toLowerCase()) {
             case "administrateur" -> Role.ADMIN;
