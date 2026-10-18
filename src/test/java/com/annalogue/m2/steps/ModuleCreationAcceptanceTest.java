@@ -28,8 +28,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class ModuleCreationAcceptanceTest {
 
+
     @Autowired
-    private RegisterUserAcceptanceTest loginSteps;
+    private UserAcceptanceTest userSteps;
 
     @Autowired
     private IModuleService moduleService;
@@ -75,7 +76,7 @@ public class ModuleCreationAcceptanceTest {
     }
 
     private Page page() {
-        return loginSteps.getPage();
+        return userSteps.getPage();
     }
 
     private String message(String key, Object... args) {
@@ -110,7 +111,7 @@ public class ModuleCreationAcceptanceTest {
     @Et("je suis désigné comme responsable du module {string}")
     public void IsResponsable(String name) {
         ModuleEntity module = moduleService.findByName(name).orElseThrow();
-        assertEquals(loginSteps.getLoggedUser().getEmail(), module.getResponsible().getEmail());
+        assertEquals(userSteps.getCurrentUser().getEmail(), module.getResponsible().getEmail());
     }
 
     @Et("le module {string} apparaît dans ma liste de modules gérés")
@@ -123,7 +124,7 @@ public class ModuleCreationAcceptanceTest {
 
     @Et("je gère déjà le module {string}")
     public void ImResponsableForOtherModules(String name) {
-        moduleService.createModule(name, loginSteps.getLoggedUser());
+        moduleService.createModule(name, userSteps.getCurrentUser());
     }
 
     @Et("les modules {string} et {string} apparaissent dans ma liste de gestion")
