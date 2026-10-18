@@ -20,6 +20,9 @@ import io.cucumber.java.fr.Soit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import com.annalogue.m2.services.IPublicationService;
+import com.microsoft.playwright.options.FilePayload;
+import java.nio.charset.StandardCharsets;
 
 import java.util.Objects;
 
@@ -42,6 +45,9 @@ public class NotificationAcceptanceTest {
 
     @Autowired
     private IInscriptionService inscriptionService;
+
+    @Autowired
+    private IPublicationService publicationService;
 
     @Autowired
     private INotificationService notificationService;
@@ -113,7 +119,9 @@ public class NotificationAcceptanceTest {
         return page().locator("main").innerText();
     }
 
-    // 1
+    // ---------------------- 1
+
+
     @Soit("un module {string} existe")
     public void moduleExist(String moduleName) {
         UserEntity responsable = createUser(RESP_EMAIL, Role.RESPONSABLE);
@@ -158,7 +166,7 @@ public class NotificationAcceptanceTest {
     }
 
 
-    // 2
+    //---------------------- 2
 
     @Soit("l'administrateur est connecté")
     public void adminIsLoggedIn() {
@@ -187,4 +195,46 @@ public class NotificationAcceptanceTest {
         assertTrue(pageText.contains("Welcome! The administrator created your account."));
     }
 
+
+    // ------------------------ 3
+
+    @Et("{string} est inscrit au module {string}")
+    public void UserSub(String email, String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName).get();
+        UserEntity responsable = userService.findByEmail(RESP_EMAIL).get();
+        inscriptionService.save(responsable, email, module.getId());
+
+        assertTrue(isEnrolled(email, moduleName));
+    }
+
+
+    @Quand("le responsable du module {string} ajoute un sujet")
+    public void RespAddsSujet(String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName).get();
+        login(RESP_EMAIL);
+
+        page().navigate(url("/upload"));
+        byte[] pdf = "%PDF-1.4 sujet".getBytes(StandardCharsets.UTF_8);
+        page().locator("#fileInput").setInputFiles(new FilePayload("sujet.pdf", "application/pdf", pdf));
+        page().locator("#name").fill("Sujet");
+        page().locator("#description").fill("Exam subject");
+        page().locator("#module").selectOption(String.valueOf(module.getId()));
+        page().locator("#fileType").selectOption("EXAM");
+        page().locator("form[action='/files'] button[type=submit]").click();
+        page().locator(".alert").first().waitFor();
+        String alertText = page().locator(".alert").first().innerText();
+        assertTrue(page().locator(".alert-success").count() > 0, "Upload failed: " + alertText);
+
+        assertTrue(publicationService.findByName("Sujet").isPresent());
+    }
+
+
+
+    @Alors("le système doit notifier {string} qu'un sujet a été ajouté au module {string}")
+    public void NotifiedSujetAdded(String email, String moduleName) {
+        assertTrue(hasNotification(email, NotificationType.PUBLICATION_ADDED, moduleName));
+
+        String pageText = notificationsPageText(email);
+        assertTrue(pageText.contains("A new subject was added to the module " + moduleName + "."));
+    }
 }
