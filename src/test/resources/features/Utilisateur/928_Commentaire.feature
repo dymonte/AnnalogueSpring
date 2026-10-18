@@ -50,7 +50,7 @@ Fonctionnalité: Utilisateur - Commentaire
   Scénario: Ajout commentaire correction responsable
     Soit Je suis connecté en tant que "user" avec le rôle "Responsable module"
     Et Je suis inscrit au module "Test fonctionnel"
-    Et J'ai le role <rolemodule> pour le module "Test fonctionnel"
+    Et J'ai le role "intervenant" pour le module "Test fonctionnel"
     Et Je suis sur la page du module "Test fonctionnel"
     Et Le sujet "Sujet1" existe sur le module "Test fonctionnel"
     Et Le sujet "Sujet1" du module "Test fonctionnel" dispose de la correction "correction1"
@@ -105,7 +105,7 @@ Fonctionnalité: Utilisateur - Commentaire
   Scénario: Ajout commentaire correction
     Soit Je suis connecté en tant que "user" avec le rôle "Responsable module"
     Et Je suis inscrit au module "Test fonctionnel"
-    Et J'ai le role <rolemodule> pour le module "Test fonctionnel"
+    Et J'ai le role "intervenant" pour le module "Test fonctionnel"
     Et Je suis sur la page du module "Test fonctionnel"
     Et Le sujet "Sujet1" existe sur le module "Test fonctionnel"
     Et Le sujet "Sujet1" du module "Test fonctionnel" dispose de la correction "correction1"

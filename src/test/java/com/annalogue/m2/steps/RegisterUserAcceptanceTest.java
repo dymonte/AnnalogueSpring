@@ -112,38 +112,6 @@ public class RegisterUserAcceptanceTest {
         }
     }
 
-    @Soit("je suis connecté en tant que {string} avec le rôle {string}")
-    public void je_suis_connecte_en_tant_que_avec_le_role(String username, String role) {
-        Role r = switch (role.toLowerCase()) {
-            case "administrateur" -> Role.ADMIN;
-            case "responsable de module" -> Role.RESPONSABLE;
-            case "membre" -> Role.PROF;
-            default -> Role.ETUDIANT;
-        };
-
-        user = new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                r,
-                0,
-                "g"
-        );
-
-        userService.save(user);
-
-        page.navigate("http://localhost:" + port + "/login");
-        page.locator("#username").fill(username + "@example.com");
-        page.locator("#password").fill(PASSWORD);
-        page.locator("#login-btn").click();
-
-        page.waitForURL("http://localhost:" + port + "/home");
-
-        assertEquals(
-                "http://localhost:" + port + "/home",
-                page.url()
-        );
-    }
 
     @Et("je gère le module {string}")
     public void je_gere_le_module(String name) {

@@ -1,6 +1,7 @@
 package com.annalogue.m2.steps;
 
 import com.annalogue.m2.models.*;
+import com.annalogue.m2.repositories.CommentRepository;
 import com.annalogue.m2.repositories.CorrectionRepository;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
@@ -65,8 +66,13 @@ public class UserAcceptanceTest {
     @Autowired
     private CorrectionRepository correctionRepository;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
     @LocalServerPort
     private int port;
+
+    private CorrectionEntity currentCorrection;
 
     // shared between all the scenarios
     static Playwright playwright;
@@ -109,6 +115,7 @@ public class UserAcceptanceTest {
         currentSubject = null;
         currentCorrectionTitle = null;
         correctionSubmitted = false;
+        currentCorrection = null;
     }
 
     @After
@@ -116,6 +123,7 @@ public class UserAcceptanceTest {
         if (context != null) {
             context.close();
         }
+        commentRepository.deleteAllInBatch();
         correctionRepository.deleteAllInBatch();
         publicationService.deleteAll();
         inscriptionService.deleteAll();
@@ -223,6 +231,44 @@ public class UserAcceptanceTest {
 
     private String modulePageUrl(ModuleEntity module) {
         return url("/modules/" + module.getId());
+    }
+
+    private String detailsPageUrl(PublicationEntity subject) {
+        return url("/publications/" + subject.getId() + "/details");
+    }
+
+    // form of the details page of a subject (the navbar has other forms: the action identifies it)
+    private String subjectCommentForm(PublicationEntity subject) {
+        return "form[action$='/publications/" + subject.getId() + "/add-comment']";
+    }
+
+    private String correctionCommentForm(CorrectionEntity correction) {
+        return "form[action$='/modules/" + correction.getId() + "/add-comment-correction']";
+    }
+
+    // comments of a subject (a comment of a correction has no publication)
+    private List<CommentEntity> subjectComments(PublicationEntity subject) {
+        return commentRepository.findAll().stream()
+                .filter(c -> c.getPublication() != null && c.getPublication().getId().equals(subject.getId()))
+                .toList();
+    }
+
+    private List<CommentEntity> correctionComments(CorrectionEntity correction) {
+        return commentRepository.findAll().stream()
+                .filter(c -> c.getCorrection() != null && c.getCorrection().getId().equals(correction.getId()))
+                .toList();
+    }
+
+    private boolean hasComment(List<CommentEntity> comments, String login, String content) {
+        return comments.stream().anyMatch(c -> content.equals(c.getContent())
+                && c.getAuthorComment() != null
+                && email(login).equals(c.getAuthorComment().getEmail()));
+    }
+
+    // card of a correction on the module page (the delete form identifies it): its comments are the articles inside
+    private Locator correctionCard(CorrectionEntity correction) {
+        return page.locator("div.card-body.p-3").filter(new Locator.FilterOptions()
+                .setHas(page.locator("form[action$='/deleteCorrection/" + correction.getId() + "']")));
     }
 
     // ===== Soit / Et =====
@@ -583,5 +629,153 @@ public class UserAcceptanceTest {
         assertTrue(storedName.matches(Pattern.quote(base) + "(-\\d+)?" + Pattern.quote(extension)),
                 "Unexpected stored file : " + storedName);
         assertTrue(new File(correction.getPath()).exists(), "File not stored : " + correction.getPath());
+    }
+
+    @Quand("J'ajoute un commentaire au sujet {string}")
+    public void jAjouteUnCommentaireAuSujet(String subjectName) {
+        currentSubject = findSubject(subjectName);
+        currentCorrection = null;
+
+        // the comments of a subject are on its details page, reached from the module page
+        page.click("a[href$='/publications/" + currentSubject.getId() + "/details']");
+        page.waitForURL(detailsPageUrl(currentSubject));
+        assertThat(page.locator(subjectCommentForm(currentSubject))).isVisible();
+    }
+
+    @Quand("J'ajoute un commentaire à la correction {string} du sujet {string}")
+    public void jAjouteUnCommentaireÀLaCorrectionDuSujet(String title, String subjectName) {
+        currentSubject = findSubject(subjectName);
+        currentCorrection = findCorrection(title, currentSubject)
+                .orElseThrow(() -> new AssertionError("Correction not found : " + title));
+        long id = currentCorrection.getId();
+
+        // opens the form « Add a comment » of the correction, on the module page
+        page.click("[data-bs-target='#comment-form-" + id + "']");
+        assertThat(page.locator("#content-" + id)).isVisible();
+    }
+
+    @Et("Je saisis le commentaire {string}")
+    public void jeSaisisLeCommentaire(String content) {
+        assertNotNull(currentSubject);
+
+        if (currentCorrection != null) {
+            page.fill("#content-" + currentCorrection.getId(), content);
+        } else {
+            page.fill(subjectCommentForm(currentSubject) + " textarea[name='content']", content);
+        }
+    }
+
+    @Et("Je valide l'ajout du commentaire")
+    public void jeValideLAjoutDuCommentaire() {
+        assertNotNull(currentSubject);
+
+        String form = currentCorrection != null
+                ? correctionCommentForm(currentCorrection)
+                : subjectCommentForm(currentSubject);
+
+        // submits the form and waits for the redirect to the module page
+        page.waitForNavigation(() -> page.click(form + " button[type='submit']"));
+
+        assertThat(page).hasURL(modulePageUrl(currentSubject.getModule()));
+    }
+
+    // no cancel button in the pages: the user leaves the form without submitting it
+    @Et("J'annule l'ajout du commentaire")
+    public void jAnnuleLAjoutDuCommentaire() {
+        assertNotNull(currentSubject);
+
+        if (currentCorrection != null) {
+            long id = currentCorrection.getId();
+            // closes the form of the correction
+            page.click("[data-bs-target='#comment-form-" + id + "']");
+            assertThat(page.locator("#content-" + id)).isHidden();
+        } else {
+            // « go back » button of the details page
+            page.click("a[aria-label='Go back']");
+            page.waitForURL(modulePageUrl(currentSubject.getModule()));
+        }
+    }
+
+    @Et("Le sujet {string} du module {string} dispose de la correction {string}")
+    public void leSujetDuModuleDisposeDeLaCorrection(String subjectName, String moduleName, String title) {
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+        PublicationEntity subject = findSubject(subjectName);
+        assertEquals(module.getId(), subject.getModule().getId());
+
+        if (findCorrection(title, subject).isEmpty()) {
+            UserEntity author = (currentUser != null) ? currentUser : module.getResponsible();
+            correctionRepository.save(new CorrectionEntity(
+                    author, subject, title, "test/example/" + title + ".pdf"));
+        }
+        assertTrue(findCorrection(title, subject).isPresent());
+
+        // the correction was created after the page was displayed
+        if (page.url().equals(modulePageUrl(module))) {
+            page.reload();
+        }
+    }
+
+    @Alors("Un commentaire de l'utilisateur {string} disant {string} est disponible pour le sujet {string} sur le module {string}")
+    public void unCommentaireDeLUtilisateurDisantEstDisponiblePourLeSujetSurLeModule(
+            String login, String content, String subjectName, String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+        PublicationEntity subject = findSubject(subjectName);
+        assertEquals(module.getId(), subject.getModule().getId());
+
+        assertTrue(hasComment(subjectComments(subject), login, content),
+                "Comment not stored for the subject : " + subjectName);
+
+        // displayed on the details page of the subject, with the email of the author
+        page.navigate(detailsPageUrl(subject));
+        assertThat(page.locator("article")
+                .filter(new Locator.FilterOptions().setHasText(content))
+                .filter(new Locator.FilterOptions().setHasText(email(login)))
+                .first()).isVisible();
+    }
+
+    @Alors("Un commentaire de l'utilisateur {string} disant {string} est disponible pour la correction {string} du sujet {string} sur le module {string}")
+    public void unCommentaireDeLUtilisateurDisantEstDisponiblePourLaCorrectionDuSujetSurLeModule(
+            String login, String content, String title, String subjectName, String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+        PublicationEntity subject = findSubject(subjectName);
+        assertEquals(module.getId(), subject.getModule().getId());
+        CorrectionEntity correction = findCorrection(title, subject)
+                .orElseThrow(() -> new AssertionError("Correction not found : " + title));
+
+        assertTrue(hasComment(correctionComments(correction), login, content),
+                "Comment not stored for the correction : " + title);
+
+        // displayed under the correction, on the module page
+        page.navigate(modulePageUrl(module));
+        assertThat(correctionCard(correction).locator("article")
+                .filter(new Locator.FilterOptions().setHasText(content))
+                .filter(new Locator.FilterOptions().setHasText(email(login)))
+                .first()).isVisible();
+    }
+
+    @Alors("Aucun commentaire n'est disponible pour le sujet {string}")
+    public void aucunCommentaireNEstDisponiblePourLeSujet(String subjectName) {
+        PublicationEntity subject = findSubject(subjectName);
+
+        assertTrue(subjectComments(subject).isEmpty(), "A comment exists for the subject : " + subjectName);
+
+        // the comments are the only articles of the details page
+        page.navigate(detailsPageUrl(subject));
+        assertThat(page.locator("article")).hasCount(0);
+    }
+
+    @Alors("Aucun commentaire n'est disponible pour la correction {string} du sujet {string}")
+    public void aucunCommentaireNEstDisponiblePourLaCorrectionDuSujet(String title, String subjectName) {
+        PublicationEntity subject = findSubject(subjectName);
+        CorrectionEntity correction = findCorrection(title, subject)
+                .orElseThrow(() -> new AssertionError("Correction not found : " + title));
+
+        assertTrue(correctionComments(correction).isEmpty(), "A comment exists for the correction : " + title);
+
+        page.navigate(modulePageUrl(subject.getModule()));
+        assertThat(correctionCard(correction).locator("article")).hasCount(0);
     }
 }
