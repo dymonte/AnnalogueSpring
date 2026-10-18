@@ -51,10 +51,10 @@ public class PublicationEntity {
 	@Column(name = "created_at", nullable = false)
 	private LocalDateTime createdAt;
 
-	@OneToMany(mappedBy = "publication")
+	@OneToMany(mappedBy = "publication", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<CommentEntity> comments;
 
-	@OneToMany(mappedBy = "publication")
+	@OneToMany(mappedBy = "publication", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<CorrectionEntity> corrections;
 
 	public Long getId() {

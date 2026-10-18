@@ -3,7 +3,7 @@ Fonctionnalité: Résponsable Module -Inscrire
 
 
   Scénario: Inscription individuelle d'un utilisateur par le responsable
-    Soit je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
+    Soit Je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
     Et je gère le module "MOIA"
     Et l'utilisateur "Fabien" est inscrit sur la plateforme mais non inscrit au module "MOIA"
     Quand j'inscris individuellement "Fabien" au module "MOIA"
@@ -11,7 +11,7 @@ Fonctionnalité: Résponsable Module -Inscrire
     Et "Fabien" a accès aux ressources du module "MOIA"
 
   Scénario: Inscription d'une cohorte d'utilisateurs par le responsable
-    Soit je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
+    Soit Je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
     Et je gère le module "MOIA"
     Et il existe une cohorte nommée "Master 2 ISL" regroupant plusieurs membres
     Quand je sélectionne et inscris la cohorte "Master 2 ISL" au module "MOIA"
@@ -19,7 +19,7 @@ Fonctionnalité: Résponsable Module -Inscrire
     Et les étudiants de la cohorte "Master 2 ISL" ont tous accès au contenu du module "MOIA"
 
   Scénario: Tentative de réinscription d'un membre déjà inscrit au module
-    Soit je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
+    Soit Je suis connecté en tant que "Fabrice" avec le rôle "Responsable de module"
     Et je gère le module "MOIA"
     Et l'utilisateur "Fabien" est déjà inscrit au module "MOIA"
     Quand je tente d'inscrire à nouveau "Fabien" au module "MOIA"
@@ -27,14 +27,14 @@ Fonctionnalité: Résponsable Module -Inscrire
     Et un message signale que "Fabien" fait déjà partie des membres inscrits
 
   Scénario: Tentative d'inscription par un membre non responsable
-    Soit je suis connecté en tant que "Lucas" avec le rôle "Membre"
+    Soit Je suis connecté en tant que "Lucas" avec le rôle "Membre"
     Et le module "MOIA" compte "Fabien" parmi ses membres
     Quand je tente d'inscrire un utilisateur au module "MOIA"
     Alors l'action d'inscription ne m'est pas accessible
     Et un message d'erreur d'autorisation est retourné
 
   Scénario: Inscription tentée par le responsable d'un autre module
-    Soit je suis connecté en tant que "Claire" avec le rôle "Responsable de module"
+    Soit Je suis connecté en tant que "Claire" avec le rôle "Responsable de module"
     Et je gère uniquement le module "TF"
     Et le module "MOIA" est géré par "Fabrice"
     Quand je tente d'inscrire un membre au module "MOIA"

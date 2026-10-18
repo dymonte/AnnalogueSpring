@@ -28,4 +28,6 @@ public interface IPublicationService {
 	void saveMultipartFile(MultipartFile file, String name, String description, Long moduleId, String authorEmail, FileType fileType) throws UploadFileException;
 
 	Optional<PublicationEntity> findByName(String name);
+
+    void deleteAll();
 }

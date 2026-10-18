@@ -100,6 +100,11 @@ public class PublicationService implements IPublicationService {
 		return publicationRepository.findByName(name);
 	}
 
+	@Override
+	public void deleteAll() {
+		inscriptionService.deleteAll();
+	}
+
 
 	private boolean canUpload(UserEntity user, ModuleEntity module) {
 		return inscriptionService.hasWriterAccess(user, module);
