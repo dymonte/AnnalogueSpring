@@ -565,11 +565,9 @@ public class UserAcceptanceTest {
         assertTrue(page.url().contains("/login"));
         assertThat(page.locator("#error")).containsText(message("error.login.generic"));
     }
-}
 
     @Alors("Le fichier {string} est associé à la correction {string}")
     public void leFichierEstAssociéÀLaCorrection(String fileName, String title) {
-
 
         assertNotNull(currentSubject);
 
