@@ -6,9 +6,9 @@ import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.services.*;
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.AriaRole;
 import com.microsoft.playwright.options.FilePayload;
-import io.cucumber.core.internal.com.fasterxml.jackson.databind.Module;
+import com.microsoft.playwright.options.LoadState;
+import com.microsoft.playwright.options.WaitUntilState;
 import io.cucumber.java.*;
 
 import io.cucumber.java.fr.Alors;
@@ -30,7 +30,6 @@ import java.util.regex.Pattern;
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 public class UserAcceptanceTest {
 
     private static final String PASSWORD = "Passw0rd!";
@@ -90,7 +89,7 @@ public class UserAcceptanceTest {
     @BeforeAll
     public static void setupGlobal() {
         playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
     }
 
     @AfterAll
@@ -119,8 +118,8 @@ public class UserAcceptanceTest {
         if (context != null) {
             context.close();
         }
-        // corrections and inscriptions reference the publications, the modules and the users
-        correctionRepository.deleteAll();
+        correctionRepository.deleteAllInBatch();
+        publicationService.deleteAll();
         inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();
@@ -225,8 +224,7 @@ public class UserAcceptanceTest {
     }
 
     @Soit("Je suis connecté en tant que {string} avec le rôle {string}")
-    public void jeSuisConnectéEnTantQueAvecLeRôle(String login, String gherkinRole) {
-        page.pause();
+    public void jeSuisConnecteEnTantQueAvecLeRole(String login, String gherkinRole) {
 
         Role role = role(gherkinRole);
 
@@ -254,9 +252,12 @@ public class UserAcceptanceTest {
         try {
             page.waitForURL(url("/home"));
         } catch (PlaywrightException e) {
-            // tells where the browser is and what the login page says, instead of a bare timeout
-            String error = page.locator("#error").count() > 0 ? page.locator("#error").innerText() : "(no #error)";
-            fail("Login of " + email(login) + " failed. Url: " + page.url() + " - message: " + error
+            String error = page.locator("#error").count() > 0
+                    ? page.locator("#error").innerText()
+                    : "(no #error)";
+
+            fail("Login of " + email(login) + " failed. Url: " + page.url()
+                    + " - message: " + error
                     + " - page: " + page.locator("body").innerText());
         }
 
@@ -340,11 +341,15 @@ public class UserAcceptanceTest {
         String moduleUrl = modulePageUrl(subject.getModule());
 
         if (!correctionSubmitted) {
-            // before the action: the correction is prepared if it does not exist yet
             if (findCorrection(title, subject).isEmpty()) {
+                UserEntity author = (currentUser != null)
+                        ? currentUser
+                        : subject.getModule().getResponsible();
+
                 correctionRepository.save(new CorrectionEntity(
-                        subject.getModule().getResponsible(), subject, title, "test/example/" + title + ".pdf"));
+                        author, subject, title, "test/example/" + title + ".pdf"));
             }
+
             if (page.url().equals(moduleUrl)) {
                 page.reload();
             }
@@ -353,9 +358,9 @@ public class UserAcceptanceTest {
         assertTrue(findCorrection(title, subject).isPresent());
 
         if (correctionSubmitted) {
-            // after the action: the correction is also displayed on the page of the module
             page.navigate(moduleUrl);
-            assertThat(page.getByText(title, new Page.GetByTextOptions().setExact(true))).isVisible();
+            assertThat(page.getByText(title,
+                    new Page.GetByTextOptions().setExact(true))).isVisible();
         }
     }
 
@@ -383,7 +388,6 @@ public class UserAcceptanceTest {
     @Et("le document {string} est disponible dans le module {string}")
     public void leDocumentEstDisponibleDansLeModule(String name, String moduleName) {
         ModuleEntity module = moduleService.findByName(moduleName).get();
-        List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(module.getId());
 
         if (publicationService.findByName(name).isEmpty()) {
             publicationService.addPublication(
@@ -391,7 +395,12 @@ public class UserAcceptanceTest {
                             userService.findByEmail("resp@example.com").get(), "test/example/"));
         }
 
-        assertTrue(publications.contains(publicationService.findByName(name).get()));
+        PublicationEntity publication = publicationService.findByName(name).orElseThrow();
+
+        boolean inModule = publicationService.findByModule(module).stream()
+                .anyMatch(p -> p.getId().equals(publication.getId()));
+
+        assertTrue(inModule);
     }
 
     @Et("{string} n'a pas accès au module {string}")
@@ -475,8 +484,14 @@ public class UserAcceptanceTest {
     public void jeValideLAjoutDeLaCorrection() {
         assertNotNull(currentSubject);
 
-        String submitButton = "#correction-form-" + currentSubject.getId() + " button[type='submit']";
+        String submitButton =
+                "#correction-form-" + currentSubject.getId()
+                        + " button[type='submit']";
+
+        // submits the form and waits for the redirect to the module page
         page.waitForNavigation(() -> page.click(submitButton));
+
+        assertThat(page).hasURL(modulePageUrl(currentSubject.getModule()));
     }
 
     // ===== Alors =====
@@ -499,6 +514,8 @@ public class UserAcceptanceTest {
 
     @Alors("Le fichier {string} est associé à la correction {string}")
     public void leFichierEstAssociéÀLaCorrection(String fileName, String title) {
+
+
         assertNotNull(currentSubject);
 
         CorrectionEntity correction = findCorrection(title, currentSubject)
