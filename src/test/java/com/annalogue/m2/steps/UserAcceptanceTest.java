@@ -93,7 +93,7 @@ public class UserAcceptanceTest {
     @BeforeAll
     public static void setupGlobal() {
         playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
     }
 
     @AfterAll
@@ -159,7 +159,7 @@ public class UserAcceptanceTest {
     // role in a module written in the Gherkin -> type of the inscription
     private InscriptionType moduleRole(String gherkinModuleRole) {
         return switch (gherkinModuleRole.trim().toLowerCase()) {
-            case "intervenant" -> InscriptionType.INTERVENANT;
+            case "intervenant", "responsable module" -> InscriptionType.INTERVENANT;
             case "etudiant", "étudiant" -> InscriptionType.ETUDIANT;
             default -> throw new IllegalArgumentException("Unknown module role in the Gherkin: " + gherkinModuleRole);
         };
@@ -279,6 +279,19 @@ public class UserAcceptanceTest {
         return currentUser;
     }
 
+    public void connectAs(String emailAddress, String username, Role role) {
+        currentUser = userService.findByEmail(emailAddress)
+                .orElseGet(() -> createUser(emailAddress, username, role));
+
+        page.navigate(url("/login"));
+        page.fill("#username", emailAddress);
+        page.fill("#password", PASSWORD);
+        page.click("#login-btn");
+        page.waitForURL(url("/home"));
+
+        loggedAsAdmin = role == Role.ADMIN;
+    }
+
     // ===== Soit / Et =====
 
     @Soit("l'utilisateur {string} est inscrit au site")
@@ -337,6 +350,7 @@ public class UserAcceptanceTest {
 
     @Et("Je suis inscrit au module {string}")
     public void jeSuisInscritAuModule(String moduleName) {
+
         assertNotNull(currentUser);
 
         ModuleEntity module = getOrCreateModule(moduleName);
@@ -776,27 +790,34 @@ public class UserAcceptanceTest {
     }
 
     @Quand("Je navigue sur la page du module {string}")
-    public void jeNavigueSurLaPageDuModule(String arg0) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+    public void jeNavigueSurLaPageDuModule(String moduleName) {
+        ModuleEntity module = getOrCreateModule(moduleName);
+        page.pause();
+        page.navigate(modulePageUrl(module));
     }
 
     @Et("Je selectionne le sujet {string}")
-    public void jeSelectionneLeSujet(String arg0) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+    public void jeSelectionneLeSujet(String subjectName) {
+        currentSubject = findSubject(subjectName);
+        page.click("a[href$='/publications/" + currentSubject.getId() + "/details']");
+        page.waitForURL(detailsPageUrl(currentSubject));
     }
 
     @Alors("Une page me propose de télécharger le document lié au sujet {string}")
-    public void unePageMeProposeDeTéléchargerLeDocumentLiéAuSujet(String arg0) {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+    public void unePageMeProposeDeTéléchargerLeDocumentLiéAuSujet(String subjectName) {
+        PublicationEntity subject = findSubject(subjectName);
+
+        assertThat(page).hasURL(detailsPageUrl(subject));
+
+        Locator download = page.locator("a[aria-label='Download publication']");
+        assertThat(download).isVisible();
+        assertThat(download).hasAttribute("href", Pattern.compile(".*/files/" + subject.getId() + "$"));
     }
 
     @Alors("J'ai un message d'erreur")
     public void JaiUnMessageDErreur() {
-        // Write code here that turns the phrase above into concrete actions
-        throw new PendingException();
+        assertThat(page.locator("#error-code")).hasText("403");
+        assertThat(page.locator("#forbidden-msg")).containsText(message("error.forbidden"));
     }
 
 }

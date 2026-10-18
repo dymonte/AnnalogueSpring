@@ -6,6 +6,7 @@ import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.PublicationEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -30,6 +32,7 @@ class ModuleControllerTest {
 
     private final IModuleService moduleService = mock(IModuleService.class);
     private final IUserService userService = mock(IUserService.class);
+    private final IInscriptionService inscriptionService = mock(IInscriptionService.class);
 
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
@@ -39,7 +42,7 @@ class ModuleControllerTest {
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new ModuleController(moduleService,userService))
+                .standaloneSetup(new ModuleController(moduleService,userService, inscriptionService))
                 .build();
     }
 
@@ -213,6 +216,12 @@ class ModuleControllerTest {
         when(module.getPublications()).thenReturn(List.of());
         when(moduleService.findById(1L)).thenReturn(Optional.of(module));
 
+        UserEntity user = new UserEntity("user@example.com", "hash", "user", Role.PROF, null, null);
+        user.setId(1L);
+
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(inscriptionService.hasReaderAccess(eq(user), any(ModuleEntity.class))).thenReturn(true);
+
 
         mockMvc.perform(get("/modules/1"))
                 .andExpect(status().isOk())
@@ -231,6 +240,10 @@ class ModuleControllerTest {
         when(module.getPublications()).thenReturn(List.of(pub1, pub2));
         when(moduleService.findById(1L)).thenReturn(Optional.of(module));
 
+        UserEntity user = new UserEntity("user@example.com", "hash", "user", Role.PROF, null, null);
+        user.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(inscriptionService.hasReaderAccess(eq(user), any(ModuleEntity.class))).thenReturn(true);
 
         mockMvc.perform(get("/modules/1"))
                 .andExpect(status().isOk())
@@ -245,5 +258,20 @@ class ModuleControllerTest {
 
         mockMvc.perform(get("/modules/99"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldReturn403WhenUserIsNotEnrolled() throws Exception {
+        ModuleEntity module = mock(ModuleEntity.class);
+        when(module.getResponsible()).thenReturn(teacher);
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+
+        UserEntity user = new UserEntity("user@example.com", "hash", "user", Role.PROF, null, null);
+        user.setId(1L);
+        when(userService.getCurrentUser()).thenReturn(user);
+        when(inscriptionService.hasReaderAccess(eq(user), any(ModuleEntity.class))).thenReturn(false);
+
+        mockMvc.perform(get("/modules/1"))
+                .andExpect(status().isForbidden());
     }
 }
