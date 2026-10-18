@@ -25,14 +25,12 @@ import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-// 1341 (NOTIF-01), 1342 (NOTIF-02), 1343 (NOTIF-03)
-// some sentences are also used by 1346 (deactivation): reuse them, do not write them again
 public class NotificationAcceptanceTest {
 
     private static final String PASSWORD = "Passw0rd!";
     private static final String RESP_EMAIL = "resp-notif@example.com";
+    private static final String ADMIN_EMAIL = "notif-admin@example.com";
 
-    // gives us the browser page (opened before each scenario)
     @Autowired
     private RegisterUserAcceptanceTest loginSteps;
 
@@ -157,6 +155,36 @@ public class NotificationAcceptanceTest {
 
         String pageText = notificationsPageText(email);
         assertTrue(pageText.contains("You were enrolled in the module " + moduleName + "."));
+    }
+
+
+    // 2
+
+    @Soit("l'administrateur est connecté")
+    public void adminIsLoggedIn() {
+        createUser(ADMIN_EMAIL, Role.ADMIN);
+        login(ADMIN_EMAIL);
+    }
+    @Quand("l'administrateur inscrit l'utilisateur {string}")
+    public void AdminAddUser(String email) {
+        page().navigate(url("/members/add"));
+        page().locator("#email").fill(email);
+        page().locator("#username").fill("user");
+        page().locator("#role").selectOption("PROF");
+        page().locator("button:has-text('Add Member')").click();
+        page().locator(".alert-success").waitFor();
+
+        UserEntity created = userService.findByEmail(email).get();
+        created.setPasswordHash(passwordEncoder.encode(PASSWORD));
+        userService.save(created);
+    }
+
+    @Alors("le système doit notifier {string} qu'il est inscrit à l'application")
+    public void NotifiedAccountCreated(String email) {
+        assertTrue(hasNotification(email, NotificationType.ACCOUNT_CREATED, null));
+
+        String pageText = notificationsPageText(email);
+        assertTrue(pageText.contains("Welcome! The administrator created your account."));
     }
 
 }
