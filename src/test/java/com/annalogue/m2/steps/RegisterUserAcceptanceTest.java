@@ -500,10 +500,11 @@ public class RegisterUserAcceptanceTest {
 
     @Alors("l'action m'est refusée")
     public void action_est_refusee(){
+        syncWithLoggedUser();
+
         String url = page.url();
         assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new")
                 || url.equals("http://localhost:" + port + "/modules/add"));
-
     }
 
     @Et("aucun membre n'est ajouté au module {string}")
