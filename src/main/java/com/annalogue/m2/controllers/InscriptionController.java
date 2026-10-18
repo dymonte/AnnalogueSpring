@@ -190,49 +190,71 @@ public class InscriptionController {
         public String removeEnrollment(
                         @PathVariable Long id,
                         RedirectAttributes redirectAttributes) {
-                try {
-                        UserEntity currentUser = getCurrentUser();
-                        boolean isManagedEnrollment = inscriptionService
-                                        .findInscriptions(currentUser)
-                                        .stream()
-                                        .anyMatch(inscription -> inscription.getId().equals(id));
+            try {
+                UserEntity currentUser = getCurrentUser();
 
-                        if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
-                                redirectAttributes.addFlashAttribute(
-                                                "error",
-                                                notifyService.getMessage("error.inscription.not.found"));
-                                return "redirect:/module-enrollments";
-                        }
+                if (!inscriptionService.existsById(id)) {
+                    redirectAttributes.addFlashAttribute(
+                            "error",
+                            notifyService.getMessage("error.inscription.not.enrolled")
 
-                        inscriptionService.deleteById(id);
-
-                        redirectAttributes.addFlashAttribute(
-                                        "success",
-                                        notifyService.getMessage("success.inscription.deleted"));
-
-                } catch (UsernameNotFoundException e) {
-                        redirectAttributes.addFlashAttribute(
-                                        "error",
-                                        notifyService.getMessage("error.inscription.prof.not.found"));
+                    );
+                    return "redirect:/module-enrollments";
                 }
-                return "redirect:/module-enrollments";
+
+                boolean isManagedEnrollment =
+                        inscriptionService.findInscriptions(currentUser).stream()
+                                .anyMatch(inscription -> inscription.getId().equals(id));
+
+                if (!isManagedEnrollment) {
+                    redirectAttributes.addFlashAttribute(
+                            "error",
+                            notifyService.getMessage("error.inscription.not.found")
+                    );
+                    return "redirect:/module-enrollments";
+                }
+
+                inscriptionService.deleteById(id);
+
+                redirectAttributes.addFlashAttribute(
+                        "success",
+                        notifyService.getMessage("success.inscription.deleted")
+                );
+
+            } catch (UsernameNotFoundException e) {
+                redirectAttributes.addFlashAttribute(
+                        "error",
+                        notifyService.getMessage("error.inscription.prof.not.found")
+                );
+            }
+
+            return "redirect:/module-enrollments";
         }
 
         @PostMapping("/module-enrollments/{id}/toggle-editor")
         public String toggleEditor(@PathVariable Long id, RedirectAttributes redirectAttributes) {
                 try {
                         UserEntity currentUser = getCurrentUser();
-                        boolean isManagedEnrollment = inscriptionService
-                                        .findInscriptions(currentUser)
-                                        .stream()
-                                        .anyMatch(inscription -> inscription.getId().equals(id));
+                    if (!inscriptionService.existsById(id)) {
+                        redirectAttributes.addFlashAttribute(
+                                "error",
+                                notifyService.getMessage("error.inscription.not.enrolled")
 
-                        if (!isManagedEnrollment || !inscriptionService.existsById(id)) {
-                                redirectAttributes.addFlashAttribute(
-                                                "error",
-                                                notifyService.getMessage("error.inscription.not.found"));
-                                return "redirect:/module-enrollments";
-                        }
+                        );
+                        return "redirect:/module-enrollments";
+                    }
+
+                    boolean isManagedEnrollment =
+                            inscriptionService.findInscriptions(currentUser).stream()
+                                    .anyMatch(inscription -> inscription.getId().equals(id));
+
+                    if (!isManagedEnrollment) {
+                        redirectAttributes.addFlashAttribute(
+                                "error",
+                                notifyService.getMessage("error.inscription.not.found")
+                        );
+                        return "redirect:/module-enrollments";
+                    }
                         boolean isEditor = inscriptionService.toggleEditor(id);
 
                         String messageKey = isEditor

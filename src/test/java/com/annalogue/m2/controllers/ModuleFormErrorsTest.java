@@ -35,6 +35,9 @@ class ModuleFormErrorsTest {
     private MockMvc mockMvc;
 
     @MockitoBean
+    private IInscriptionService inscriptionService;
+
+    @MockitoBean
     private IModuleService moduleService;
 
     @MockitoBean
@@ -42,9 +45,6 @@ class ModuleFormErrorsTest {
 
     @MockitoBean
     private INotificationService notificationService;
-
-    @MockitoBean
-    private IInscriptionService inscriptionService;
 
     private final UserEntity teacher =
             new UserEntity("fabrice@example.com", "hash", "fabrice", Role.PROF, null, null);
