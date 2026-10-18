@@ -20,6 +20,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email)
             throws UsernameNotFoundException {
 
+
         UserEntity user = userService.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "User not found : " + email));

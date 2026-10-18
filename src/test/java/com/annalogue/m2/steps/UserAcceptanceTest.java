@@ -1,11 +1,12 @@
 package com.annalogue.m2.steps;
 
 import com.annalogue.m2.models.*;
+import com.annalogue.m2.repositories.CorrectionRepository;
+import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.services.*;
 import com.microsoft.playwright.*;
-import com.microsoft.playwright.options.AriaRole;
-import io.cucumber.core.internal.com.fasterxml.jackson.databind.Module;
+import com.microsoft.playwright.options.FilePayload;
 import io.cucumber.java.*;
 
 import io.cucumber.java.fr.Alors;
@@ -18,19 +19,24 @@ import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.microsoft.playwright.assertions.PlaywrightAssertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
-@Transactional
 public class UserAcceptanceTest {
 
     private static final String PASSWORD = "Passw0rd!";
 
     // id that no user has, to act on a user who does not exist
     private static final long UNKNOWN_ID = 999999L;
+
+    // minimal content of a pdf, enough for the upload
+    private static final byte[] PDF_CONTENT = "%PDF-1.4\n%%EOF\n".getBytes(StandardCharsets.UTF_8);
 
     @Autowired
     private IUserService userService;
@@ -53,6 +59,12 @@ public class UserAcceptanceTest {
     @Autowired
     private IInscriptionService inscriptionService;
 
+    @Autowired
+    private InscriptionRepository inscriptionRepository;
+
+    @Autowired
+    private CorrectionRepository correctionRepository;
+
     @LocalServerPort
     private int port;
 
@@ -64,6 +76,13 @@ public class UserAcceptanceTest {
     private BrowserContext context;
     private Page page;
     private boolean loggedAsAdmin;
+
+    // state of the correction scenarios
+    private UserEntity currentUser;
+    private PublicationEntity currentSubject;
+    private String currentCorrectionTitle;
+    // true once the user has started to act on the page (Quand): before, the steps only prepare the data
+    private boolean correctionSubmitted;
 
     @BeforeAll
     public static void setupGlobal() {
@@ -86,13 +105,20 @@ public class UserAcceptanceTest {
         context = browser.newContext(new Browser.NewContextOptions().setLocale("fr-FR"));
         page = context.newPage();
         loggedAsAdmin = false;
+        currentUser = null;
+        currentSubject = null;
+        currentCorrectionTitle = null;
+        correctionSubmitted = false;
     }
 
-    @After
+    @After(order = 40000)
     public void teardownScenario() {
         if (context != null) {
             context.close();
         }
+        correctionRepository.deleteAllInBatch();
+        publicationService.deleteAll();
+        inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();
     }
@@ -109,6 +135,26 @@ public class UserAcceptanceTest {
 
     private String message(String key) {
         return messageSource.getMessage(key, null, Locale.ENGLISH);
+    }
+
+    // role written in the Gherkin -> role of the application
+    // « Membre » is a teacher, like in AdminMembersAcceptanceTest
+    private Role role(String gherkinRole) {
+        return switch (gherkinRole.trim().toLowerCase()) {
+            case "administrateur" -> Role.ADMIN;
+            case "responsable module", "responsable de module" -> Role.RESPONSABLE;
+            case "membre" -> Role.PROF;
+            default -> throw new IllegalArgumentException("Unknown role in the Gherkin: " + gherkinRole);
+        };
+    }
+
+    // role in a module written in the Gherkin -> type of the inscription
+    private InscriptionType moduleRole(String gherkinModuleRole) {
+        return switch (gherkinModuleRole.trim().toLowerCase()) {
+            case "intervenant" -> InscriptionType.INTERVENANT;
+            case "etudiant", "étudiant" -> InscriptionType.ETUDIANT;
+            default -> throw new IllegalArgumentException("Unknown module role in the Gherkin: " + gherkinModuleRole);
+        };
     }
 
     private UserEntity createUser(String emailAddress, String username, Role role) {
@@ -129,15 +175,6 @@ public class UserAcceptanceTest {
         return null;
     }
 
-    // role written in the Gherkin -> role of the application
-    private Role role(String gherkinRole) {
-        return switch (gherkinRole.trim().toLowerCase()) {
-            case "administrateur" -> Role.ADMIN;
-            case "responsable module", "responsable de module" -> Role.RESPONSABLE;
-            case "membre" -> Role.ETUDIANT;
-            default -> throw new IllegalArgumentException("Unknown role in the Gherkin: " + gherkinRole);
-        };
-    }
 
     // fills the login form and waits for the result: /home if accepted, /login?error if refused
     private void login(String login, String password) {
@@ -151,6 +188,41 @@ public class UserAcceptanceTest {
     // http status of a page, to check what the connected user is allowed to open
     private int statusOf(String path) {
         return page.navigate(url(path)).status();
+    }
+
+    // the module with its responsible (another user than the connected one), created if it does not exist
+    private ModuleEntity getOrCreateModule(String name) {
+        return moduleService.findByName(name).orElseGet(() -> {
+            UserEntity responsible = userService.findByEmail("resp@example.com")
+                    .orElseGet(() -> createUser("resp@example.com", "resp", Role.RESPONSABLE));
+            return moduleService.createModule(name, responsible);
+        });
+    }
+
+    private Optional<InscriptionEntity> findInscription(UserEntity user, ModuleEntity module) {
+        return inscriptionService.findByUserId(user.getId()).stream()
+                .filter(ins -> ins.getModule().getId().equals(module.getId()))
+                .findFirst();
+    }
+
+    private PublicationEntity findSubject(String subjectName) {
+        return publicationService.findByName(subjectName)
+                .orElseThrow(() -> new AssertionError("Subject not found : " + subjectName));
+    }
+
+    private Optional<CorrectionEntity> findCorrection(String title, PublicationEntity subject) {
+        for (CorrectionEntity correction : correctionRepository.findAll()) {
+            if (title.equals(correction.getTitle())
+                    && correction.getPublication() != null
+                    && correction.getPublication().getId().equals(subject.getId())) {
+                return Optional.of(correction);
+            }
+        }
+        return Optional.empty();
+    }
+
+    private String modulePageUrl(ModuleEntity module) {
+        return url("/modules/" + module.getId());
     }
 
     // ===== Soit / Et =====
@@ -172,6 +244,147 @@ public class UserAcceptanceTest {
         }
 
         assertTrue(userService.existsByEmail(email(login)));
+    }
+
+    @Soit("Je suis connecté en tant que {string} avec le rôle {string}")
+    public void jeSuisConnecteEnTantQueAvecLeRole(String login, String gherkinRole) {
+
+        Role role = role(gherkinRole);
+
+        currentUser = userService.findByEmail(email(login))
+                .orElseGet(() -> createUser(email(login), login, role));
+
+        System.out.println("Utilisateur : " + email(login));
+        System.out.println("Utilisateur trouvé : " + (currentUser != null));
+        System.out.println("Mot de passe utilisé : " + PASSWORD);
+
+        System.out.println("Email : " + currentUser.getEmail());
+
+        System.out.println("Hash présent : "
+                + (currentUser.getPasswordHash() != null));
+
+        System.out.println("Mot de passe correspondant : "
+                + passwordEncoder.matches(PASSWORD, currentUser.getPasswordHash()));
+
+        assertTrue(userService.existsByEmail(email(login)));
+
+        page.navigate(url("/login"));
+        page.fill("#username", email(login));
+        page.fill("#password", PASSWORD);
+        page.click("#login-btn");
+        try {
+            page.waitForURL(url("/home"));
+        } catch (PlaywrightException e) {
+            String error = page.locator("#error").count() > 0
+                    ? page.locator("#error").innerText()
+                    : "(no #error)";
+
+            fail("Login of " + email(login) + " failed. Url: " + page.url()
+                    + " - message: " + error
+                    + " - page: " + page.locator("body").innerText());
+        }
+
+        loggedAsAdmin = role == Role.ADMIN;
+    }
+
+    @Et("J'ai créé le module {string}")
+    public void jAiCrééLeModule(String moduleName) {
+        assertNotNull(currentUser);
+
+        ModuleEntity module = moduleService.createModule(moduleName, currentUser);
+
+        assertTrue(moduleService.existsByName(moduleName));
+        assertEquals(currentUser.getId(), module.getResponsible().getId());
+    }
+
+    @Et("Je suis inscrit au module {string}")
+    public void jeSuisInscritAuModule(String moduleName) {
+        assertNotNull(currentUser);
+
+        ModuleEntity module = getOrCreateModule(moduleName);
+
+        if (findInscription(currentUser, module).isEmpty()) {
+            inscriptionService.save(module.getResponsible(), currentUser.getEmail(), module.getId());
+        }
+
+        assertTrue(findInscription(currentUser, module).isPresent());
+    }
+
+    @Et("J'ai le role {string} pour le module {string}")
+    public void jAiLeRolePourLeModule(String gherkinModuleRole, String moduleName) {
+        assertNotNull(currentUser);
+
+        InscriptionType expectedType = moduleRole(gherkinModuleRole);
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+
+        InscriptionEntity inscription = findInscription(currentUser, module)
+                .orElseThrow(() -> new AssertionError("Not enrolled in the module : " + moduleName));
+
+        // the service gives the type from the role of the user: here the type is forced
+        inscription.setInscriptionType(expectedType);
+        inscriptionRepository.save(inscription);
+
+        assertEquals(expectedType, findInscription(currentUser, module).orElseThrow().getInscriptionType());
+    }
+
+    @Et("Je suis sur la page du module {string}")
+    public void jeSuisSurLaPageDuModule(String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+
+        page.navigate(modulePageUrl(module));
+
+        assertThat(page).hasURL(modulePageUrl(module));
+    }
+
+    @Et("Le sujet {string} existe sur le module {string}")
+    public void leSujetExisteSurLeModule(String subjectName, String moduleName) {
+        ModuleEntity module = moduleService.findByName(moduleName)
+                .orElseThrow(() -> new AssertionError("Module not found : " + moduleName));
+
+        if (publicationService.findByName(subjectName).isEmpty()) {
+            publicationService.addPublication(
+                    new PublicationEntity(subjectName, subjectName + "description", FileType.TD, module,
+                            module.getResponsible(), "test/example/" + subjectName + ".pdf"));
+        }
+
+        currentSubject = findSubject(subjectName);
+        assertEquals(module.getId(), currentSubject.getModule().getId());
+
+        // the subject was created after the page was displayed
+        if (page.url().equals(modulePageUrl(module))) {
+            page.reload();
+        }
+    }
+
+    @Et("La correction {string} est disponible pour le sujet {string}")
+    public void laCorrectionEstDisponiblePourLeSujet(String title, String subjectName) {
+        PublicationEntity subject = findSubject(subjectName);
+        String moduleUrl = modulePageUrl(subject.getModule());
+
+        if (!correctionSubmitted) {
+            if (findCorrection(title, subject).isEmpty()) {
+                UserEntity author = (currentUser != null)
+                        ? currentUser
+                        : subject.getModule().getResponsible();
+
+                correctionRepository.save(new CorrectionEntity(
+                        author, subject, title, "test/example/" + title + ".pdf"));
+            }
+
+            if (page.url().equals(moduleUrl)) {
+                page.reload();
+            }
+        }
+
+        assertTrue(findCorrection(title, subject).isPresent());
+
+        if (correctionSubmitted) {
+            page.navigate(moduleUrl);
+            assertThat(page.getByText(title,
+                    new Page.GetByTextOptions().setExact(true))).isVisible();
+        }
     }
 
     @Et("{string} a accès au module {string}")
@@ -198,7 +411,6 @@ public class UserAcceptanceTest {
     @Et("le document {string} est disponible dans le module {string}")
     public void leDocumentEstDisponibleDansLeModule(String name, String moduleName) {
         ModuleEntity module = moduleService.findByName(moduleName).get();
-        List<PublicationEntity> publications = moduleService.findAllPublicationsFromModule(module.getId());
 
         if (publicationService.findByName(name).isEmpty()) {
             publicationService.addPublication(
@@ -206,7 +418,12 @@ public class UserAcceptanceTest {
                             userService.findByEmail("resp@example.com").get(), "test/example/"));
         }
 
-        assertTrue(publications.contains(publicationService.findByName(name).get()));
+        PublicationEntity publication = publicationService.findByName(name).orElseThrow();
+
+        boolean inModule = publicationService.findByModule(module).stream()
+                .anyMatch(p -> p.getId().equals(publication.getId()));
+
+        assertTrue(inModule);
     }
 
     @Et("{string} n'a pas accès au module {string}")
@@ -276,6 +493,41 @@ public class UserAcceptanceTest {
         login(login, PASSWORD);
     }
 
+    @Quand("J'ajoute une correction {string} au sujet {string}")
+    public void jAjouteUneCorrectionAuSujet(String title, String subjectName) {
+        correctionSubmitted = true;
+        currentSubject = findSubject(subjectName);
+        currentCorrectionTitle = title;
+        long id = currentSubject.getId();
+
+        // opens the form « Add a correction » of the subject, then types the title
+        page.click("[data-bs-target='#correction-form-" + id + "']");
+        assertThat(page.locator("#correction-title-" + id)).isVisible();
+        page.fill("#correction-title-" + id, title);
+    }
+
+    @Quand("Je télécharge le fichier {string} sur la page")
+    public void jeTéléchargeLeFichierSurLaPage(String fileName) {
+        assertNotNull(currentSubject);
+
+        page.locator("#correction-file-" + currentSubject.getId())
+                .setInputFiles(new FilePayload(fileName, "application/pdf", PDF_CONTENT));
+    }
+
+    @Quand("Je valide l'ajout de la correction")
+    public void jeValideLAjoutDeLaCorrection() {
+        assertNotNull(currentSubject);
+
+        String submitButton =
+                "#correction-form-" + currentSubject.getId()
+                        + " button[type='submit']";
+
+        // submits the form and waits for the redirect to the module page
+        page.waitForNavigation(() -> page.click(submitButton));
+
+        assertThat(page).hasURL(modulePageUrl(currentSubject.getModule()));
+    }
+
     // ===== Alors =====
 
     @Alors("le document {string} est affiché dans les résultats")
@@ -312,5 +564,24 @@ public class UserAcceptanceTest {
     public void jAiUnMessageDErreur() {
         assertTrue(page.url().contains("/login"));
         assertThat(page.locator("#error")).containsText(message("error.login.generic"));
+    }
+
+    @Alors("Le fichier {string} est associé à la correction {string}")
+    public void leFichierEstAssociéÀLaCorrection(String fileName, String title) {
+
+        assertNotNull(currentSubject);
+
+        CorrectionEntity correction = findCorrection(title, currentSubject)
+                .orElseThrow(() -> new AssertionError("Correction not found : " + title));
+
+        // the storage adds a number when the name is already used: correction1.pdf -> correction1-1.pdf
+        String storedName = Path.of(correction.getPath()).getFileName().toString();
+        int dot = fileName.lastIndexOf('.');
+        String base = dot < 0 ? fileName : fileName.substring(0, dot);
+        String extension = dot < 0 ? "" : fileName.substring(dot);
+
+        assertTrue(storedName.matches(Pattern.quote(base) + "(-\\d+)?" + Pattern.quote(extension)),
+                "Unexpected stored file : " + storedName);
+        assertTrue(new File(correction.getPath()).exists(), "File not stored : " + correction.getPath());
     }
 }
