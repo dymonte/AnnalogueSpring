@@ -237,4 +237,14 @@ public class NotificationAcceptanceTest {
         String pageText = notificationsPageText(email);
         assertTrue(pageText.contains("A new subject was added to the module " + moduleName + "."));
     }
+
+
+
+    @Alors("le système ne doit pas notifier {string} qu'un sujet a été ajouté au module {string}")
+    public void NoNotificationNonSub(String email, String moduleName) {
+        assertFalse(hasNotification(email, NotificationType.PUBLICATION_ADDED, moduleName));
+
+        String pageText = notificationsPageText(email);
+        assertFalse(pageText.contains("A new subject was added to the module " + moduleName + "."));
+    }
 }
