@@ -18,9 +18,9 @@ Fonctionnalité: Utilisateur - Consultation Sujet
     | "Membre"              | "intervenant" |
 
   Scénario: consultation sujet responsable
-    Soit Je suis connecté en tant que "Responsable"
+    Soit Je suis connecté en tant que "Responsable module"
     Et J'ai créé le module "Test fonctionnel"
-    Et J'ai le role "Responsable" pour le module "Test fonctionnel"
+    Et J'ai le role "Responsable module" pour le module "Test fonctionnel"
     Et Le sujet "Sujet1" existe sur le module "Test fonctionnel"
     Quand Je navigue sur la page du module "Test fonctionnel"
     Et Je selectionne le sujet "Sujet1"
@@ -33,7 +33,7 @@ Fonctionnalité: Utilisateur - Consultation Sujet
     Alors J'ai un message d'erreur
     
   Scénario: consultation module non inscrit responsable
-    Soit Je suis connecté en tant que "Responsable Module"
+    Soit Je suis connecté en tant que "Responsable module"
     Et J'ai créé le module "Programmation"
     Quand Je navigue sur la page du module "Test fonctionnel"
     Alors J'ai un message d'erreur

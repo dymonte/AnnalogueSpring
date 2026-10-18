@@ -53,6 +53,9 @@ public class AdminMembersAcceptanceTest {
     @Autowired
     private MessageSource messageSource;
 
+    @Autowired
+    private UserAcceptanceTest userAcceptanceTest;
+
     @LocalServerPort
     private int port;
 
@@ -240,6 +243,8 @@ public class AdminMembersAcceptanceTest {
         page.fill("#password", PASSWORD);
         page.click("#login-btn");
         page.waitForURL(url("/home"));
+
+        userAcceptanceTest.connectAs(role.name().toLowerCase() + "@example.com", role.name().toLowerCase(), role);
 
         loggedAsAdmin = role == Role.ADMIN;
     }

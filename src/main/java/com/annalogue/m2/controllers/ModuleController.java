@@ -2,6 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import org.springframework.security.core.Authentication;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 
 // all texts are message keys of messages.properties: the pages display them with #{${...}}
@@ -32,9 +34,12 @@ public class ModuleController {
 
     private final IModuleService moduleService;
     private final IUserService userService;
-    public ModuleController(IModuleService moduleService, IUserService userService) {
+    private final IInscriptionService inscriptionService;
+
+    public ModuleController(IModuleService moduleService, IUserService userService, IInscriptionService inscriptionService) {
         this.moduleService = moduleService;
         this.userService = userService;
+        this.inscriptionService = inscriptionService;
     }
 
     // catalogue of all the modules, for the admin only;
@@ -96,6 +101,12 @@ public class ModuleController {
     public String showModule(@PathVariable Long id, Model model) {
         ModuleEntity module = moduleService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        UserEntity user = userService.getCurrentUser();
+        boolean isResponsible = Objects.equals(module.getResponsible().getId(), user.getId());
+        if (!isResponsible && !inscriptionService.hasReaderAccess(user, module)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         model.addAttribute("module", module);
 

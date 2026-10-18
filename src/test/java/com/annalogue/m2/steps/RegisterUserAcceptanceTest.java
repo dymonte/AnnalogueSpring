@@ -4,8 +4,11 @@ import com.annalogue.m2.models.InscriptionEntity;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.CommentRepository;
+import com.annalogue.m2.repositories.CorrectionRepository;
 import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IPublicationService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
 import io.cucumber.java.*;
@@ -38,6 +41,15 @@ public class RegisterUserAcceptanceTest {
 
     @Autowired
     private UserAcceptanceTest userSteps;
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private CorrectionRepository correctionRepository;
+
+    @Autowired
+    private IPublicationService publicationService;
 
     // the connection is done by UserAcceptanceTest: same browser page and same user
     private void syncWithLoggedUser() {
@@ -94,6 +106,9 @@ public class RegisterUserAcceptanceTest {
 
         page = context.newPage();
 
+        commentRepository.deleteAllInBatch();
+        correctionRepository.deleteAllInBatch();
+        publicationService.deleteAll();
         inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();

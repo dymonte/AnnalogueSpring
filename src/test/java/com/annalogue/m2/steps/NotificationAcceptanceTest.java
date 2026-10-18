@@ -6,6 +6,8 @@ import com.annalogue.m2.models.NotificationEntity;
 import com.annalogue.m2.models.NotificationType;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.CommentRepository;
+import com.annalogue.m2.repositories.CorrectionRepository;
 import com.annalogue.m2.repositories.NotificationRepository;
 import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
@@ -58,12 +60,23 @@ public class NotificationAcceptanceTest {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private CorrectionRepository correctionRepository;
+
+
+
     @LocalServerPort
     private int port;
 
     @After(order = 30000)
     public void cleanDatabase() {
-        notificationRepository.deleteAll();
+        commentRepository.deleteAllInBatch();
+        correctionRepository.deleteAllInBatch();
+        publicationService.deleteAll();
         inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();
