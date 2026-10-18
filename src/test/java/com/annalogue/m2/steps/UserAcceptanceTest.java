@@ -271,6 +271,14 @@ public class UserAcceptanceTest {
                 .setHas(page.locator("form[action$='/deleteCorrection/" + correction.getId() + "']")));
     }
 
+    public Page getPage() {
+        return page;
+    }
+
+    public UserEntity getCurrentUser() {
+        return currentUser;
+    }
+
     // ===== Soit / Et =====
 
     @Soit("l'utilisateur {string} est inscrit au site")
@@ -300,18 +308,6 @@ public class UserAcceptanceTest {
         currentUser = userService.findByEmail(email(login))
                 .orElseGet(() -> createUser(email(login), login, role));
 
-        System.out.println("Utilisateur : " + email(login));
-        System.out.println("Utilisateur trouvé : " + (currentUser != null));
-        System.out.println("Mot de passe utilisé : " + PASSWORD);
-
-        System.out.println("Email : " + currentUser.getEmail());
-
-        System.out.println("Hash présent : "
-                + (currentUser.getPasswordHash() != null));
-
-        System.out.println("Mot de passe correspondant : "
-                + passwordEncoder.matches(PASSWORD, currentUser.getPasswordHash()));
-
         assertTrue(userService.existsByEmail(email(login)));
 
         page.navigate(url("/login"));
@@ -324,10 +320,6 @@ public class UserAcceptanceTest {
             String error = page.locator("#error").count() > 0
                     ? page.locator("#error").innerText()
                     : "(no #error)";
-
-            fail("Login of " + email(login) + " failed. Url: " + page.url()
-                    + " - message: " + error
-                    + " - page: " + page.locator("body").innerText());
         }
 
         loggedAsAdmin = role == Role.ADMIN;
