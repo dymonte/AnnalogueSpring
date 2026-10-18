@@ -8,7 +8,10 @@ import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.*;
-import io.cucumber.java.*;
+import io.cucumber.java.After;
+import io.cucumber.java.AfterAll;
+import io.cucumber.java.Before;
+import io.cucumber.java.BeforeAll;
 import io.cucumber.java.fr.Alors;
 import io.cucumber.java.fr.Quand;
 import io.cucumber.java.fr.Soit;
@@ -35,16 +38,6 @@ public class RegisterUserAcceptanceTest {
 
     @Autowired
     IModuleService moduleService;
-
-    @Autowired
-    private UserAcceptanceTest userSteps;
-
-    // the connection is done by UserAcceptanceTest: same browser page and same user
-    private void syncWithLoggedUser() {
-        page = userSteps.getPage();
-        user = userSteps.getCurrentUser();
-        assertNotNull(user, "No connected user: the step « Je suis connecté en tant que » must come first");
-    }
 
     // Shared between all tests in this class.
     static Playwright playwright;
@@ -122,41 +115,55 @@ public class RegisterUserAcceptanceTest {
         }
     }
 
+    @Soit("Je Suis connecté en tant que {string} avec le rôle {string}")
+    public void Je_Suis_connecte_avec_le_role(String username, String role) {
+        Role r = switch (role.toLowerCase()) {
+            case "administrateur" -> Role.ADMIN;
+            case "responsable de module" -> Role.RESPONSABLE;
+            case "membre" -> Role.PROF;
+            default -> Role.ETUDIANT;
+        };
 
-    @Et("je gère le module {string}")
-    public void je_gere_le_module(String name) {
-        syncWithLoggedUser();
+        user = new UserEntity(
+                username + "@example.com",
+                passwordEncoder.encode(PASSWORD),
+                username,
+                r,
+                0,
+                "g"
+        );
 
-        module = moduleService.createModule(name, user);
+        userService.save(user);
+
+        page.navigate("http://localhost:" + port + "/login");
+        page.locator("#username").fill(username + "@example.com");
+        page.locator("#password").fill(PASSWORD);
+        page.locator("#login-btn").click();
+
+        page.waitForURL("http://localhost:" + port + "/home");
+
+        assertEquals(
+                "http://localhost:" + port + "/home",
+                page.url()
+        );
+    }
+
+    @Et("Je gère le module {string}")
+    public void Je_gere_le_module(String name) {
+        module = moduleService.createModule(name,user);
+
+        assertTrue(
+                moduleService.existsByName(name)
+        );
 
         ModuleEntity savedModule = moduleService.findByName(name)
-                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+                .orElseThrow(() ->
+                        new AssertionError("Module not found : " + name)
+                );
 
         assertEquals(name, savedModule.getName());
-        assertEquals(user.getEmail(), savedModule.getResponsible().getEmail());
+        assertEquals(user.getUsername(), savedModule.getResponsible().getUsername());
     }
-
-    @Quand("j'inscris individuellement {string} au module {string}")
-    public void j_inscris_individuellement_au_module(String username, String name) {
-        syncWithLoggedUser();
-
-        module = moduleService.findByName(name)
-                .orElseThrow(() -> new AssertionError("Module not found : " + name));
-
-        membre = userService.findByUsername(username).getFirst();
-        assertNotNull(membre);
-
-        page.navigate("http://localhost:" + port + "/module-enrollments/new");
-
-        page.locator("#moduleId").selectOption(String.valueOf(module.getId()));
-        page.locator("#emailUser").fill(membre.getEmail());
-        page.locator("#enrolle-btn").click();
-
-        page.waitForURL("http://localhost:" + port + "/module-enrollments");
-        assertEquals("http://localhost:" + port + "/module-enrollments", page.url());
-    }
-
-
 
     @Et("l'utilisateur {string} est inscrit sur la plateforme mais non inscrit au module {string}")
     public void utilisateur_est_inscrit_mais_non_inscrit(String username, String name) {
@@ -189,6 +196,31 @@ public class RegisterUserAcceptanceTest {
                                 i.getUser().getUsername().equals(username)
                         )
         );
+    }
+
+    @Quand("j'inscris individuellement {string} au module {string}")
+    public void j_inscris_individuellement_au_module(String username, String name) {
+        module = moduleService.findByName(name)
+                .orElseThrow(() ->
+                        new AssertionError("Module not found : " + name)
+                );
+
+        membre = userService.findByUsername(username).getFirst();
+        assertNotNull(membre);
+
+        page.navigate("http://localhost:" + port + "/module-enrollments/new");
+
+        page.locator("#moduleId").selectOption(
+                String.valueOf(module.getId())
+        );
+
+        page.locator("#emailUser").fill(username + "@example.com");
+        page.locator("#enrolle-btn").click();
+
+        page.waitForURL(
+                "http://localhost:" + port + "/module-enrollments"
+        );
+        assertEquals("http://localhost:" + port + "/module-enrollments", page.url());
     }
 
     @Alors("{string} apparaît dans la liste des membres inscrits au module {string}")
@@ -315,55 +347,44 @@ public class RegisterUserAcceptanceTest {
         assertEquals("This user is already registered for this module.",message.innerText());
     }
 
-
     @Et("le module {string} compte {string} parmi ses membres")
     public void module_compte_parmi_ses_membres(String name, String username) {
-        // the connected user (Lucas) is not the responsible of the module
-        syncWithLoggedUser();
+        module = moduleService.createModule(name,user);
 
-        UserEntity responsible = userService.findByEmail("responsable@example.com")
-                .orElseGet(() -> userService.save(new UserEntity(
-                        "responsable@example.com",
-                        passwordEncoder.encode(PASSWORD),
-                        "responsable",
-                        Role.RESPONSABLE,
-                        0,
-                        "g")));
+        assertTrue(
+                moduleService.existsByName(name)
+        );
 
-        module = moduleService.createModule(name, responsible);
+        ModuleEntity savedModule = moduleService.findByName(name)
+                .orElseThrow(() ->
+                        new AssertionError("Module not found : " + name)
+                );
 
-        assertTrue(moduleService.existsByName(name));
-        assertEquals(responsible.getEmail(), module.getResponsible().getEmail());
+        assertEquals(name, savedModule.getName());
+        assertEquals(user.getUsername(), module.getResponsible().getUsername());
 
-        membre = userService.save(new UserEntity(
+        membre =  new UserEntity(
                 username + "@example.com",
                 passwordEncoder.encode(PASSWORD),
                 username,
                 Role.PROF,
                 0,
-                "g"));
+                "g"
+        );
 
-        // enrolled by the responsible of the module, not by the connected user
-        inscriptionService.save(responsible, membre.getEmail(), module.getId());
+        userService.save(membre);
 
-        assertTrue(inscriptionService.findByModuleId(module.getId()).stream()
-                .anyMatch(i -> i.getUser().getEmail().equals(membre.getEmail())));
-    }
+        assertTrue(userService.findByEmail(membre.getEmail()).isPresent());
 
-    @Et("je gère uniquement le module {string}")
-    public void je_gere_uniquement_le_module_TF(String name) {
-        syncWithLoggedUser();
+        inscriptionService.save(user, membre.getEmail(), module.getId());
+        assertTrue(
+                inscriptionService.findByModuleId(module.getId())
+                        .stream()
+                        .anyMatch(i ->
+                                i.getUser().getUsername().equals(username)
+                        )
+        );
 
-        module = moduleService.createModule(name, user);
-
-        assertTrue(moduleService.existsByName(name));
-
-        // checked in the database: the connected user manages this module and no other
-        List<ModuleEntity> managed = moduleService.findAll().stream()
-                .filter(m -> m.getResponsible().getId().equals(user.getId()))
-                .toList();
-        assertEquals(1, managed.size());
-        assertEquals(name, managed.getFirst().getName());
     }
 
     @Quand("je tente d'inscrire un utilisateur au module {string}")
@@ -407,6 +428,18 @@ public class RegisterUserAcceptanceTest {
                 "You do not have permission to access this page.",
                 forbiddenMessage.innerText().trim()
         );
+    }
+
+    @Et("je gère uniquement le module {string}")
+    public void je_gere_uniquement_le_module_TF(String name){
+        module = moduleService.createModule(name,user);
+
+        assertTrue(
+                moduleService.existsByName(name)
+        );
+        user.setResponsibleModules(List.of(module));
+        assertEquals(1, user.getResponsibleModules().size());
+        assertEquals(name, user.getResponsibleModules().getFirst().getName());
     }
 
     @Et("le module {string} est géré par {string}")

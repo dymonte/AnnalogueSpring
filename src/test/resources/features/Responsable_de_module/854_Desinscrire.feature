@@ -19,17 +19,17 @@ Fonctionnalité: Résponsable Module - Désinscrire
 
   Scénario: Tentative de désinscription par un responsable d'un autre module
     Soit je suis connecté en tant que "Antony" avec le rôle "Responsable de module"
-    Et je gère uniquement le module "TF"
-    Et le module "MOIA" est géré par "Fabrice"
+    Et Je gère uniquement le module "TF"
+    Et Le module "MOIA" est géré par "Fabrice"
     Et l'utilisateur "Fabien" est inscrit au module "MOIA"
     Quand je tente de désinscrire "Fabien" du module "MOIA"
-    Alors l'action m'est refusée
+    Alors L'action m'est refusée
     Et "Fabien" reste inscrit au module "MOIA"
 
   Scénario: Tentative de désinscription par un simple membre ou étudiant
     Soit je suis connecté en tant que "Lucas" avec le rôle "Membre"
     Et le module "MOIA" compte "Fabien" et moi-même parmi ses membres
-    Quand je tente de désinscrire "Fabien" du module "MOIA"
+    Quand je tente de retirer "Fabien" du module "MOIA"
     Alors l'option de désinscription ne m'est pas accessible
     Et un message d'erreur d'autorisation est affiché
 

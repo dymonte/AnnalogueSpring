@@ -2,6 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.models.*;
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
+import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.INotificationService;
 import com.annalogue.m2.services.IUserService;
@@ -32,6 +33,9 @@ class ModuleFormErrorsTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockitoBean
+    private IInscriptionService inscriptionService;
 
     @MockitoBean
     private IModuleService moduleService;

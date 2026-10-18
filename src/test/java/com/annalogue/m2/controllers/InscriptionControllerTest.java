@@ -589,8 +589,8 @@ class InscriptionControllerTest {
                 .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
         when(inscriptionService.existsById(5L)).thenReturn(false);
-        when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
-                "Enrollment not found or you are not authorized to delete it."
+        when(notifyService.getMessage("error.inscription.not.enrolled")).thenReturn(
+                "The user is not enrolled in this module."
         );
         mockMvc.perform(
                         post("/module-enrollments/{id}/delete", 5L)
@@ -600,7 +600,7 @@ class InscriptionControllerTest {
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/module-enrollments"))
                 .andExpect(flash().attributeExists("error"))
-                .andExpect(flash().attribute("error", "Enrollment not found or you are not authorized to delete it."));
+                .andExpect(flash().attribute("error", "The user is not enrolled in this module."));
 
         verify(inscriptionService, never()).deleteById(5L);
     }
@@ -696,17 +696,16 @@ class InscriptionControllerTest {
                                 .thenReturn(List.of(tf_achevlot, tf_fmaiou));
 
                 when(inscriptionService.existsById(5L)).thenReturn(false);
-                when(notifyService.getMessage("error.inscription.not.found")).thenReturn(
-                                "Enrollment not found or you are not authorized to modify or delete it.");
+                when(notifyService.getMessage("error.inscription.not.enrolled")).thenReturn(
+                                "The user is not enrolled in this module.");
                 mockMvc.perform(
-                                post("/module-enrollments/{id}/delete", 5L)
+                                post("/module-enrollments/{id}/toggle-editor", 5L)
                                                 .with(user("fbouquet@ufr.com").roles("RESPONSABLE"))
                                                 .with(csrf()))
                                 .andExpect(status().is3xxRedirection())
                                 .andExpect(redirectedUrl("/module-enrollments"))
                                 .andExpect(flash().attributeExists("error"))
-                                .andExpect(flash().attribute("error",
-                                                "Enrollment not found or you are not authorized to modify or delete it."));
+                                .andExpect(flash().attribute("error","The user is not enrolled in this module."));
 
                 verify(inscriptionService, never()).toggleEditor(5L);
         }

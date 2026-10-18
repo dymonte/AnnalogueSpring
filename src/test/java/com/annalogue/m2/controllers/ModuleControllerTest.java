@@ -2,10 +2,7 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.exceptions.InvalidModuleDataException;
-import com.annalogue.m2.models.ModuleEntity;
-import com.annalogue.m2.models.PublicationEntity;
-import com.annalogue.m2.models.Role;
-import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.models.*;
 import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
 import com.annalogue.m2.services.IUserService;
@@ -208,12 +205,24 @@ class ModuleControllerTest {
     @Test
     void shouldShowEmptyModulePage() throws Exception {
         ModuleEntity module = mock(ModuleEntity.class);
+
         when(module.getId()).thenReturn(1L);
         when(module.getName()).thenReturn("MOIA");
         when(module.getResponsible()).thenReturn(teacher);
         when(module.getPublications()).thenReturn(List.of());
-        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
 
+        UserEntity currentUser = mock(UserEntity.class);
+        when(currentUser.getId()).thenReturn(10L);
+        when(userService.getCurrentUser()).thenReturn(currentUser);
+
+        InscriptionEntity inscription = mock(InscriptionEntity.class);
+        UserEntity registeredUser = mock(UserEntity.class);
+        when(registeredUser.getId()).thenReturn(10L);
+        when(inscription.getUser()).thenReturn(registeredUser);
+
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+        when(inscriptionService.findByModuleId(1L))
+                .thenReturn(List.of(inscription));
 
         mockMvc.perform(get("/modules/1"))
                 .andExpect(status().isOk())
@@ -225,13 +234,28 @@ class ModuleControllerTest {
     @Test
     void shouldShowFilledModulePage() throws Exception {
         ModuleEntity module = mock(ModuleEntity.class);
+
         when(module.getId()).thenReturn(1L);
         when(module.getName()).thenReturn("MOIA");
         when(module.getResponsible()).thenReturn(teacher);
-        PublicationEntity pub1 = mock(PublicationEntity.class), pub2 = mock(PublicationEntity.class);
-        when(module.getPublications()).thenReturn(List.of(pub1, pub2));
-        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
 
+        PublicationEntity pub1 = mock(PublicationEntity.class);
+        PublicationEntity pub2 = mock(PublicationEntity.class);
+
+        when(module.getPublications()).thenReturn(List.of(pub1, pub2));
+
+        UserEntity currentUser = mock(UserEntity.class);
+        when(currentUser.getId()).thenReturn(10L);
+        when(userService.getCurrentUser()).thenReturn(currentUser);
+
+        InscriptionEntity inscription = mock(InscriptionEntity.class);
+        UserEntity registeredUser = mock(UserEntity.class);
+        when(registeredUser.getId()).thenReturn(10L);
+        when(inscription.getUser()).thenReturn(registeredUser);
+
+        when(moduleService.findById(1L)).thenReturn(Optional.of(module));
+        when(inscriptionService.findByModuleId(1L))
+                .thenReturn(List.of(inscription));
 
         mockMvc.perform(get("/modules/1"))
                 .andExpect(status().isOk())
@@ -239,7 +263,6 @@ class ModuleControllerTest {
                 .andExpect(model().attribute("publications", List.of(pub1, pub2)))
                 .andExpect(model().attribute("module", module));
     }
-
     @Test
     void shouldReturn404WhenModuleDoesNotExist() throws Exception {
         when(moduleService.findById(99L)).thenReturn(Optional.empty());
