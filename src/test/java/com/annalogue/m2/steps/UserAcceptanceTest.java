@@ -604,6 +604,7 @@ public class UserAcceptanceTest {
         assertThat(page.locator("#error")).containsText(message("error.login.generic"));
     }
 
+
     @Alors("Le fichier {string} est associé à la correction {string}")
     public void leFichierEstAssociéÀLaCorrection(String fileName, String title) {
 
@@ -774,5 +775,28 @@ public class UserAcceptanceTest {
         assertThat(correctionCard(correction).locator("article")).hasCount(0);
     }
 
+    @Quand("Je navigue sur la page du module {string}")
+    public void jeNavigueSurLaPageDuModule(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Et("Je selectionne le sujet {string}")
+    public void jeSelectionneLeSujet(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("Une page me propose de télécharger le document lié au sujet {string}")
+    public void unePageMeProposeDeTéléchargerLeDocumentLiéAuSujet(String arg0) {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
+
+    @Alors("J'ai un message d'erreur")
+    public void JaiUnMessageDErreur() {
+        // Write code here that turns the phrase above into concrete actions
+        throw new PendingException();
+    }
 
 }
