@@ -294,7 +294,8 @@ public class UserAcceptanceTest {
         assertTrue(page.locator("#result-list").count() == 0);
     }
 
-    @Alors("je suis connecté en tant que {string} avec le rôle {string}")
+    // @Alors("je suis connecté en tant que {string} avec le rôle {string}")
+    // called by RegisterUserAcceptanceTest (same sentence as 853 / 860)
     public void jeSuisConnectéEnTantQueAvecLeRôle(String login, String gherkinRole) {
         Role expected = role(gherkinRole);
 

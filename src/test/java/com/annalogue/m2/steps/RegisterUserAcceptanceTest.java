@@ -38,7 +38,10 @@ public class RegisterUserAcceptanceTest {
 
     @Autowired
     IModuleService moduleService;
-
+    // Quentin's check (958), used when the user already exists
+    @Autowired
+    UserAcceptanceTest userSteps;
+    
     // Shared between all tests in this class.
     static Playwright playwright;
     static Browser browser;
@@ -115,8 +118,17 @@ public class RegisterUserAcceptanceTest {
         }
     }
 
+    // same sentence used in 2 ways:
+    // - 853 / 860: the user does not exist yet -> create him and log in
+    // - 958 (Quentin): the user already exists and is logged in -> only check it
+    
     @Soit("je suis connecté en tant que {string} avec le rôle {string}")
     public void je_suis_connecte_avec_le_role(String username, String role) {
+        if (userService.findByEmail(username.toLowerCase() + "@example.com").isPresent()) {
+            userSteps.jeSuisConnectéEnTantQueAvecLeRôle(username, role);
+            return;
+        }
+
         Role r = switch (role.toLowerCase()) {
             case "administrateur" -> Role.ADMIN;
             case "responsable de module" -> Role.RESPONSABLE;
