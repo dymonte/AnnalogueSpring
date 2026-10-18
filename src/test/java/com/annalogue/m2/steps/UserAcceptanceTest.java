@@ -651,6 +651,9 @@ public class UserAcceptanceTest {
 
         // opens the form « Add a comment » of the correction, on the module page
         page.click("[data-bs-target='#comment-form-" + id + "']");
+
+        // waits for the end of the animation: during it (class « collapsing »), Bootstrap ignores a new click
+        assertThat(page.locator("#comment-form-" + id)).hasClass(Pattern.compile("\\bshow\\b"));
         assertThat(page.locator("#content-" + id)).isVisible();
     }
 
@@ -778,4 +781,6 @@ public class UserAcceptanceTest {
         page.navigate(modulePageUrl(subject.getModule()));
         assertThat(correctionCard(correction).locator("article")).hasCount(0);
     }
+
+
 }

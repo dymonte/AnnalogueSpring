@@ -21,6 +21,7 @@ Fonctionnalité: Utilisateur - Commentaire
     
   
   Plan du scénario: Ajout commentaire correction
+    Soit Je suis connecté en tant que "user" avec le rôle <role>
     Et Je suis inscrit au module "Test fonctionnel"
     Et J'ai le role <rolemodule> pour le module "Test fonctionnel"
     Et Je suis sur la page du module "Test fonctionnel"
@@ -78,6 +79,7 @@ Fonctionnalité: Utilisateur - Commentaire
   
   
   Plan du scénario: Annulation commentaire correction
+    Soit Je suis connecté en tant que "user" avec le rôle <role>
     Et Je suis inscrit au module "Test fonctionnel"
     Et J'ai le role <rolemodule> pour le module "Test fonctionnel"
     Et Je suis sur la page du module "Test fonctionnel"
@@ -85,7 +87,7 @@ Fonctionnalité: Utilisateur - Commentaire
     Et Le sujet "Sujet1" du module "Test fonctionnel" dispose de la correction "correction1"
     Quand J'ajoute un commentaire à la correction "correction1" du sujet "Sujet1"
     Et J'annule l'ajout du commentaire
-    Alors Aucun commentaire n'est disponible pour le sujet "Sujet1"
+    Alors Aucun commentaire n'est disponible pour la correction "correction1" du sujet "Sujet1"
     Exemples:
     | role                  | rolemodule    |
     | "Responsable module"  | "etudiant"    |
@@ -109,6 +111,6 @@ Fonctionnalité: Utilisateur - Commentaire
     Et Je suis sur la page du module "Test fonctionnel"
     Et Le sujet "Sujet1" existe sur le module "Test fonctionnel"
     Et Le sujet "Sujet1" du module "Test fonctionnel" dispose de la correction "correction1"
-    Quand J'ajoute un commentaire au sujet "Sujet1"
+    Quand J'ajoute un commentaire à la correction "correction1" du sujet "Sujet1"
     Et J'annule l'ajout du commentaire
     Alors Aucun commentaire n'est disponible pour la correction "correction1" du sujet "Sujet1"

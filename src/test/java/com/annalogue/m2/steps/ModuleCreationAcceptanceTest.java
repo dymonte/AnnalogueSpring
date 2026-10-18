@@ -3,8 +3,11 @@ package com.annalogue.m2.steps;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.CommentRepository;
+import com.annalogue.m2.repositories.CorrectionRepository;
 import com.annalogue.m2.services.IInscriptionService;
 import com.annalogue.m2.services.IModuleService;
+import com.annalogue.m2.services.IPublicationService;
 import com.annalogue.m2.services.IUserService;
 import com.microsoft.playwright.Page;
 import io.cucumber.java.After;
@@ -43,12 +46,24 @@ public class ModuleCreationAcceptanceTest {
     @Autowired
     private MessageSource messageSource;
 
+    @Autowired
+    private CommentRepository commentRepository;
+
+    @Autowired
+    private CorrectionRepository correctionRepository;
+
+    @Autowired
+    private IPublicationService publicationService;
+
     @LocalServerPort
     private int port;
 
 
     @After(order = 20000)
     public void cleanDatabase() {
+        commentRepository.deleteAllInBatch();
+        correctionRepository.deleteAllInBatch();
+        publicationService.deleteAll();
         inscriptionService.deleteAll();
         moduleService.deleteAll();
         userService.deleteAll();
