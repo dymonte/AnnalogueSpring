@@ -39,6 +39,10 @@ public class HomeController {
     @GetMapping(value = { "/home", "/" })
     public String home(@RequestParam(defaultValue = FILTER_ALL) String filter,
                        @RequestParam(required = false) String role,
+                       @RequestParam(required = false) String successKey,
+                       @RequestParam(required = false) String errorKey,
+                       @RequestParam(required = false) String changedUsername,
+                       @RequestParam(required = false) String deletedUsername,
                        Authentication authentication,
                        Model model) {
 
@@ -67,6 +71,11 @@ public class HomeController {
             model.addAttribute("filterRoles", roleService.getRoles());
             model.addAttribute("selectedFilter", selectedRole == null ? "" : selectedRole.name());
             model.addAttribute("teacherRoles", roleService.getTeacherRoles());
+
+            if (successKey != null) model.addAttribute("successKey", successKey);
+            if (errorKey != null) model.addAttribute("errorKey", errorKey);
+            if (changedUsername != null) model.addAttribute("changedUsername", changedUsername);
+            if (deletedUsername != null) model.addAttribute("deletedUsername", deletedUsername);
 
             return "home";
         }

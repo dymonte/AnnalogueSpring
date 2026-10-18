@@ -18,7 +18,7 @@
     </th:block>
 
     <!-- filter by role (GET /members?role=PROF) -->
-    <form th:action="@{/members}" method="get" id="role-filter"
+    <form th:action="@{/home}" method="get" id="role-filter"
           class="d-flex gap-2 align-items-center mb-3">
         <label for="filter-role" class="form-label mb-0" th:text="#{members.filter.role}">Filter by role</label>
         <select id="filter-role" name="role" class="form-select form-select-sm w-auto"

@@ -284,7 +284,7 @@ public class AdminMembersAcceptanceTest {
 
         if (loggedAsAdmin && user(login).isPresent()) {
             // through the members page: the select of the user's row
-            if (!tryToNavigateToConnectedPage("members")) return;
+            if (!tryToNavigateToConnectedPage("home")) return;
 
             // the select only offers the possible roles: add the asked value if it is not there
             page.locator(row(login) + " .role-select").evaluate("""
@@ -305,7 +305,7 @@ public class AdminMembersAcceptanceTest {
     public void jeSupprimeDuSite(String login) {
         if (loggedAsAdmin && user(login).isPresent()) {
 
-            if (!tryToNavigateToConnectedPage("members")) return;
+            if (!tryToNavigateToConnectedPage("home")) return;
 
             // the delete button asks for a confirmation
             page.onceDialog(Dialog::accept);
@@ -373,13 +373,13 @@ public class AdminMembersAcceptanceTest {
     @Alors("J'ai un message d'erreur qui dit que je n'ai pas le droit de changer les roles des utilisateur")
     public void messagePasLeDroitDeChangerLesRoles() {
         assertTrue(visibleText().contains(message("error.forbidden")));
-        assertFalse(page.url().endsWith("/members"));
+        assertFalse(page.url().endsWith("/home"));
     }
 
     @Alors("J'ai un message d'erreur qui dit que je n'ai pas le droit de supprimer un utilisateur de site")
     public void messagePasLeDroitDeSupprimer() {
         assertTrue(visibleText().contains(message("error.forbidden")));
-        assertFalse(page.url().endsWith("/members"));
+        assertFalse(page.url().endsWith("/home"));
     }
 
     @Alors("J'ai un message d'erreur qui dit qu'on ne peut pas ajouter un autre administrateur")

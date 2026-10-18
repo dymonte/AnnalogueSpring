@@ -135,7 +135,7 @@ public class UserController {
         }
 
         // back to the list in both cases, with the message
-        return "redirect:/members";
+        return "redirect:/home";
     }
 
     // the admin switches a teacher between Teacher and Module manager (admin only, see SecurityConfig: /members/**)
@@ -152,11 +152,11 @@ public class UserController {
 
         if (role == null || role.isBlank()) {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.empty");
-            return "redirect:/members";
+            return "redirect:/home";
         }
         if (!roleService.exists(role)) {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.invalid");
-            return "redirect:/members";
+            return "redirect:/home";
         }
 
         try {
@@ -173,7 +173,7 @@ public class UserController {
             redirectAttributes.addFlashAttribute("errorKey", "error.user.role.change.database");
         }
 
-        return "redirect:/members";
+        return "redirect:/home";
     }
     // lists shown in the form's dropdowns
     private void addFormLists(Model model) {
