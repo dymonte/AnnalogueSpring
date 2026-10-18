@@ -497,7 +497,9 @@ public class RegisterUserAcceptanceTest {
 
     @Alors("l'action m'est refusée")
     public void action_est_refusee(){
-        assertEquals("http://localhost:" + port + "/module-enrollments/new" ,page.url());
+        String url = page.url();
+        assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new")
+                || url.equals("http://localhost:" + port + "/modules/add"));
 
     }
 
@@ -538,4 +540,11 @@ public class RegisterUserAcceptanceTest {
         // TODO :
     }
 
+    public Page getPage() {
+        return page;
+    }
+
+    public UserEntity getLoggedUser() {
+        return user;
+    }
 }

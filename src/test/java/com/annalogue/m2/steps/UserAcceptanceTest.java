@@ -7,8 +7,6 @@ import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.services.*;
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.FilePayload;
-import com.microsoft.playwright.options.LoadState;
-import com.microsoft.playwright.options.WaitUntilState;
 import io.cucumber.java.*;
 
 import io.cucumber.java.fr.Alors;
@@ -177,6 +175,21 @@ public class UserAcceptanceTest {
         return null;
     }
 
+
+    // fills the login form and waits for the result: /home if accepted, /login?error if refused
+    private void login(String login, String password) {
+        page.navigate(url("/login"));
+        page.fill("#username", email(login));
+        page.fill("#password", password);
+        page.click("#login-btn");
+        page.waitForURL(u -> u.contains("/home") || u.contains("/login?error"));
+    }
+
+    // http status of a page, to check what the connected user is allowed to open
+    private int statusOf(String path) {
+        return page.navigate(url(path)).status();
+    }
+
     // the module with its responsible (another user than the connected one), created if it does not exist
     private ModuleEntity getOrCreateModule(String name) {
         return moduleService.findByName(name).orElseGet(() -> {
@@ -219,6 +232,16 @@ public class UserAcceptanceTest {
         if(!userService.existsByEmail(email(login))) {
             createUser(email(login), login, Role.ETUDIANT);
         };
+
+        assertTrue(userService.existsByEmail(email(login)));
+    }
+
+    @Soit("L'utilisateur {string} possède un compte {string} ayant comme mot de passe {string}")
+    public void lUtilisateurPossèdeUnCompteAyantCommeMotDePasse(String login, String gherkinRole, String password) {
+        if (!userService.existsByEmail(email(login))) {
+            userService.save(new UserEntity(email(login), passwordEncoder.encode(password), login,
+                    role(gherkinRole), null, null));
+        }
 
         assertTrue(userService.existsByEmail(email(login)));
     }
@@ -459,6 +482,17 @@ public class UserAcceptanceTest {
         page.waitForURL(url("/home"));
     }
 
+    @Quand("je m'authentifie avec l'identifiant {string} et le mot de passe {string}")
+    public void jeMAuthentifieAvecLIdentifiantEtLeMotDePasse(String login, String password) {
+        login(login, password);
+    }
+
+    // the password field is required in the form: any password is sent, the account does not exist
+    @Quand("je m'authentifie avec l'identifiant {string}")
+    public void jeMAuthentifieAvecLIdentifiant(String login) {
+        login(login, PASSWORD);
+    }
+
     @Quand("J'ajoute une correction {string} au sujet {string}")
     public void jAjouteUneCorrectionAuSujet(String title, String subjectName) {
         correctionSubmitted = true;
@@ -511,6 +545,27 @@ public class UserAcceptanceTest {
     public void aucunDocumentNEstAffichéDansLesRésultats() {
         assertTrue(page.locator("#result-list").count() == 0);
     }
+
+    @Alors("je suis connecté en tant que {string} avec le rôle {string}")
+    public void jeSuisConnectéEnTantQueAvecLeRôle(String login, String gherkinRole) {
+        Role expected = role(gherkinRole);
+
+        // the user is logged in: redirected to /home, his name is in the navbar
+        assertTrue(page.url().endsWith("/home"));
+        assertThat(page.locator("#dropdownLogout"))
+                .containsText(Pattern.compile(login, Pattern.CASE_INSENSITIVE));
+
+        // the role is the one of the account: what he can open depends on it (SecurityConfig)
+        assertEquals(expected == Role.ADMIN ? 200 : 403, statusOf("/admin"));
+        assertEquals(expected == Role.RESPONSABLE ? 200 : 403, statusOf("/modules/add"));
+    }
+
+    @Alors("j'ai un message d'erreur")
+    public void jAiUnMessageDErreur() {
+        assertTrue(page.url().contains("/login"));
+        assertThat(page.locator("#error")).containsText(message("error.login.generic"));
+    }
+}
 
     @Alors("Le fichier {string} est associé à la correction {string}")
     public void leFichierEstAssociéÀLaCorrection(String fileName, String title) {

@@ -62,6 +62,9 @@ class PublicationControllerTest {
     private IInscriptionService inscriptionService;
 
     @MockitoBean
+    private INotificationService notificationService;
+
+    @MockitoBean
     private IFilesService filesService;
 
 	@Test

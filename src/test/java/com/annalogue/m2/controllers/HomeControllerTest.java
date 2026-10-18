@@ -4,7 +4,8 @@ import com.annalogue.m2.dto.UserModuleView;
 import com.annalogue.m2.ldap.SecurityConfig;
 import com.annalogue.m2.services.CustomUserDetailsService;
 import com.annalogue.m2.services.IModuleService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.INotificationService;
+import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -41,10 +42,13 @@ class HomeControllerTest {
     private CustomUserDetailsService customUserDetailsService;
 
     @MockitoBean
-    private UserService userService;
+    private IUserService userService;
 
     @MockitoBean
     private IModuleService moduleService;
+
+    @MockitoBean
+    private INotificationService notificationService;
 
     // modules of Fabrice: MOIA created by him, TF where he is lecturer and editor
     private final UserModuleView moia =

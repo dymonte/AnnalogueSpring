@@ -3,6 +3,8 @@ package com.annalogue.m2.services;
 import com.annalogue.m2.models.*;
 import com.annalogue.m2.repositories.InscriptionRepository;
 import com.annalogue.m2.repositories.NotificationRepository;
+import com.annalogue.m2.exceptions.NotificationStateException;
+import com.annalogue.m2.repositories.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -25,6 +28,9 @@ class NotificationServiceTest {
 
     @Mock
     private InscriptionRepository inscriptionRepository;
+
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private NotificationService notificationService;
@@ -168,5 +174,82 @@ class NotificationServiceTest {
         notificationService.notifyPublicationAdded(subjectBy(responsible));
 
         assertTrue(savedRecipients().isEmpty());
+    }
+
+    // ===== notifications enable disable =====
+
+    @Test
+    void shouldNotNotifyTheEnrollmentWhenNotificationsAreOff() {
+        student.setNotificationsEnabled(false);
+
+        notificationService.notifyEnrollment(student, tf);
+
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldNotNotifyTheUsersWhoTurnedOffTheirNotifications() {
+        lecturer.setNotificationsEnabled(false);
+        when(inscriptionRepository.findByModuleId(10L)).thenReturn(List.of(
+                new InscriptionEntity(InscriptionType.ETUDIANT, student, tf),
+                new InscriptionEntity(InscriptionType.INTERVENANT, lecturer, tf)));
+
+        notificationService.notifyPublicationAdded(subjectBy(responsible));
+
+        assertEquals(List.of(student), savedRecipients());
+    }
+
+    @Test
+    void shouldTurnOffTheNotifications() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(student));
+
+        notificationService.disableNotifications(2L);
+
+        assertFalse(student.isNotificationsEnabled());
+        verify(userRepository).save(student);
+    }
+
+    @Test
+    void shouldTurnOnTheNotifications() {
+        student.setNotificationsEnabled(false);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(student));
+
+        notificationService.enableNotifications(2L);
+
+        assertTrue(student.isNotificationsEnabled());
+        verify(userRepository).save(student);
+    }
+
+    @Test
+    void shouldRefuseToTurnOffWhenAlreadyOff() {
+        student.setNotificationsEnabled(false);
+        when(userRepository.findById(2L)).thenReturn(Optional.of(student));
+
+        NotificationStateException exception = assertThrows(NotificationStateException.class,
+                () -> notificationService.disableNotifications(2L));
+
+        assertEquals("error.notification.already.disabled", exception.getMessageKey());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRefuseToTurnOnWhenAlreadyOn() {
+        when(userRepository.findById(2L)).thenReturn(Optional.of(student));
+
+        NotificationStateException exception = assertThrows(NotificationStateException.class,
+                () -> notificationService.enableNotifications(2L));
+
+        assertEquals("error.notification.already.enabled", exception.getMessageKey());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldRefuseAnUnknownUser() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+
+        NotificationStateException exception = assertThrows(NotificationStateException.class,
+                () -> notificationService.disableNotifications(99L));
+
+        assertEquals("error.notification.user.notfound", exception.getMessageKey());
     }
 }

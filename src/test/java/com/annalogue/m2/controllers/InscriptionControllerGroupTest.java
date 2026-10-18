@@ -6,10 +6,7 @@ import com.annalogue.m2.exceptions.ModuleNotManagedException;
 import com.annalogue.m2.ldap.SecurityConfig;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
-import com.annalogue.m2.services.CustomUserDetailsService;
-import com.annalogue.m2.services.IInscriptionService;
-import com.annalogue.m2.services.NotifyService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +40,8 @@ class InscriptionControllerGroupTest {
         @Autowired
         private MockMvc mockMvc;
 
-        @MockitoBean
-        private UserService userService;
+    @MockitoBean
+    private IUserService userService;
 
         @MockitoBean
         private CustomUserDetailsService customUserDetailsService;
@@ -52,8 +49,11 @@ class InscriptionControllerGroupTest {
         @MockitoBean
         private IInscriptionService inscriptionService;
 
-        @MockitoBean
-        private NotifyService notifyService;
+    @MockitoBean
+    private INotifyService notifyService;
+
+    @MockitoBean 
+    private INotificationService notificationService;
 
         private UserEntity responsible;
 

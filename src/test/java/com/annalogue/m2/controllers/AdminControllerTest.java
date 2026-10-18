@@ -2,7 +2,8 @@ package com.annalogue.m2.controllers;
 
 import com.annalogue.m2.ldap.SecurityConfig;
 import com.annalogue.m2.services.CustomUserDetailsService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.INotificationService;
+import com.annalogue.m2.services.IUserService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -30,7 +31,10 @@ public class AdminControllerTest {
 	private CustomUserDetailsService customUserDetailsService;
 
 	@MockitoBean
-	private UserService userService;
+	private IUserService userService;
+
+	@MockitoBean
+    private INotificationService notificationService;
 
 	@Test
 	void adminAuthenticatedAdminShouldReturnAdminPage() throws Exception {
