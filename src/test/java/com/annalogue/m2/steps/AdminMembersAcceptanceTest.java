@@ -234,7 +234,18 @@ public class AdminMembersAcceptanceTest {
     public void jeSuisConnecteEnTantQue(String gherkinRole) {
         Role role = role(gherkinRole);
         String sessionEmail = "session-" + role.name().toLowerCase() + "@example.com";
-        userAcceptanceTest.connectAs(sessionEmail, "session-" + role.name().toLowerCase(), role);
+        if (userService.findByEmail(sessionEmail).isEmpty()) {
+            createUser(sessionEmail, "session-" + role.name().toLowerCase(), role);
+        }
+
+        page.navigate(url("/login"));
+        page.fill("#username", sessionEmail);
+        page.fill("#password", PASSWORD);
+        page.click("#login-btn");
+        page.waitForURL(url("/home"));
+
+        userAcceptanceTest.connectAs(role.name().toLowerCase() + "@example.com", role.name().toLowerCase(), role);
+
         loggedAsAdmin = role == Role.ADMIN;
     }
 

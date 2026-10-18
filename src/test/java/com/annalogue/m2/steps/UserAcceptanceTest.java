@@ -93,7 +93,7 @@ public class UserAcceptanceTest {
     @BeforeAll
     public static void setupGlobal() {
         playwright = Playwright.create();
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(false));
+        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
     }
 
     @AfterAll
@@ -792,7 +792,6 @@ public class UserAcceptanceTest {
     @Quand("Je navigue sur la page du module {string}")
     public void jeNavigueSurLaPageDuModule(String moduleName) {
         ModuleEntity module = getOrCreateModule(moduleName);
-        page.pause();
         page.navigate(modulePageUrl(module));
     }
 
