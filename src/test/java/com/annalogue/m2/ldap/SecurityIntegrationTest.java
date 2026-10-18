@@ -238,7 +238,7 @@ class SecurityIntegrationTest {
                                 .with(SecurityMockMvcRequestPostProcessors.csrf())
                 )
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"));
+                .andExpect(redirectedUrl("/home"));
 
         verify(handleUserService).deleteUser(1L);
     }

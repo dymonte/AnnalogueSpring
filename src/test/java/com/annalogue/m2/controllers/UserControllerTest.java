@@ -3,10 +3,7 @@ package com.annalogue.m2.controllers;
 import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
-import com.annalogue.m2.services.HandleUserService;
-import com.annalogue.m2.services.INotificationService;
-import com.annalogue.m2.services.IUserService;
-import com.annalogue.m2.services.RoleService;
+import com.annalogue.m2.services.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -18,7 +15,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import com.annalogue.m2.services.HandPasswordService;
 
 
 import static org.hamcrest.Matchers.containsString;
@@ -29,10 +25,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.List;
 import static org.hamcrest.Matchers.not;
 
-import com.annalogue.m2.services.NotifyService;
 import org.springframework.context.annotation.Import;
 import com.annalogue.m2.exceptions.UserDeletionException;
 import com.annalogue.m2.models.UserEntity;
+
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
@@ -60,6 +56,10 @@ class UserControllerTest {
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private NotifyService notifyService;
+
     // tells the RoleService mock that this role exists
     private void mockValidRole(String roleName, Role role) {
         when(roleService.exists(roleName)).thenReturn(true);
@@ -375,21 +375,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.suggestion").value("jkamel1"));
     }
 
-        // ===== GET /members =====
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldListMembers() throws Exception {
-        UserEntity student = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, null, null);
-        when(handleUserService.findAllUsers()).thenReturn(List.of(student));
-
-        mockMvc.perform(get("/members").with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(view().name("admin/members"))
-                .andExpect(content().string(containsString("data-email=\"memb@example.com\"")))
-                .andExpect(content().string(containsString("Student")));
-    }
-
     // ===== POST /members/{id}/delete =====
 
     @Test
@@ -399,7 +384,7 @@ class UserControllerTest {
 
         mockMvc.perform(post("/members/5/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("successKey", "success.member.deleted"))
                 .andExpect(flash().attribute("deletedUsername", "memb"));
     }
@@ -412,22 +397,10 @@ class UserControllerTest {
 
         mockMvc.perform(post("/members/6/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("errorKey", "error.user.delete.linked"));
     }
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldShowDeleteSuccessMessageAfterRedirect() throws Exception {
-        when(handleUserService.findAllUsers()).thenReturn(List.of());
-
-        mockMvc.perform(get("/members")
-                        .with(SecurityMockMvcRequestPostProcessors.csrf())
-                        .flashAttr("successKey", "success.member.deleted")
-                        .flashAttr("deletedUsername", "memb"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("User memb was deleted.")));
-    }
 
     // ===== POST /members/{id}/role : Prof <-> Responsable Module =====
 
@@ -441,7 +414,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("role", "RESPONSABLE"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("successKey", "success.member.role.changed"))
                 .andExpect(flash().attribute("changedUsername", "toto"));
 
@@ -455,7 +428,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("role", " "))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("errorKey", "error.user.role.empty"));
 
         verify(handleUserService, never()).changeRole(any(), any());
@@ -486,7 +459,7 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("role", "ADMIN"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members"))
+                .andExpect(redirectedUrl("/home"))
                 .andExpect(flash().attribute("errorKey", "error.user.role.change.admin"));
     }
 
@@ -504,90 +477,5 @@ class UserControllerTest {
                 .andExpect(flash().attribute("errorKey", "error.user.role.change.database"));
     }
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldShowRoleSelectOnlyForTeachers() throws Exception {
-        UserEntity toto = new UserEntity("toto@example.com", "hash", "toto", Role.PROF, null, null);
-        toto.setId(7L);
-        UserEntity student = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, null, null);
-        student.setId(8L);
-        when(handleUserService.findAllUsers()).thenReturn(List.of(toto, student));
-        when(roleService.getTeacherRoles()).thenReturn(List.of(Role.PROF, Role.RESPONSABLE));
 
-        mockMvc.perform(get("/members").with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("/members/7/role")))
-                .andExpect(content().string(not(containsString("/members/8/role"))))
-                .andExpect(content().string(containsString("Module manager")));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldShowRoleChangedMessageAfterRedirect() throws Exception {
-        when(handleUserService.findAllUsers()).thenReturn(List.of());
-
-        mockMvc.perform(get("/members")
-                        .with(SecurityMockMvcRequestPostProcessors.csrf())
-                        .flashAttr("successKey", "success.member.role.changed")
-                        .flashAttr("changedUsername", "toto"))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("The role of toto was changed.")));
-    }
-
-    // ===== GET /members?role=... : filter by role =====
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldFilterMembersByRole() throws Exception {
-        UserEntity toto = new UserEntity("toto@example.com", "hash", "toto", Role.PROF, null, null);
-        toto.setId(7L);
-        mockValidRole("PROF", Role.PROF);
-        when(handleUserService.findUsersByRole(Role.PROF)).thenReturn(List.of(toto));
-
-        mockMvc.perform(get("/members").param("role", "PROF").with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("selectedFilter", "PROF"))
-                .andExpect(content().string(containsString("data-email=\"toto@example.com\"")));
-
-        verify(handleUserService, never()).findAllUsers();
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldShowAllMembersWhenFilterIsUnknown() throws Exception {
-        when(roleService.exists("FANTOME")).thenReturn(false);
-        when(handleUserService.findAllUsers()).thenReturn(List.of());
-
-        mockMvc.perform(get("/members").param("role", "FANTOME").with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(model().attribute("selectedFilter", ""))
-                .andExpect(content().string(containsString("No members yet.")));
-
-        verify(handleUserService, never()).findUsersByRole(any());
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldSayNoMemberWithThisRole() throws Exception {
-        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
-        when(handleUserService.findUsersByRole(Role.RESPONSABLE)).thenReturn(List.of());
-
-        mockMvc.perform(get("/members").param("role", "RESPONSABLE").with(SecurityMockMvcRequestPostProcessors.csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().string(containsString("No members with this role.")));
-    }
-
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void shouldKeepTheFilterAfterChangingRole() throws Exception {
-        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
-        when(handleUserService.changeRole(7L, Role.RESPONSABLE)).thenReturn("toto");
-
-        mockMvc.perform(post("/members/7/role")
-                        .with(SecurityMockMvcRequestPostProcessors.csrf())
-                        .param("role", "RESPONSABLE")
-                        .param("filter", "PROF"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/members?role=PROF"));
-    }
 }
