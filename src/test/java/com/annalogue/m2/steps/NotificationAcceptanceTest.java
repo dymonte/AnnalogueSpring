@@ -275,4 +275,20 @@ public class NotificationAcceptanceTest {
 
         assertFalse(userService.findByEmail(email).get().isNotificationsEnabled());
     }
+
+    // --- scénario 2
+
+    // same action as in 1341, the sentence is just written differently
+    @Quand("le responsable du module {string} inscrit l'utilisateur {string} au module")
+    public void RespAddUserToModuleOther(String moduleName, String email) {
+        RespAddUserToModule(moduleName, email);
+    }
+
+    @Alors("le système ne doit pas notifier {string} qu'il est inscrit au module {string}")
+    public void NoNotificationSub(String email, String moduleName) {
+        assertFalse(hasNotification(email, NotificationType.MODULE_ENROLLMENT, moduleName));
+
+        String pageText = notificationsPageText(email);
+        assertFalse(pageText.contains("You were enrolled in the module " + moduleName + "."));
+    }
 }
