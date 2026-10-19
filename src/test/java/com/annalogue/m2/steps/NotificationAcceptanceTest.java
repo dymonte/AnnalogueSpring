@@ -260,4 +260,19 @@ public class NotificationAcceptanceTest {
         String pageText = notificationsPageText(email);
         assertFalse(pageText.contains("A new subject was added to the module " + moduleName + "."));
     }
+
+
+
+    // ------------------------ 1346 : désactivation des notifications
+
+    // --- scénario 1
+
+    @Et("{string} a désactivées les notifications")
+    public void notificationsOff(String email) {
+        UserEntity user = createUser(email, Role.ETUDIANT);
+        user.setNotificationsEnabled(false);
+        userService.save(user);
+
+        assertFalse(userService.findByEmail(email).get().isNotificationsEnabled());
+    }
 }
