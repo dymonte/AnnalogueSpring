@@ -357,4 +357,25 @@ public class NotificationAcceptanceTest {
         assertTrue(myUser().isNotificationsEnabled());
         assertTrue(userSteps.getPage().locator("#notif-switch").isChecked());
     }
+
+    // ---  5
+
+    private String errorMessage() {
+        return userSteps.getPage().locator("main .alert-danger").innerText().trim();
+    }
+
+    @Alors("J'ai un message d'erreur qui dit que mes notifcations sont déjà désactivées")
+    public void errorAlreadyOff() {
+        assertEquals("Your notifications are already disabled.", errorMessage());
+        assertFalse(myUser().isNotificationsEnabled());
+    }
+
+
+    // --- scénario 6
+
+    @Alors("J'ai un message d'erreur qui dit que mes notifcations sont déjà activées")
+    public void errorAlreadyOn() {
+        assertEquals("Your notifications are already enabled.", errorMessage());
+        assertTrue(myUser().isNotificationsEnabled());
+    }
 }
