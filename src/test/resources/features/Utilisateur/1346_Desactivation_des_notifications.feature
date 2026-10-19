@@ -16,25 +16,25 @@ Fonctionnalité: Désactivation des notifications
     Alors le système ne doit pas notifier "user@test.fr" qu'il est inscrit au module "Module"
     
   Scénario: Désactivation des notification
-    Soit je suis connecté en tant que "Membre"
+    Soit Je suis connecté en tant que "Membre"
     Et mes notifications sont activées
     Quand je désactive mes notifications
     Alors mes notifications doivent être désactivées
     
   Scénario: Réactivation des notification
-    Soit je suis connecté en tant que "Membre"
+    Soit Je suis connecté en tant que "Membre"
     Et mes notifications sont désactivées
     Quand je réactive mes notifications
     Alors mes notifications doivent être activées
     
   Scénario: Désactivation des notification déjà désactivées
-    Soit je suis connecté en tant que "Membre"
+    Soit Je suis connecté en tant que "Membre"
     Et mes notifications sont désactivées
     Quand je désactive mes notifications
     Alors J'ai un message d'erreur qui dit que mes notifcations sont déjà désactivées
     
   Scénario: Réactivation des notification déjà activées
-    Soit je suis connecté en tant que "Membre"
+    Soit Je suis connecté en tant que "Membre"
     Et mes notifications sont activées
     Quand je réactive mes notifications
     Alors J'ai un message d'erreur qui dit que mes notifcations sont déjà activées

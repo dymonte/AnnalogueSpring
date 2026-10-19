@@ -67,6 +67,8 @@ public class NotificationAcceptanceTest {
     @Autowired
     private CorrectionRepository correctionRepository;
 
+    @Autowired
+    private UserAcceptanceTest userSteps;
 
 
     @LocalServerPort
@@ -291,4 +293,49 @@ public class NotificationAcceptanceTest {
         String pageText = notificationsPageText(email);
         assertFalse(pageText.contains("You were enrolled in the module " + moduleName + "."));
     }
+
+
+    // ---  3
+
+    private UserEntity myUser() {
+        return userService.findByEmail(userSteps.getCurrentUser().getEmail()).get();
+    }
+
+    private void setMyNotifications(boolean enabled) {
+        UserEntity user = myUser();
+        user.setNotificationsEnabled(enabled);
+        userService.save(user);
+    }
+
+
+    private void sendSwitch(String path) {
+        Page page = userSteps.getPage();
+        page.navigate(url("/notifications"));
+
+        page.waitForResponse(
+                response -> response.url().equals(url("/notifications"))
+                        && response.request().method().equals("GET"),
+                () -> page.locator("#notifSwitchForm")
+                        .evaluate("(form, action) => { form.action = action; form.submit(); }", url(path)));
+        page.waitForLoadState();
+    }
+
+    @Et("mes notifications sont activées")
+    public void myNotificationsOn() {
+        setMyNotifications(true);
+        assertTrue(myUser().isNotificationsEnabled());
+    }
+
+    @Quand("je désactive mes notifications")
+    public void disableMyNotifications() {
+        sendSwitch("/notifications/disable");
+    }
+
+    @Alors("mes notifications doivent être désactivées")
+    public void myNotificationsMustBeOff() {
+        assertFalse(myUser().isNotificationsEnabled());
+        assertFalse(userSteps.getPage().locator("#notif-switch").isChecked());
+    }
+
+    
 }
