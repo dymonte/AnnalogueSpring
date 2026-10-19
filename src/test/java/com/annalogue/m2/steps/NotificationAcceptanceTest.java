@@ -338,4 +338,23 @@ public class NotificationAcceptanceTest {
     }
 
     
+
+    // ---  4
+
+    @Et("mes notifications sont désactivées")
+    public void myNotificationsOff() {
+        setMyNotifications(false);
+        assertFalse(myUser().isNotificationsEnabled());
+    }
+
+    @Quand("je réactive mes notifications")
+    public void enableMyNotifications() {
+        sendSwitch("/notifications/enable");
+    }
+
+    @Alors("mes notifications doivent être activées")
+    public void myNotificationsMustBeOn() {
+        assertTrue(myUser().isNotificationsEnabled());
+        assertTrue(userSteps.getPage().locator("#notif-switch").isChecked());
+    }
 }
