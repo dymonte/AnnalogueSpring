@@ -371,7 +371,7 @@ public class NotificationAcceptanceTest {
     }
 
 
-    // --- scénario 6
+        // ---  6
 
     @Alors("J'ai un message d'erreur qui dit que mes notifcations sont déjà activées")
     public void errorAlreadyOn() {
