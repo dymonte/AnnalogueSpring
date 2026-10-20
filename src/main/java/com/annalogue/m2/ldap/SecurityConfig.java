@@ -29,6 +29,7 @@ public class SecurityConfig {
                                                 .requestMatchers("/modules/add").hasRole("RESPONSABLE")
                                                 .requestMatchers("/module-enrollments/new").hasRole("RESPONSABLE")
                                                 .requestMatchers("/module-enrollments/group").hasRole("RESPONSABLE")
+                                                .requestMatchers("/module-enrollments/group/new").hasRole("RESPONSABLE")
                                                 .requestMatchers("/module-enrollments")
                                                 .hasAnyRole("ADMIN", "RESPONSABLE")
                                                 .requestMatchers("/module-enrollments/{id}/delete")

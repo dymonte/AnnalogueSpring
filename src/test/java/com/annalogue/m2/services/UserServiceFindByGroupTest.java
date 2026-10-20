@@ -68,4 +68,11 @@ class UserServiceFindByGroupTest {
 
         assertTrue(userService.findByGroup("Z").isEmpty());
     }
+
+    @Test
+    void shouldReturnDistinctGroupNames() {
+        when(userRepository.findDistinctGroupNames()).thenReturn(List.of("Master 2 ISL", "Master 2 IA"));
+
+        assertEquals(List.of("Master 2 ISL", "Master 2 IA"), userService.findAllGroupNames());
+    }
 }

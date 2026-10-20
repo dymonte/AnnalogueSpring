@@ -31,4 +31,6 @@ public interface IUserService {
     public UserEntity getCurrentUser();
 
     public List<UserEntity> findByGroup(String group);
+
+    public List<String> findAllGroupNames();
 }
