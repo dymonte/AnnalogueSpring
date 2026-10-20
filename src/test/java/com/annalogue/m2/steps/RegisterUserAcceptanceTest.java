@@ -1,5 +1,7 @@
 package com.annalogue.m2.steps;
 
+import com.annalogue.m2.models.InscriptionEntity;
+import com.annalogue.m2.models.InscriptionType;
 import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
@@ -25,561 +27,604 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.nio.file.Paths;
 import java.util.List;
 
+import com.annalogue.m2.models.StudyLevel;
+import com.microsoft.playwright.options.FormData;
+import com.microsoft.playwright.options.RequestOptions;
+import java.util.ArrayList;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class RegisterUserAcceptanceTest {
 
-    @Autowired
-    IUserService userService;
+        @Autowired
+        IUserService userService;
 
-    @Autowired
-    PasswordEncoder passwordEncoder;
+        @Autowired
+        PasswordEncoder passwordEncoder;
 
-    @Autowired
-    IInscriptionService inscriptionService;
+        @Autowired
+        IInscriptionService inscriptionService;
 
-    @Autowired
-    IModuleService moduleService;
+        @Autowired
+        IModuleService moduleService;
 
-    @Autowired
-    private UserAcceptanceTest userSteps;
+        @Autowired
+        private UserAcceptanceTest userSteps;
 
-    @Autowired
-    private CommentRepository commentRepository;
+        @Autowired
+        private CommentRepository commentRepository;
 
-    @Autowired
-    private CorrectionRepository correctionRepository;
+        @Autowired
+        private CorrectionRepository correctionRepository;
 
-    @Autowired
-    private IPublicationService publicationService;
+        @Autowired
+        private IPublicationService publicationService;
 
-    // the connection is done by UserAcceptanceTest: same browser page and same user
-    private void syncWithLoggedUser() {
-        page = userSteps.getPage();
-        user = userSteps.getCurrentUser();
-        assertNotNull(user, "No connected user: the step « Je suis connecté en tant que » must come first");
-    }
-
-    // Shared between all tests in this class.
-    static Playwright playwright;
-    static Browser browser;
-    static BrowserContext context;
-    // New instance for each test method.
-
-    Page page;
-
-    @LocalServerPort
-    private int port;
-
-    private UserEntity user, membre;
-    private ModuleEntity module, moia_fabrice;
-    private static final String PASSWORD = "tin20hi7n@20ne";
-
-
-    @BeforeAll
-    public static void setupGlobal() {
-        playwright = Playwright.create();
-        // true for ci/cd
-        browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
-    }
-
-    @AfterAll
-    public static void teardownGlobal() {
-        if (browser != null) {
-            browser.close();
+        // the connection is done by UserAcceptanceTest: same browser page and same user
+        private void syncWithLoggedUser() {
+                page = userSteps.getPage();
+                user = userSteps.getCurrentUser();
+                assertNotNull(user, "No connected user: the step « Je suis connecté en tant que » must come first");
         }
-        if (playwright != null) {
-            playwright.close();
+
+        // cohorte = groupe (groupName) : les membres de la cohorte et un étudiant d'un
+        // autre groupe
+        private final List<UserEntity> cohortMembers = new ArrayList<>();
+        private UserEntity outsider;
+
+        private UserEntity createStudent(String username, String group) {
+                UserEntity student = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                Role.ETUDIANT,
+                                2026,
+                                group);
+                student.setLevel(StudyLevel.M2);
+                return userService.save(student);
         }
-    }
 
-    @Before
-    public void setupScenario() {
-        context = browser.newContext(
-                new Browser.NewContextOptions().setLocale("fr-FR")
-        );
+        // Shared between all tests in this class.
+        static Playwright playwright;
+        static Browser browser;
+        static BrowserContext context;
+        // New instance for each test method.
 
-        context.tracing().start(
-                new Tracing.StartOptions()
-                        .setScreenshots(true)
-                        .setSnapshots(true)
-                        .setSources(true)
-        );
+        Page page;
 
-        page = context.newPage();
+        @LocalServerPort
+        private int port;
 
-        commentRepository.deleteAllInBatch();
-        correctionRepository.deleteAllInBatch();
-        publicationService.deleteAll();
-        inscriptionService.deleteAll();
-        moduleService.deleteAll();
-        userService.deleteAll();
-    }
+        private UserEntity user, membre;
+        private ModuleEntity module, moia_fabrice;
+        private static final String PASSWORD = "tin20hi7n@20ne";
 
-    @After
-    public void teardownScenario() {
-        try {
-            inscriptionService.deleteAll();
-            moduleService.deleteAll();
-            userService.deleteAll();
+        @BeforeAll
+        public static void setupGlobal() {
+                playwright = Playwright.create();
+                // true for ci/cd
+                browser = playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(true));
+        }
 
-        } finally {
-            if (context != null) {
-                context.tracing().stop(
-                        new Tracing.StopOptions()
-                                .setPath(Paths.get("trace.zip"))
-                );
+        @AfterAll
+        public static void teardownGlobal() {
+                if (browser != null) {
+                        browser.close();
+                }
+                if (playwright != null) {
+                        playwright.close();
+                }
+        }
 
+        @Before
+        public void setupScenario() {
+                context = browser.newContext(
+                                new Browser.NewContextOptions().setLocale("fr-FR"));
 
-                context.close();
-                context = null;
-                page = null;
-            }
+                context.tracing().start(
+                                new Tracing.StartOptions()
+                                                .setScreenshots(true)
+                                                .setSnapshots(true)
+                                                .setSources(true));
+
+                page = context.newPage();
+
+                commentRepository.deleteAllInBatch();
+                correctionRepository.deleteAllInBatch();
+                publicationService.deleteAll();
+                inscriptionService.deleteAll();
+                moduleService.deleteAll();
+                userService.deleteAll();
+        }
+
+        @After
+        public void teardownScenario() {
+                try {
+                        inscriptionService.deleteAll();
+                        moduleService.deleteAll();
+                        userService.deleteAll();
+
+                } finally {
+                        if (context != null) {
+                                context.tracing().stop(
+                                                new Tracing.StopOptions()
+                                                                .setPath(Paths.get("trace.zip")));
+
+                                context.close();
+                                context = null;
+                                page = null;
+                        }
+
+                }
+        }
+
+        @Soit("Étant connecté en tant que {string} avec le rôle {string}")
+        public void Je_Suis_connecte_avec_le_role(String username, String role) {
+                Role r = switch (role.toLowerCase()) {
+                        case "administrateur" -> Role.ADMIN;
+                        case "responsable de module" -> Role.RESPONSABLE;
+                        case "membre" -> Role.PROF;
+                        default -> Role.ETUDIANT;
+                };
+
+                user = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                r,
+                                0,
+                                "g");
+
+                userService.save(user);
+
+                page.navigate("http://localhost:" + port + "/login");
+                page.locator("#username").fill(username + "@example.com");
+                page.locator("#password").fill(PASSWORD);
+                page.locator("#login-btn").click();
+
+                page.waitForURL("http://localhost:" + port + "/home");
+
+                assertEquals(
+                                "http://localhost:" + port + "/home",
+                                page.url());
+        }
+
+        @Et("Je gère le module {string}")
+        public void Je_gere_le_module(String name) {
+                module = moduleService.createModule(name, user);
+
+                assertTrue(
+                                moduleService.existsByName(name));
+
+                ModuleEntity savedModule = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertEquals(name, savedModule.getName());
+                assertEquals(user.getUsername(), savedModule.getResponsible().getUsername());
+        }
+
+        @Et("l'utilisateur {string} est inscrit sur la plateforme mais non inscrit au module {string}")
+        public void utilisateur_est_inscrit_mais_non_inscrit(String username, String name) {
+                membre = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                Role.PROF,
+                                0,
+                                "g");
+
+                userService.save(membre);
+                UserEntity savedMembre = userService.findByEmail(username + "@example.com").orElseThrow(
+                                () -> new AssertionError("Membre not found : " + username));
+                assertEquals(
+                                username,
+                                savedMembre.getUsername());
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertFalse(
+                                inscriptionService.findByModuleId(module.getId())
+                                                .stream()
+                                                .anyMatch(i -> i.getUser().getUsername().equals(username)));
+        }
+
+        @Quand("j'inscris individuellement {string} au module {string}")
+        public void j_inscris_individuellement_au_module(String username, String name) {
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                membre = userService.findByUsername(username).getFirst();
+                assertNotNull(membre);
+
+                page.navigate("http://localhost:" + port + "/module-enrollments/new");
+
+                page.locator("#moduleId").selectOption(
+                                String.valueOf(module.getId()));
+
+                page.locator("#emailUser").fill(username + "@example.com");
+                page.locator("#enrolle-btn").click();
+
+                page.waitForURL(
+                                "http://localhost:" + port + "/module-enrollments");
+                assertEquals("http://localhost:" + port + "/module-enrollments", page.url());
+        }
+
+        @Alors("{string} apparaît dans la liste des membres inscrits au module {string}")
+        public void membre_apparait_dans_la_liste(String username, String name) {
+
+                membre = userService.findByUsername(username).getFirst();
+                assertNotNull(membre);
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertTrue(
+                                inscriptionService.findByModuleId(module.getId())
+                                                .stream()
+                                                .anyMatch(i -> i.getUser().getUsername().equals(username)));
+
+                assertTrue(
+                                page.locator("#success").isVisible());
+                assertEquals("User successfully registered.", page.locator("#success span").innerText());
+        }
+
+        @Et("{string} a accès aux ressources du module {string}")
+        public void membre_a_acces_aux_ressources(String username, String name) {
+                membre = userService.findByUsername(username).getFirst();
+                assertNotNull(membre);
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertTrue(
+                                inscriptionService.hasReaderAccess(membre, module));
+        }
+
+        @Et("l'utilisateur {string} est déjà inscrit au module {string}")
+        public void memere_deja_inscrit_au_module(String username, String name) {
+
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                membre = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                Role.PROF,
+                                0,
+                                "g");
+
+                userService.save(membre);
+                assertTrue(userService.findByEmail(username + "@example.com").isPresent());
+                inscriptionService.save(user, membre.getEmail(), module.getId());
+
+                assertTrue(
+                                inscriptionService.findByModuleId(module.getId())
+                                                .stream()
+                                                .anyMatch(i -> i.getUser().getUsername().equals(username)));
+        }
+
+        @Quand("je tente d'inscrire à nouveau {string} au module {string}")
+        public void je_tente_d_inscrire_a_nouveau_Fabien_au_module_MOIA(String username, String name) {
+                membre = userService.findByUsername(username).getFirst();
+                assertNotNull(membre);
+                module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+                page.navigate(
+                                "http://localhost:" + port + "/module-enrollments/new");
+
+                page.locator("#moduleId")
+                                .selectOption(String.valueOf(module.getId()));
+
+                page.locator("#emailUser").fill(membre.getEmail());
+                page.locator("#enrolle-btn").click();
+
+                page.waitForURL(
+                                "http://localhost:" + port + "/module-enrollments/new");
+
+                assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
 
         }
-    }
-
-    @Soit("Étant connecté en tant que {string} avec le rôle {string}")
-    public void Je_Suis_connecte_avec_le_role(String username, String role) {
-        Role r = switch (role.toLowerCase()) {
-            case "administrateur" -> Role.ADMIN;
-            case "responsable de module" -> Role.RESPONSABLE;
-            case "membre" -> Role.PROF;
-            default -> Role.ETUDIANT;
-        };
-
-        user = new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                r,
-                0,
-                "g"
-        );
-
-        userService.save(user);
-
-        page.navigate("http://localhost:" + port + "/login");
-        page.locator("#username").fill(username + "@example.com");
-        page.locator("#password").fill(PASSWORD);
-        page.locator("#login-btn").click();
-
-        page.waitForURL("http://localhost:" + port + "/home");
-
-        assertEquals(
-                "http://localhost:" + port + "/home",
-                page.url()
-        );
-    }
-
-    @Et("Je gère le module {string}")
-    public void Je_gere_le_module(String name) {
-        module = moduleService.createModule(name,user);
-
-        assertTrue(
-                moduleService.existsByName(name)
-        );
-
-        ModuleEntity savedModule = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertEquals(name, savedModule.getName());
-        assertEquals(user.getUsername(), savedModule.getResponsible().getUsername());
-    }
-
-    @Et("l'utilisateur {string} est inscrit sur la plateforme mais non inscrit au module {string}")
-    public void utilisateur_est_inscrit_mais_non_inscrit(String username, String name) {
-        membre = new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                Role.PROF,
-                0,
-                "g"
-        );
-
-        userService.save(membre);
-        UserEntity savedMembre = userService.findByEmail(username + "@example.com").orElseThrow(
-                ()-> new AssertionError("Membre not found : " + username)
-        );
-        assertEquals(
-                username,
-                savedMembre.getUsername()
-        );
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertFalse(
-                inscriptionService.findByModuleId(module.getId())
-                        .stream()
-                        .anyMatch(i ->
-                                i.getUser().getUsername().equals(username)
-                        )
-        );
-    }
-
-    @Quand("j'inscris individuellement {string} au module {string}")
-    public void j_inscris_individuellement_au_module(String username, String name) {
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        membre = userService.findByUsername(username).getFirst();
-        assertNotNull(membre);
-
-        page.navigate("http://localhost:" + port + "/module-enrollments/new");
-
-        page.locator("#moduleId").selectOption(
-                String.valueOf(module.getId())
-        );
-
-        page.locator("#emailUser").fill(username + "@example.com");
-        page.locator("#enrolle-btn").click();
-
-        page.waitForURL(
-                "http://localhost:" + port + "/module-enrollments"
-        );
-        assertEquals("http://localhost:" + port + "/module-enrollments", page.url());
-    }
-
-    @Alors("{string} apparaît dans la liste des membres inscrits au module {string}")
-    public void membre_apparait_dans_la_liste(String username, String name) {
-
-        membre = userService.findByUsername(username).getFirst();
-        assertNotNull(membre);
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertTrue(
-                inscriptionService.findByModuleId(module.getId())
-                        .stream()
-                        .anyMatch(i ->
-                                i.getUser().getUsername().equals(username)
-                        )
-        );
-
-        assertTrue(
-                page.locator("#success").isVisible()
-        );
-        assertEquals("User successfully registered.", page.locator("#success span").innerText());
-    }
-
-    @Et("{string} a accès aux ressources du module {string}")
-    public void membre_a_acces_aux_ressources(String username, String name) {
-        membre = userService.findByUsername(username).getFirst();
-        assertNotNull(membre);
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertTrue(
-                inscriptionService.hasReaderAccess(membre, module)
-        );
-    }
-
-    @Et("l'utilisateur {string} est déjà inscrit au module {string}")
-    public void memere_deja_inscrit_au_module(String username, String name){
-
-
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        membre =  new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                Role.PROF,
-                0,
-                "g"
-        );
-
-        userService.save(membre);
-        assertTrue(userService.findByEmail(username + "@example.com").isPresent());
-        inscriptionService.save(user, membre.getEmail(), module.getId());
-
-        assertTrue(
-                inscriptionService.findByModuleId(module.getId())
-                        .stream()
-                        .anyMatch(i ->
-                                i.getUser().getUsername().equals(username)
-                        )
-        );
-    }
-
-    @Quand("je tente d'inscrire à nouveau {string} au module {string}")
-    public void je_tente_d_inscrire_a_nouveau_Fabien_au_module_MOIA(String username, String name){
-        membre = userService.findByUsername(username).getFirst();
-        assertNotNull(membre);
-        module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-        page.navigate(
-                "http://localhost:" + port + "/module-enrollments/new"
-        );
-
-        page.locator("#moduleId")
-                .selectOption(String.valueOf(module.getId()));
-
-        page.locator("#emailUser").fill(membre.getEmail());
-        page.locator("#enrolle-btn").click();
-
-
-        page.waitForURL(
-                "http://localhost:" + port + "/module-enrollments/new"
-        );
-
-        assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
-
-    }
-
-    @Alors("l'inscription n'est pas dupliquée")
-    public void inscription_non_dupliquee(){
-        assertNotNull(membre);
-        assertNotNull(module);
-
-        long inscriptionsNbr = inscriptionService
-                .findByModuleId(module.getId())
-                .stream()
-                .filter(i ->
-                        i.getUser().getId().equals(membre.getId())
-                )
-                .count();
-
-        assertEquals(
-                1,
-                inscriptionsNbr
-        );
-    }
-
-    @Et("un message signale que {string} fait déjà partie des membres inscrits")
-    public void message_signal_membre_deja_inscrit(String username) {
-        assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
-
-        Locator message = page.locator("#userAlreadyRegisterError");
-        assertTrue(message.isVisible());
-        assertEquals("This user is already registered for this module.",message.innerText());
-    }
-
-    @Et("le module {string} compte {string} parmi ses membres")
-    public void module_compte_parmi_ses_membres(String name, String username) {
-        module = moduleService.createModule(name,user);
-
-        assertTrue(
-                moduleService.existsByName(name)
-        );
-
-        ModuleEntity savedModule = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertEquals(name, savedModule.getName());
-        assertEquals(user.getUsername(), module.getResponsible().getUsername());
-
-        membre =  new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                Role.PROF,
-                0,
-                "g"
-        );
-
-        userService.save(membre);
-
-        assertTrue(userService.findByEmail(membre.getEmail()).isPresent());
-
-        inscriptionService.save(user, membre.getEmail(), module.getId());
-        assertTrue(
-                inscriptionService.findByModuleId(module.getId())
-                        .stream()
-                        .anyMatch(i ->
-                                i.getUser().getUsername().equals(username)
-                        )
-        );
-
-        assertTrue(moduleService.existsByName(name));
-
-        // checked in the database: the connected user manages this module and no other
-        List<ModuleEntity> managed = moduleService.findAll().stream()
-                .filter(m -> m.getResponsible().getId().equals(user.getId()))
-                .toList();
-        assertEquals(1, managed.size());
-        assertEquals(name, managed.getFirst().getName());
-    }
-
-    @Quand("je tente d'inscrire un utilisateur au module {string}")
-    public void je_tente_d_inscrire_a_nouveau_utilisateur_au_module_MOIA(String name){
-       page.navigate(
-                "http://localhost:" + port + "/module-enrollments/new"
-        );
-    }
-
-    @Alors("l'action d'inscription ne m'est pas accessible")
-    public void inscription_non_accessible(){
-        //we should redirect to /error
-        assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
-        assertEquals(
-                Role.PROF,
-                user.getRole()
-        );
-    }
-
-    @Et("un message d'erreur d'autorisation est retourné")
-    public void message_erreur_autorisation_retourne() {
-
-        Locator errorCode = page.locator("#error-code");
-
-        assertTrue(
-                errorCode.isVisible()
-        );
-
-        assertEquals(
-                "403",
-                errorCode.innerText().trim()
-        );
-
-        Locator forbiddenMessage = page.locator("#forbidden-msg");
-
-        assertTrue(
-                forbiddenMessage.isVisible()
-        );
-
-        assertEquals(
-                "You do not have permission to access this page.",
-                forbiddenMessage.innerText().trim()
-        );
-    }
-
-    @Et("je gère uniquement le module {string}")
-    public void je_gere_uniquement_le_module_TF(String name){
-        module = moduleService.createModule(name,user);
-
-        assertTrue(
-                moduleService.existsByName(name)
-        );
-        user.setResponsibleModules(List.of(module));
-        assertEquals(1, user.getResponsibleModules().size());
-        assertEquals(name, user.getResponsibleModules().getFirst().getName());
-    }
-
-    @Et("le module {string} est géré par {string}")
-    public void module_MOIA_gere_Fabrice(String name, String username){
-        UserEntity fabrice= new UserEntity(
-                username + "@example.com",
-                passwordEncoder.encode(PASSWORD),
-                username,
-                Role.RESPONSABLE,
-                0,
-                "g"
-        );
-
-        userService.save(fabrice);
-        assertTrue(userService.findByEmail(fabrice.getEmail()).isPresent());
-
-        moia_fabrice = moduleService.createModule(name,fabrice);
-
-        assertTrue(
-                moduleService.existsByName(name)
-        );
-        assertEquals(username,moia_fabrice.getResponsible().getUsername());
-    }
-
-    @Quand("je tente d'inscrire un membre au module {string}")
-    public void je_tente_d_inscrire_un_membre_au_module(String name) {
-        moia_fabrice = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        UserEntity newMembre = new UserEntity(
-                "new_membre@example.com",
-                passwordEncoder.encode(PASSWORD),
-                "new_membre",
-                Role.ETUDIANT,
-                0,
-                "g"
-        );
-
-        userService.save(newMembre);
-        assertTrue(userService.findByEmail(newMembre.getEmail()).isPresent());
-        page.navigate(
-                "http://localhost:" + port + "/module-enrollments/new"
-        );
-
-        Locator moduleSelect = page.locator("#moduleId");
-
-        assertTrue(moduleSelect.isVisible());
-
-        assertEquals(
-                0,
-                moduleSelect.locator(
-                        "option[value='" + moia_fabrice.getId() + "']"
-                ).count()
-        );
-    }
-
-    @Alors("L’exécution de cette action m’est interdite")
-    public void action_est_refusee(){
-        //syncWithLoggedUser();
-
-        String url = page.url();
-        assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new"));
-    }
-
-    @Et("aucun membre n'est ajouté au module {string}")
-    public void aucun_membre_n_est_ajoute_au_module(String name) {
-        ModuleEntity module = moduleService.findByName(name)
-                .orElseThrow(() ->
-                        new AssertionError("Module not found : " + name)
-                );
-
-        assertFalse(
-                inscriptionService.findByModuleId(module.getId())
-                        .stream()
-                        .anyMatch(i ->
-                                i.getUser().getEmail()
-                                        .equals("new_membre@example.com")
-                        )
-        );
-    }
-
-    @Et("il existe une cohorte nommée {string} regroupant plusieurs membres")
-    public void cohorte_regroupant_plusieurs_membres(String nomCohorte) {
-        // TODO :
-    }
-
-    @Quand("je sélectionne et inscris la cohorte {string} au module {string}")
-    public void inscrire_cohorte_au_module(String nomCohorte, String nomModule) {
-        // TODO :
-    }
-
-    @Alors("tous les membres de la cohorte {string} sont ajoutés au module {string}")
-    public void tous_les_membres_sont_inscrits(String nomCohorte,String nomModule) {
-        // TODO :
-    }
-
-    @Et("les étudiants de la cohorte {string} ont tous accès au contenu du module {string}")
-    public void tous_les_etudiants_ont_acces(String nomCohorte, String nomModule) {
-        // TODO :
-    }
-
-    public Page getPage() {
-        return page;
-    }
-
-    public UserEntity getLoggedUser() {
-        return user;
-    }
+
+        @Alors("l'inscription n'est pas dupliquée")
+        public void inscription_non_dupliquee() {
+                assertNotNull(membre);
+                assertNotNull(module);
+
+                long inscriptionsNbr = inscriptionService
+                                .findByModuleId(module.getId())
+                                .stream()
+                                .filter(i -> i.getUser().getId().equals(membre.getId()))
+                                .count();
+
+                assertEquals(
+                                1,
+                                inscriptionsNbr);
+        }
+
+        @Et("un message signale que {string} fait déjà partie des membres inscrits")
+        public void message_signal_membre_deja_inscrit(String username) {
+                assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
+
+                Locator message = page.locator("#userAlreadyRegisterError");
+                assertTrue(message.isVisible());
+                assertEquals("This user is already registered for this module.", message.innerText());
+        }
+
+        @Et("le module {string} compte {string} parmi ses membres")
+        public void module_compte_parmi_ses_membres(String name, String username) {
+                module = moduleService.createModule(name, user);
+
+                assertTrue(
+                                moduleService.existsByName(name));
+
+                ModuleEntity savedModule = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertEquals(name, savedModule.getName());
+                assertEquals(user.getUsername(), module.getResponsible().getUsername());
+
+                membre = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                Role.PROF,
+                                0,
+                                "g");
+
+                userService.save(membre);
+
+                assertTrue(userService.findByEmail(membre.getEmail()).isPresent());
+
+                inscriptionService.save(user, membre.getEmail(), module.getId());
+                assertTrue(
+                                inscriptionService.findByModuleId(module.getId())
+                                                .stream()
+                                                .anyMatch(i -> i.getUser().getUsername().equals(username)));
+
+                assertTrue(moduleService.existsByName(name));
+
+                // checked in the database: the connected user manages this module and no other
+                List<ModuleEntity> managed = moduleService.findAll().stream()
+                                .filter(m -> m.getResponsible().getId().equals(user.getId()))
+                                .toList();
+                assertEquals(1, managed.size());
+                assertEquals(name, managed.getFirst().getName());
+        }
+
+        @Quand("je tente d'inscrire un utilisateur au module {string}")
+        public void je_tente_d_inscrire_a_nouveau_utilisateur_au_module_MOIA(String name) {
+                page.navigate(
+                                "http://localhost:" + port + "/module-enrollments/new");
+        }
+
+        @Alors("l'action d'inscription ne m'est pas accessible")
+        public void inscription_non_accessible() {
+                // we should redirect to /error
+                assertEquals("http://localhost:" + port + "/module-enrollments/new", page.url());
+                assertEquals(
+                                Role.PROF,
+                                user.getRole());
+        }
+
+        @Et("un message d'erreur d'autorisation est retourné")
+        public void message_erreur_autorisation_retourne() {
+
+                Locator errorCode = page.locator("#error-code");
+
+                assertTrue(
+                                errorCode.isVisible());
+
+                assertEquals(
+                                "403",
+                                errorCode.innerText().trim());
+
+                Locator forbiddenMessage = page.locator("#forbidden-msg");
+
+                assertTrue(
+                                forbiddenMessage.isVisible());
+
+                assertEquals(
+                                "You do not have permission to access this page.",
+                                forbiddenMessage.innerText().trim());
+        }
+
+        @Et("je gère uniquement le module {string}")
+        public void je_gere_uniquement_le_module_TF(String name) {
+                module = moduleService.createModule(name, user);
+
+                assertTrue(
+                                moduleService.existsByName(name));
+                user.setResponsibleModules(List.of(module));
+                assertEquals(1, user.getResponsibleModules().size());
+                assertEquals(name, user.getResponsibleModules().getFirst().getName());
+        }
+
+        @Et("le module {string} est géré par {string}")
+        public void module_MOIA_gere_Fabrice(String name, String username) {
+                UserEntity fabrice = new UserEntity(
+                                username + "@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                username,
+                                Role.RESPONSABLE,
+                                0,
+                                "g");
+
+                userService.save(fabrice);
+                assertTrue(userService.findByEmail(fabrice.getEmail()).isPresent());
+
+                moia_fabrice = moduleService.createModule(name, fabrice);
+
+                assertTrue(
+                                moduleService.existsByName(name));
+                assertEquals(username, moia_fabrice.getResponsible().getUsername());
+        }
+
+        @Quand("je tente d'inscrire un membre au module {string}")
+        public void je_tente_d_inscrire_un_membre_au_module(String name) {
+                moia_fabrice = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                UserEntity newMembre = new UserEntity(
+                                "new_membre@example.com",
+                                passwordEncoder.encode(PASSWORD),
+                                "new_membre",
+                                Role.ETUDIANT,
+                                0,
+                                "g");
+
+                userService.save(newMembre);
+                assertTrue(userService.findByEmail(newMembre.getEmail()).isPresent());
+                page.navigate(
+                                "http://localhost:" + port + "/module-enrollments/new");
+
+                Locator moduleSelect = page.locator("#moduleId");
+
+                assertTrue(moduleSelect.isVisible());
+
+                assertEquals(
+                                0,
+                                moduleSelect.locator(
+                                                "option[value='" + moia_fabrice.getId() + "']").count());
+        }
+
+        @Alors("L’exécution de cette action m’est interdite")
+        public void action_est_refusee() {
+                // syncWithLoggedUser();
+
+                String url = page.url();
+                assertTrue(url.equals("http://localhost:" + port + "/module-enrollments/new"));
+        }
+
+        @Et("aucun membre n'est ajouté au module {string}")
+        public void aucun_membre_n_est_ajoute_au_module(String name) {
+                ModuleEntity module = moduleService.findByName(name)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + name));
+
+                assertFalse(
+                                inscriptionService.findByModuleId(module.getId())
+                                                .stream()
+                                                .anyMatch(i -> i.getUser().getEmail()
+                                                                .equals("new_membre@example.com")));
+        }
+
+        @Et("il existe une cohorte nommée {string} regroupant plusieurs membres")
+        public void cohorte_regroupant_plusieurs_membres(String nomCohorte) {
+                cohortMembers.clear();
+                cohortMembers.add(createStudent("etucohorte1", nomCohorte));
+                cohortMembers.add(createStudent("etucohorte2", nomCohorte));
+                cohortMembers.add(createStudent("etucohorte3", nomCohorte));
+
+                // un étudiant d'un autre groupe : il ne doit PAS être inscrit
+                outsider = createStudent("etuautre", "Autre groupe");
+
+                assertEquals(3, userService.findByGroup(nomCohorte).size());
+        }
+
+        @Quand("je sélectionne et inscris la cohorte {string} au module {string}")
+        public void inscrire_cohorte_au_module(String nomCohorte, String nomModule) {
+                module = moduleService.findByName(nomModule)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + nomModule));
+
+                // la page /module-enrollments contient le token CSRF (formulaire de logout de
+                // la navbar)
+                page.navigate("http://localhost:" + port + "/module-enrollments");
+                String csrfToken = page.locator("input[name='_csrf']").first().getAttribute("value");
+                assertNotNull(csrfToken);
+
+                // pas d'écran pour les cohortes : on envoie le formulaire comme le navigateur
+                // le ferait
+                APIResponse response = page.context().request().post(
+                                "http://localhost:" + port + "/module-enrollments/group",
+                                RequestOptions.create()
+                                                .setForm(FormData.create()
+                                                                .set("_csrf", csrfToken)
+                                                                .set("moduleId", String.valueOf(module.getId()))
+                                                                .set("group", nomCohorte))
+                                                .setMaxRedirects(0));
+                try {
+                        assertEquals(302, response.status());
+                } finally {
+                        response.dispose();
+                }
+
+                // le message flash s'affiche sur la page de redirection
+                page.navigate("http://localhost:" + port + "/module-enrollments");
+                assertEquals("http://localhost:" + port + "/module-enrollments", page.url());
+        }
+
+        @Alors("tous les membres de la cohorte {string} sont ajoutés au module {string}")
+        public void tous_les_membres_sont_inscrits(String nomCohorte, String nomModule) {
+                module = moduleService.findByName(nomModule)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + nomModule));
+
+                List<InscriptionEntity> inscriptions = inscriptionService.findByModuleId(module.getId());
+
+                for (UserEntity member : userService.findByGroup(nomCohorte)) {
+                        InscriptionEntity inscription = inscriptions.stream()
+                                        .filter(i -> i.getUser().getId().equals(member.getId()))
+                                        .findFirst()
+                                        .orElseThrow(() -> new AssertionError(
+                                                        member.getUsername() + " is not enrolled"));
+
+                        assertEquals(InscriptionType.ETUDIANT, inscription.getInscriptionType());
+                        assertFalse(inscription.isEditor());
+                }
+
+                // exactement les 3 membres de la cohorte (le responsable est inscrit comme
+                // intervenant)
+                assertEquals(cohortMembers.size(),
+                                inscriptions.stream()
+                                                .filter(i -> i.getInscriptionType() == InscriptionType.ETUDIANT)
+                                                .count());
+
+                // l'étudiant d'un autre groupe n'est pas inscrit
+                assertTrue(inscriptions.stream()
+                                .noneMatch(i -> i.getUser().getId().equals(outsider.getId())));
+
+                // message affiché à l'écran : "Group registered: 3 member(s) added, 0 already
+                // registered."
+                assertTrue(page.locator("#success").isVisible());
+                assertTrue(page.locator("#success span").innerText()
+                                .contains(cohortMembers.size() + " member(s) added"));
+        }
+
+        @Et("les étudiants de la cohorte {string} ont tous accès au contenu du module {string}")
+        public void tous_les_etudiants_ont_acces(String nomCohorte, String nomModule) {
+                module = moduleService.findByName(nomModule)
+                                .orElseThrow(() -> new AssertionError("Module not found : " + nomModule));
+
+                for (UserEntity member : userService.findByGroup(nomCohorte)) {
+                        // côté service
+                        assertTrue(inscriptionService.hasReaderAccess(member, module));
+
+                        // côté navigateur : l'étudiant se connecte et ouvre la page du module (200, pas
+                        // 403)
+                        BrowserContext studentContext = browser.newContext();
+                        Page studentPage = studentContext.newPage();
+                        try {
+                                studentPage.navigate("http://localhost:" + port + "/login");
+                                studentPage.locator("#username").fill(member.getEmail());
+                                studentPage.locator("#password").fill(PASSWORD);
+                                studentPage.locator("#login-btn").click();
+                                studentPage.waitForURL("http://localhost:" + port + "/home");
+
+                                Response response = studentPage.navigate(
+                                                "http://localhost:" + port + "/modules/" + module.getId());
+                                assertNotNull(response);
+                                assertEquals(200, response.status());
+                        } finally {
+                                studentContext.close();
+                        }
+                }
+
+                // l'étudiant hors cohorte n'a pas accès
+                assertFalse(inscriptionService.hasReaderAccess(outsider, module));
+        }
+
+        public Page getPage() {
+                return page;
+        }
+
+        public UserEntity getLoggedUser() {
+                return user;
+        }
 }
