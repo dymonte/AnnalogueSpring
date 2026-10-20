@@ -24,8 +24,10 @@
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
             <h1 class="h3 mb-0" th:text="${isAdmin} ? #{my.modules.all.title} : #{my.modules.title}">My modules</h1>
             <div class="d-flex gap-2">
-                <a th:unless="${isAdmin}" href="/change-password" class="btn btn-outline-secondary"
-                    th:text="#{home.change.password}">Change password</a>
+                <a th:if="${canCreateModule or countCreated > 0}" href="/module-enrollments/new" class="btn btn-outline-secondary"
+                    th:text="#{home.add.enrollment}">Enroll members</a>
+                <a th:if="${canCreateModule or countCreated > 0}" href="/module-enrollments" class="btn btn-outline-secondary"
+                   th:text="#{home.view.enrollment}">View enroll members</a>
                 <a th:if="${canCreateModule}" id="create-module" href="/modules/add" class="btn btn-primary"
                     th:text="#{home.create.module}">Create a module</a>
             </div>

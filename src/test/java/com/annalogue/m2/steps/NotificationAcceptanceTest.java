@@ -67,6 +67,8 @@ public class NotificationAcceptanceTest {
     @Autowired
     private CorrectionRepository correctionRepository;
 
+    @Autowired
+    private UserAcceptanceTest userSteps;
 
 
     @LocalServerPort
@@ -259,5 +261,121 @@ public class NotificationAcceptanceTest {
 
         String pageText = notificationsPageText(email);
         assertFalse(pageText.contains("A new subject was added to the module " + moduleName + "."));
+    }
+
+
+
+    // ------------------------ 1346 : désactivation des notifications
+
+    // --- scénario 1
+
+    @Et("{string} a désactivées les notifications")
+    public void notificationsOff(String email) {
+        UserEntity user = createUser(email, Role.ETUDIANT);
+        user.setNotificationsEnabled(false);
+        userService.save(user);
+
+        assertFalse(userService.findByEmail(email).get().isNotificationsEnabled());
+    }
+
+    // --- scénario 2
+
+    // same action as in 1341, the sentence is just written differently
+    @Quand("le responsable du module {string} inscrit l'utilisateur {string} au module")
+    public void RespAddUserToModuleOther(String moduleName, String email) {
+        RespAddUserToModule(moduleName, email);
+    }
+
+    @Alors("le système ne doit pas notifier {string} qu'il est inscrit au module {string}")
+    public void NoNotificationSub(String email, String moduleName) {
+        assertFalse(hasNotification(email, NotificationType.MODULE_ENROLLMENT, moduleName));
+
+        String pageText = notificationsPageText(email);
+        assertFalse(pageText.contains("You were enrolled in the module " + moduleName + "."));
+    }
+
+
+    // ---  3
+
+    private UserEntity myUser() {
+        return userService.findByEmail(userSteps.getCurrentUser().getEmail()).get();
+    }
+
+    private void setMyNotifications(boolean enabled) {
+        UserEntity user = myUser();
+        user.setNotificationsEnabled(enabled);
+        userService.save(user);
+    }
+
+
+    private void sendSwitch(String path) {
+        Page page = userSteps.getPage();
+        page.navigate(url("/notifications"));
+
+        page.waitForResponse(
+                response -> response.url().equals(url("/notifications"))
+                        && response.request().method().equals("GET"),
+                () -> page.locator("#notifSwitchForm")
+                        .evaluate("(form, action) => { form.action = action; form.submit(); }", url(path)));
+        page.waitForLoadState();
+    }
+
+    @Et("mes notifications sont activées")
+    public void myNotificationsOn() {
+        setMyNotifications(true);
+        assertTrue(myUser().isNotificationsEnabled());
+    }
+
+    @Quand("je désactive mes notifications")
+    public void disableMyNotifications() {
+        sendSwitch("/notifications/disable");
+    }
+
+    @Alors("mes notifications doivent être désactivées")
+    public void myNotificationsMustBeOff() {
+        assertFalse(myUser().isNotificationsEnabled());
+        assertFalse(userSteps.getPage().locator("#notif-switch").isChecked());
+    }
+
+    
+
+    // ---  4
+
+    @Et("mes notifications sont désactivées")
+    public void myNotificationsOff() {
+        setMyNotifications(false);
+        assertFalse(myUser().isNotificationsEnabled());
+    }
+
+    @Quand("je réactive mes notifications")
+    public void enableMyNotifications() {
+        sendSwitch("/notifications/enable");
+    }
+
+    @Alors("mes notifications doivent être activées")
+    public void myNotificationsMustBeOn() {
+        assertTrue(myUser().isNotificationsEnabled());
+        assertTrue(userSteps.getPage().locator("#notif-switch").isChecked());
+    }
+
+    // ---  5
+
+    private String errorMessage() {
+        return userSteps.getPage().locator("main .alert-danger").innerText().trim();
+    }
+
+    @Alors("J'ai un message d'erreur qui dit que mes notifcations sont déjà désactivées")
+    public void errorAlreadyOff() {
+        assertEquals("Your notifications are already disabled.", errorMessage());
+        assertFalse(myUser().isNotificationsEnabled());
+    }
+
+
+        // ---  6
+
+    @Alors("J'ai un message d'erreur qui dit que mes notifcations sont déjà activées")
+    public void errorAlreadyOn() {
+        assertEquals("Your notifications are already enabled.", errorMessage());
+        assertTrue(myUser().isNotificationsEnabled());
     }
 }
