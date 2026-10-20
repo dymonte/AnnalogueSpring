@@ -23,6 +23,7 @@ import static org.hamcrest.Matchers.startsWith;
 
 import java.util.Optional;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -40,8 +41,8 @@ class InscriptionControllerGroupTest {
         @Autowired
         private MockMvc mockMvc;
 
-    @MockitoBean
-    private IUserService userService;
+        @MockitoBean
+        private IUserService userService;
 
         @MockitoBean
         private CustomUserDetailsService customUserDetailsService;
@@ -49,11 +50,11 @@ class InscriptionControllerGroupTest {
         @MockitoBean
         private IInscriptionService inscriptionService;
 
-    @MockitoBean
-    private INotifyService notifyService;
+        @MockitoBean
+        private INotifyService notifyService;
 
-    @MockitoBean 
-    private INotificationService notificationService;
+        @MockitoBean
+        private INotificationService notificationService;
 
         private UserEntity responsible;
 
@@ -212,5 +213,31 @@ class InscriptionControllerGroupTest {
                                 .param("group", "G1"))
                                 .andExpect(redirectedUrl("/module-enrollments"))
                                 .andExpect(flash().attribute("success", "Already registered: anna, zoe"));
+        }
+
+        @Test
+        void responsableShouldSeeGroupForm() throws Exception {
+                when(userService.findAllGroupNames()).thenReturn(List.of("Master 2 ISL"));
+
+                mockMvc.perform(get("/module-enrollments/group/new")
+                                .with(user("fabrice@test.com").roles("RESPONSABLE")))
+                                .andExpect(status().isOk())
+                                .andExpect(view().name("modules/add_group_member_module"))
+                                .andExpect(model().attribute("groups", List.of("Master 2 ISL")))
+                                .andExpect(model().attributeExists("modules"));
+        }
+
+        @Test
+        void studentShouldNotSeeGroupForm() throws Exception {
+                mockMvc.perform(get("/module-enrollments/group/new")
+                                .with(user("lucas@test.com").roles("ETUDIANT")))
+                                .andExpect(status().isForbidden());
+        }
+
+        @Test
+        void anonymousShouldBeRedirectedToLoginForGroupForm() throws Exception {
+                mockMvc.perform(get("/module-enrollments/group/new"))
+                                .andExpect(status().is3xxRedirection())
+                                .andExpect(header().string("Location", startsWith("/login")));
         }
 }

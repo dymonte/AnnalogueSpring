@@ -97,4 +97,9 @@ public class UserService implements IUserService {
         }
         return userRepository.findByGroupNameIgnoreCaseOrderByUsernameAsc(group.trim());
     }
+
+    @Override
+    public List<String> findAllGroupNames() {
+        return userRepository.findDistinctGroupNames();
+    }
 }
