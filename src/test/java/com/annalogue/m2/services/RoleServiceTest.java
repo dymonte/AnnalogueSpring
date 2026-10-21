@@ -16,8 +16,9 @@ class RoleServiceTest {
 
         List<Role> roles = roleService.getRoles();
 
-        assertEquals(3, roles.size());
+        assertEquals(4, roles.size());
         assertTrue(roles.contains(Role.ADMIN));
+        assertTrue(roles.contains(Role.RESPONSABLE));
         assertTrue(roles.contains(Role.PROF));
         assertTrue(roles.contains(Role.ETUDIANT));
     }
@@ -26,6 +27,7 @@ class RoleServiceTest {
     void shouldAcceptExistingRolesIgnoringCase() {
 
         assertTrue(roleService.exists("ADMIN"));
+        assertTrue(roleService.exists("Responsable"));
         assertTrue(roleService.exists("prof"));
         assertTrue(roleService.exists("Etudiant"));
     }
@@ -50,5 +52,24 @@ class RoleServiceTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> roleService.fromString("directeur"));
+    }
+    @Test
+    void assignableRolesShouldNotContainAdmin() {
+
+        List<Role> roles = roleService.getAssignableRoles();
+
+        assertEquals(3, roles.size());
+        assertTrue(roles.contains(Role.RESPONSABLE));
+        assertTrue(roles.contains(Role.PROF));
+        assertTrue(roles.contains(Role.ETUDIANT));
+        assertFalse(roles.contains(Role.ADMIN));
+    }
+
+    @Test
+    void teacherRolesShouldBeProfAndResponsable() {
+
+        List<Role> roles = roleService.getTeacherRoles();
+
+        assertEquals(List.of(Role.PROF, Role.RESPONSABLE), roles);
     }
 }

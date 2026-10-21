@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 import java.util.Locale;
-
+import com.annalogue.m2.models.NotificationType;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -44,11 +44,14 @@ class MessagesTest {
         assertFalse(message("error.user.role.empty").isBlank());
         assertFalse(message("error.user.role.invalid").isBlank());
         assertFalse(message("error.user.username.empty").isBlank());
-        assertFalse(message("error.user.username.mismatch").isBlank());
+        assertFalse(message("error.user.username.invalid").isBlank());
+        assertFalse(message("error.user.level.empty").isBlank());
+        assertFalse(message("error.user.level.invalid").isBlank());
         assertFalse(message("error.user.year.empty").isBlank());
         assertFalse(message("error.user.year.invalid").isBlank());
         assertFalse(message("error.user.group.empty").isBlank());
         assertFalse(message("error.user.group.invalid").isBlank());
+        assertFalse(message("error.user.role.admin.forbidden").isBlank());
     }
 
     @Test
@@ -65,5 +68,124 @@ class MessagesTest {
                 Locale.ENGLISH);
 
         assertTrue(text.contains("new@test.com"));
+    }
+
+    @Test
+    void shouldContainCentralizedMessagesForTfan2698() {
+        assertFalse(message("success.password.changed").isBlank());
+        assertFalse(message("error.password.user.notfound").isBlank());
+        assertFalse(message("error.password.current.invalid").isBlank());
+        assertFalse(message("error.password.mismatch").isBlank());
+        assertFalse(message("error.password.weak").isBlank());
+        assertFalse(message("success.logout").isBlank());
+        assertFalse(message("error.page.notfound").isBlank());
+        assertFalse(message("error.page.forbidden").isBlank());
+        assertFalse(message("error.page.server").isBlank());
+        assertFalse(message("info.user.username.available").isBlank());
+        assertFalse(message("warning.user.username.taken").isBlank());
+        assertFalse(message("action.user.username.use").isBlank());
+        assertFalse(message("mail.credentials.subject").isBlank());
+    }
+
+    @Test
+    void shouldContainPageTexts() {
+        assertFalse(message("nav.home").isBlank());
+        assertFalse(message("role.PROF").isBlank());
+        assertFalse(message("role.ETUDIANT").isBlank());
+        assertFalse(message("login.submit").isBlank());
+        assertFalse(message("home.change.password").isBlank());
+        assertFalse(message("password.submit").isBlank());
+        assertFalse(message("member.submit").isBlank());
+        assertFalse(message("error.page.heading").isBlank());
+        assertFalse(message("action.close").isBlank());
+    }
+    @Test
+    void shouldContainDeleteMemberMessages() {
+        assertFalse(message("members.title").isBlank());
+        assertFalse(message("members.delete").isBlank());
+        assertFalse(message("members.delete.confirm").isBlank());
+        assertFalse(message("success.member.deleted").isBlank());
+        assertFalse(message("error.user.delete.notfound").isBlank());
+        assertFalse(message("error.user.delete.admin").isBlank());
+        assertFalse(message("error.user.delete.linked").isBlank());
+        assertFalse(message("error.user.delete.database").isBlank());
+    }
+
+    @Test
+    void shouldContainModuleControllerMessages() {
+        assertFalse(message("error.module.name.empty").isBlank());
+        assertFalse(message("error.module.name.tooLong").isBlank());
+        assertFalse(message("error.module.name.exists").isBlank());
+        assertFalse(message("error.module.database").isBlank());
+        assertFalse(message("success.module.created").isBlank());
+    }
+
+    @Test
+    void shouldContainMyModulesLabels() {
+        assertFalse(message("my.modules.role.responsible").isBlank());
+        assertFalse(message("my.modules.role.ETUDIANT").isBlank());
+        assertFalse(message("my.modules.role.INTERVENANT").isBlank());
+    }
+
+    @Test
+    void shouldContainResponsableRoleMessages() {
+        assertFalse(message("role.RESPONSABLE").isBlank());
+        assertFalse(message("members.role.change").isBlank());
+        assertFalse(message("members.filter.role").isBlank());
+        assertFalse(message("members.filter.all").isBlank());
+        assertFalse(message("members.filter.submit").isBlank());
+        assertFalse(message("members.filter.empty").isBlank());
+        assertFalse(message("error.user.role.change.notfound").isBlank());
+        assertFalse(message("error.user.role.change.admin").isBlank());
+        assertFalse(message("error.user.role.change.admin.user").isBlank());
+        assertFalse(message("error.user.role.change.notallowed").isBlank());
+        assertFalse(message("error.user.role.change.modules").isBlank());
+        assertFalse(message("error.user.role.change.database").isBlank());
+    }
+
+    @Test
+    void shouldInsertUsernameInRoleChangedMessage() {
+        String text = messageSource.getMessage(
+                "success.member.role.changed",
+                new Object[]{"toto"},
+                Locale.ENGLISH);
+
+        assertTrue(text.contains("toto"));
+    }
+
+        @Test
+    void shouldContainMyModulesPageTexts() {
+        assertFalse(message("my.modules.title").isBlank());
+        assertFalse(message("my.modules.all.title").isBlank());
+        assertFalse(message("my.modules.filter.title").isBlank());
+        assertFalse(message("my.modules.filter.all").isBlank());
+        assertFalse(message("my.modules.filter.created").isBlank());
+        assertFalse(message("my.modules.filter.enrolled").isBlank());
+        assertFalse(message("my.modules.editor").isBlank());
+        assertFalse(message("my.modules.empty.all").isBlank());
+        assertFalse(message("my.modules.empty.created").isBlank());
+        assertFalse(message("my.modules.empty.enrolled").isBlank());
+        assertFalse(message("my.modules.empty.admin").isBlank());
+    }
+    @Test
+    void shouldContainTheTextOfEachNotificationType() {
+        for (NotificationType type : NotificationType.values()) {
+            assertFalse(message(type.getMessageKey()).isBlank());
+        }
+        assertTrue(messageSource.getMessage("notification.MODULE_ENROLLMENT", new Object[] {"TF"}, Locale.ENGLISH)
+                .contains("TF"));
+    }
+
+    @Test
+    void shouldContainNotificationSettingsMessages() {
+        assertFalse(message("notification.status.enabled").isBlank());
+        assertFalse(message("notification.status.disabled").isBlank());
+        assertFalse(message("notification.enable").isBlank());
+        assertFalse(message("notification.disable").isBlank());
+        assertFalse(message("success.notification.enabled").isBlank());
+        assertFalse(message("success.notification.disabled").isBlank());
+        assertFalse(message("error.notification.already.enabled").isBlank());
+        assertFalse(message("error.notification.already.disabled").isBlank());
+        assertFalse(message("error.notification.user.notfound").isBlank());
     }
 }

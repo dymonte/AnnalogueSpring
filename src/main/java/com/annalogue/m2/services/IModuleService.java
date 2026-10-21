@@ -1,0 +1,35 @@
+package com.annalogue.m2.services;
+
+import com.annalogue.m2.dto.UserModuleView;
+import com.annalogue.m2.models.ModuleEntity;
+import com.annalogue.m2.models.PublicationEntity;
+import com.annalogue.m2.models.UserEntity;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface IModuleService {
+
+    // creates a module; throws InvalidModuleDataException if the name is empty, too long or already used
+    public ModuleEntity createModule(String name, UserEntity responsible);
+
+    // all modules, sorted by name
+    public List<ModuleEntity> findAll();
+
+    public Optional<ModuleEntity> findById(Long id);
+
+    public boolean existsByName(String name);
+
+    public void deleteAll();
+
+    public List<PublicationEntity> findAllPublicationsFromModule(ModuleEntity module);
+
+    public List<PublicationEntity> findAllPublicationsFromModule(long id);
+
+    public List<UserModuleView> findModulesOfUser(String email);
+
+    public List<UserModuleView> findAllModuleViews();
+
+    public Optional<ModuleEntity> findByName(String name);
+
+}

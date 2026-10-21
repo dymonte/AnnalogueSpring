@@ -3,20 +3,68 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF token si nécessaire pour les scripts AJAX du tableau -->
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <title th:text="#{home.title}">Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </head>
 
-<body>
+<body class="bg-light">
 
-    <div th:insert="~{navbar.html}"></div>
+<div th:insert="~{navbar.html}"></div>
 
-    <h1>Welcome <span th:text="${username}"></span></h1>
+<div class="container py-5">
 
-    <a href="/change-password" class="btn btn-primary">Changer le mot de passe</a>
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show shadow-sm mb-4" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
-    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">
+                <span th:text="#{home.welcome}">Welcome</span>
+            </h1>
+        </div>
+
+        <div th:if="${isAdmin}">
+            <a href="/members/add" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm px-4 py-2">
+                <i class="bi bi-person-plus-fill"></i>
+                <span th:text="#{home.add.member}">Add Member</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <div th:replace="~{fragments/users-table :: usersTable}"></div>
+        </div>
+    </div>
+</div>
+
+<button type="button" th:if="${canCreateModuleAndPublication}"
+        class="btn btn-primary position-fixed bottom-0 end-0 m-4 rounded-circle shadow fs-2 d-flex align-items-center justify-content-center"
+        style="width: 3.5rem; height: 3.5rem;" data-bs-toggle="modal" data-bs-target="#createModal"
+        th:aria-label="#{home.create.title}" th:text="#{home.upload}">+</button>
+
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="createModalLabel" th:text="#{home.create.title}">What would you like to create?</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                        th:aria-label="#{home.create.close}"></button>
+            </div>
+            <div class="modal-body d-grid gap-2">
+                <a href="/upload" class="btn btn-primary" th:text="#{home.create.publication}">Create a publication</a>
+                <a href="/modules/add" th:if="${canCreateModule}" class="btn btn-outline-primary"
+                   th:text="#{home.create.module}">Create a module</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 </body>
 

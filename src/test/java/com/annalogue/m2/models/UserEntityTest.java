@@ -44,4 +44,31 @@ class UserEntityTest {
         assertEquals(2025, user.getYear());
         assertEquals("G2", user.getGroupName());
     }
+
+        @Test
+    void shouldSetAndGetLevel() {
+
+        UserEntity user = new UserEntity();
+        user.setLevel(StudyLevel.M1);
+
+        assertEquals(StudyLevel.M1, user.getLevel());
+    }
+
+    @Test
+    void shouldHaveNotificationsOnByDefault() {
+        UserEntity user = new UserEntity("memb@example.com", "hash", "memb", Role.ETUDIANT, 2026, "A");
+
+        assertTrue(user.isNotificationsEnabled());
+    }
+
+    @Test
+    void shouldTurnNotificationsOffAndOn() {
+        UserEntity user = new UserEntity();
+
+        user.setNotificationsEnabled(false);
+        assertFalse(user.isNotificationsEnabled());
+
+        user.setNotificationsEnabled(true);
+        assertTrue(user.isNotificationsEnabled());
+    }
 }

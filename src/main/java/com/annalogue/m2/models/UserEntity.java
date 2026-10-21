@@ -2,6 +2,9 @@ package com.annalogue.m2.models;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "users")
 public class UserEntity {
@@ -19,31 +22,54 @@ public class UserEntity {
     @Column(name = "username", length = 100)
     private String username;
 
+
+    @Convert(converter = RoleConverter.class)
     @Column(name = "role", nullable = false)
     private Role role;
+
+
 
     @Column(name = "year_level")
     private Integer year;
 
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "study_level", length = 2)
+    private StudyLevel level;
+
     @Column(name = "group_name", length = 100)
     private String groupName;
 
-    // JPA constructor
-    public UserEntity() {
-    }
+
+    @Column(name = "notifications_enabled", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private boolean notificationsEnabled = true;
+
+    @OneToMany(mappedBy = "responsible")
+    private List<ModuleEntity> responsibleModules;
+
+    @OneToMany(mappedBy = "authorComment")
+    private List<CommentEntity> comments;
+
+    public UserEntity() {}
 
     public UserEntity(String email, String passwordHash, String username,
-            Role role, Integer year, String groupName) {
+                      Role role, Integer year, String groupName) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.username = username;
         this.role = role;
         this.year = year;
         this.groupName = groupName;
+        this.comments = new ArrayList<>();
+        this.responsibleModules = new ArrayList<>();
     }
 
     public Long getId() {
         return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getEmail() {
@@ -86,11 +112,43 @@ public class UserEntity {
         this.year = year;
     }
 
+    public StudyLevel getLevel() {
+        return level;
+    }
+
+    public void setLevel(StudyLevel level) {
+        this.level = level;
+    }
+
     public String getGroupName() {
         return groupName;
     }
 
     public void setGroupName(String groupName) {
         this.groupName = groupName;
+    }
+
+    public List<ModuleEntity> getResponsibleModules() {
+        return responsibleModules;
+    }
+
+    public void setComments(List<CommentEntity> comments) {
+        this.comments = comments;
+    }
+
+    public List<CommentEntity> getComments() {
+        return comments;
+    }
+
+    public void setResponsibleModules(List<ModuleEntity> responsibleModules) {
+        this.responsibleModules = responsibleModules;
+    }
+
+    public boolean isNotificationsEnabled() {
+        return notificationsEnabled;
+    }
+
+    public void setNotificationsEnabled(boolean notificationsEnabled) {
+        this.notificationsEnabled = notificationsEnabled;
     }
 }

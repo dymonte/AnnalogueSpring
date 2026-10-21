@@ -3,9 +3,7 @@ package com.annalogue.m2.controllers;
 import com.annalogue.m2.exceptions.EmailAlreadyExistsException;
 import com.annalogue.m2.exceptions.InvalidUserDataException;
 import com.annalogue.m2.models.Role;
-import com.annalogue.m2.services.HandleUserService;
-import com.annalogue.m2.services.RoleService;
-import com.annalogue.m2.services.UserService;
+import com.annalogue.m2.services.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -17,20 +15,26 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import com.annalogue.m2.services.HandPasswordService;
 
-import java.util.Arrays;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import java.util.List;
+import static org.hamcrest.Matchers.not;
+
+import org.springframework.context.annotation.Import;
+import com.annalogue.m2.exceptions.UserDeletionException;
+import com.annalogue.m2.models.UserEntity;
 
 @WebMvcTest(UserController.class)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
+@Import(NotifyService.class)
 class UserControllerTest {
+        private static final List<Role> ASSIGNABLE_ROLES = List.of(Role.PROF, Role.ETUDIANT);
 
     @Autowired
     private MockMvc mockMvc;
@@ -45,15 +49,22 @@ class UserControllerTest {
     private HandPasswordService handPasswordService;
 
     @MockitoBean
-    private UserService userService;
+    private IUserService userService;
+
+    @MockitoBean
+    private INotificationService notificationService;
 
     @MockitoBean
     private PasswordEncoder passwordEncoder;
+
+    @MockitoBean
+    private NotifyService notifyService;
+
     // tells the RoleService mock that this role exists
     private void mockValidRole(String roleName, Role role) {
         when(roleService.exists(roleName)).thenReturn(true);
         when(roleService.fromString(roleName)).thenReturn(role);
-        when(roleService.getRoles()).thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles()).thenReturn(ASSIGNABLE_ROLES);
     }
 
     // ===== GET /members/add =====
@@ -61,8 +72,8 @@ class UserControllerTest {
     @Test
     @WithMockUser
     void addMemberPageShouldReturnAddMemberView() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -70,14 +81,16 @@ class UserControllerTest {
         )
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/add_member"))
-                .andExpect(model().attribute("roles", Arrays.asList(Role.values())));
+                .andExpect(model().attribute("roles", ASSIGNABLE_ROLES))
+                .andExpect(model().attributeExists("academicYears"))
+                .andExpect(model().attributeExists("levels"));
     }
 
     @Test
     @WithMockUser
     void formShouldContainAllFieldsRolesAndGroups() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -85,14 +98,16 @@ class UserControllerTest {
         )
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("name=\"email\"")))
-                .andExpect(content().string(containsString("name=\"username\"")))
+                .andExpect(content().string(containsString("name=\"enteredUsername\"")))
                 .andExpect(content().string(containsString("name=\"year\"")))
                 .andExpect(content().string(containsString("name=\"group\"")))
-                .andExpect(content().string(containsString("value=\"ADMIN\"")))
+                .andExpect(content().string(not(containsString("value=\"ADMIN\""))))
                 .andExpect(content().string(containsString("value=\"PROF\"")))
                 .andExpect(content().string(containsString("value=\"ETUDIANT\"")))
                 .andExpect(content().string(containsString("value=\"A\"")))
-                .andExpect(content().string(containsString("value=\"D\"")));
+                .andExpect(content().string(containsString("value=\"D\"")))
+                .andExpect(content().string(containsString("name=\"level\"")))
+                .andExpect(content().string(containsString("value=\"M1\"")));
     }
 
     // ===== POST /members/add : success =====
@@ -101,7 +116,7 @@ class UserControllerTest {
     @WithMockUser(roles = "ADMIN")
     void shouldRedirectWithSuccessMessageWhenMemberIsAdded() throws Exception {
         mockValidRole("ETUDIANT", Role.ETUDIANT);
-        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "new", 2026, "A"))
+        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "new", 2026, "M1", "A"))
                 .thenReturn("tmp12345");
 
         mockMvc.perform(
@@ -109,8 +124,8 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
-                        .param("year", "2026")
+                        .param("enteredUsername", "new")
+                        .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().is3xxRedirection())
@@ -118,14 +133,14 @@ class UserControllerTest {
                 .andExpect(flash().attribute("successKey", "success.member.added"))
                 .andExpect(flash().attribute("addedEmail", "new@test.com"));
 
-        verify(handleUserService).addUser("new@test.com", Role.ETUDIANT, "new", 2026, "A");
+        verify(handleUserService).addUser("new@test.com", Role.ETUDIANT, "new", 2026, "M1", "A");
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldDisplaySuccessAlertAfterRedirect() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 get("/members/add")
@@ -144,7 +159,7 @@ class UserControllerTest {
     @WithMockUser(roles = "ADMIN")
     void shouldShowEmailErrorWhenEmailAlreadyExists() throws Exception {
         mockValidRole("ETUDIANT", Role.ETUDIANT);
-        when(handleUserService.addUser("used@test.com", Role.ETUDIANT, "used", 2026, "A"))
+        when(handleUserService.addUser("used@test.com", Role.ETUDIANT, "used", 2026, "M1", "A"))
                 .thenThrow(new EmailAlreadyExistsException("Account with this email already exists"));
 
         mockMvc.perform(
@@ -152,8 +167,8 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "used@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "used")
-                        .param("year", "2026")
+                        .param("enteredUsername", "used")
+                        .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().isOk())
@@ -167,23 +182,23 @@ class UserControllerTest {
 
     @Test
     @WithMockUser(roles = "ADMIN")
-    void shouldShowUsernameErrorWhenUsernameDoesNotMatch() throws Exception {
+    void shouldShowUsernameErrorWhenUsernameIsInvalid() throws Exception {
         mockValidRole("ETUDIANT", Role.ETUDIANT);
-        when(handleUserService.addUser("jean.dupont@test.com", Role.ETUDIANT, "hacker", 2026, "A"))
-                .thenThrow(new InvalidUserDataException("username", "error.user.username.mismatch"));
+        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "a b!", 2026, "M1", "A"))
+                .thenThrow(new InvalidUserDataException("username", "error.user.username.invalid"));
 
         mockMvc.perform(
                 post("/members/add")
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
-                        .param("email", "jean.dupont@test.com")
+                        .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "hacker")
-                        .param("year", "2026")
+                        .param("enteredUsername", "a b!")
+                        .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/add_member"))
-                .andExpect(model().attribute("usernameErrorKey", "error.user.username.mismatch"))
+                .andExpect(model().attribute("usernameErrorKey", "error.user.username.invalid"))
                 .andExpect(content().string(containsString("is-invalid")));
     }
 
@@ -191,7 +206,7 @@ class UserControllerTest {
     @WithMockUser(roles = "ADMIN")
     void shouldShowGroupErrorWhenGroupIsInvalid() throws Exception {
         mockValidRole("ETUDIANT", Role.ETUDIANT);
-        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "new", 2026, "Z"))
+        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "new", 2026, "M1", "Z"))
                 .thenThrow(new InvalidUserDataException("group", "error.user.group.invalid"));
 
         mockMvc.perform(
@@ -199,8 +214,9 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "2026")
+                        .param("level", "M1")
                         .param("group", "Z")
         )
                 .andExpect(status().isOk())
@@ -211,44 +227,44 @@ class UserControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldShowRoleErrorWhenRoleIsEmpty() throws Exception {
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 post("/members/add")
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "")
-                        .param("username", "new")
-                        .param("year", "2026")
+                        .param("enteredUsername", "new")
+                        .param("year", "2026").param("level", "M1").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("roleErrorKey", "error.user.role.empty"));
 
-        verify(handleUserService, never()).addUser(any(), any(), any(), any(), any());
+        verify(handleUserService, never()).addUser(any(), any(),any(), any(), any(), any());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldShowRoleErrorWhenRoleIsUnknown() throws Exception {
         when(roleService.exists("DIRECTEUR")).thenReturn(false);
-        when(roleService.getRoles())
-                .thenReturn(Arrays.asList(Role.values()));
+        when(roleService.getAssignableRoles())
+                .thenReturn(ASSIGNABLE_ROLES);
 
         mockMvc.perform(
                 post("/members/add")
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "DIRECTEUR")
-                        .param("username", "new")
-                        .param("year", "2026")
+                        .param("enteredUsername", "new")
+                        .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().isOk())
                 .andExpect(model().attribute("roleErrorKey", "error.user.role.invalid"));
 
-        verify(handleUserService, never()).addUser(any(), any(), any(), any(), any());
+        verify(handleUserService, never()).addUser(any(), any(),any(), any(), any(), any());
     }
 
     @Test
@@ -259,20 +275,20 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "ETUDIANT")
-                        .param("username", "new")
+                        .param("enteredUsername", "new")
                         .param("year", "abc")
                         .param("group", "A")
         )
                 .andExpect(status().isBadRequest());
 
-        verify(handleUserService, never()).addUser(any(), any(), any(), any(), any());
+        verify(handleUserService, never()).addUser(any(), any(),any(), any(), any(), any());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void shouldShowDatabaseErrorWhenSavingFails() throws Exception {
         mockValidRole("PROF", Role.PROF);
-        when(handleUserService.addUser("new@test.com", Role.PROF, "new", 2026, "A"))
+        when(handleUserService.addUser("new@test.com", Role.PROF, "new", 2026, "M1", "A"))
                 .thenThrow(new DataAccessResourceFailureException("Database down"));
 
         mockMvc.perform(
@@ -280,14 +296,185 @@ class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf())
                         .param("email", "new@test.com")
                         .param("role", "PROF")
-                        .param("username", "new")
-                        .param("year", "2026")
+                        .param("enteredUsername", "new")
+                        .param("year", "2026").param("level", "M1")
                         .param("group", "A")
         )
                 .andExpect(status().isOk())
                 .andExpect(view().name("admin/add_member"))
                 .andExpect(model().attribute("errorKey", "error.database"))
                 .andExpect(content().string(containsString("alert-danger")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowErrorWhenTryingToCreateAnAdmin() throws Exception {
+        mockValidRole("ADMIN", Role.ADMIN);
+        when(handleUserService.addUser("admin2@test.com", Role.ADMIN, "admin2", 2026, "M1", "A"))
+                .thenThrow(new InvalidUserDataException("role", "error.user.role.admin.forbidden"));
+
+        mockMvc.perform(
+                post("/members/add")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("email", "admin2@test.com")
+                        .param("role", "ADMIN")
+                        .param("enteredUsername", "admin2")
+                        .param("year", "2026").param("level", "M1")
+                        .param("group", "A")
+        )
+                .andExpect(status().isOk())
+                .andExpect(view().name("admin/add_member"))
+                .andExpect(model().attribute("roleErrorKey", "error.user.role.admin.forbidden"))
+                .andExpect(content().string(containsString("is-invalid")));
+    }
+
+
+        @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowLevelErrorWhenLevelIsUnknown() throws Exception {
+        mockValidRole("ETUDIANT", Role.ETUDIANT);
+        when(handleUserService.addUser("new@test.com", Role.ETUDIANT, "new", 2026, "M3", "A"))
+                .thenThrow(new InvalidUserDataException("level", "error.user.level.invalid"));
+
+        mockMvc.perform(
+                post("/members/add")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("email", "new@test.com")
+                        .param("role", "ETUDIANT")
+                        .param("enteredUsername", "new")
+                        .param("year", "2026").param("level", "M3")
+                        .param("group", "A")
+        )
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("levelErrorKey", "error.user.level.invalid"))
+                .andExpect(model().attribute("selectedLevel", "M3"));
+    }
+
+    // ===== GET /members/username-check : instant check =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void usernameCheckShouldSayAvailable() throws Exception {
+        when(handleUserService.isUsernameAvailable("jkamel")).thenReturn(true);
+
+        mockMvc.perform(get("/members/enteredUsername-check").param("enteredUsername", "jkamel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(true))
+                .andExpect(jsonPath("$.suggestion").value("jkamel"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void usernameCheckShouldSuggestAnotherNameWhenTaken() throws Exception {
+        when(handleUserService.isUsernameAvailable("jkamel")).thenReturn(false);
+        when(handleUserService.suggestUsername("jkamel")).thenReturn("jkamel1");
+
+        mockMvc.perform(get("/members/enteredUsername-check").param("enteredUsername", "jkamel"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.available").value(false))
+                .andExpect(jsonPath("$.suggestion").value("jkamel1"));
+    }
+
+    // ===== POST /members/{id}/delete =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldDeleteMemberAndRedirectWithSuccessMessage() throws Exception {
+        when(handleUserService.deleteUser(5L)).thenReturn("memb");
+
+        mockMvc.perform(post("/members/5/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andExpect(flash().attribute("successKey", "success.member.deleted"))
+                .andExpect(flash().attribute("deletedUsername", "memb"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRedirectWithErrorWhenUserCannotBeDeleted() throws Exception {
+        when(handleUserService.deleteUser(6L))
+                .thenThrow(new UserDeletionException("error.user.delete.linked"));
+
+        mockMvc.perform(post("/members/6/delete").with(SecurityMockMvcRequestPostProcessors.csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andExpect(flash().attribute("errorKey", "error.user.delete.linked"));
+    }
+
+
+    // ===== POST /members/{id}/role : Prof <-> Responsable Module =====
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldChangeRoleAndRedirectWithSuccessMessage() throws Exception {
+        mockValidRole("RESPONSABLE", Role.RESPONSABLE);
+        when(handleUserService.changeRole(7L, Role.RESPONSABLE)).thenReturn("toto");
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "RESPONSABLE"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andExpect(flash().attribute("successKey", "success.member.role.changed"))
+                .andExpect(flash().attribute("changedUsername", "toto"));
+
+        verify(handleUserService).changeRole(7L, Role.RESPONSABLE);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRefuseEmptyRoleWhenChangingRole() throws Exception {
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", " "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andExpect(flash().attribute("errorKey", "error.user.role.empty"));
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldRefuseUnknownRoleWhenChangingRole() throws Exception {
+        when(roleService.exists("FANTOME")).thenReturn(false);
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "FANTOME"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("errorKey", "error.user.role.invalid"));
+
+        verify(handleUserService, never()).changeRole(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowErrorWhenRoleChangeIsRefused() throws Exception {
+        mockValidRole("ADMIN", Role.ADMIN);
+        when(handleUserService.changeRole(7L, Role.ADMIN))
+                .thenThrow(new InvalidUserDataException("role", "error.user.role.change.admin"));
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "ADMIN"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andExpect(flash().attribute("errorKey", "error.user.role.change.admin"));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void shouldShowDatabaseErrorWhenRoleCannotBeSaved() throws Exception {
+        mockValidRole("PROF", Role.PROF);
+        when(handleUserService.changeRole(7L, Role.PROF))
+                .thenThrow(new DataAccessResourceFailureException("db down"));
+
+        mockMvc.perform(post("/members/7/role")
+                        .with(SecurityMockMvcRequestPostProcessors.csrf())
+                        .param("role", "PROF"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("errorKey", "error.user.role.change.database"));
     }
 
 

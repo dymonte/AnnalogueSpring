@@ -1,58 +1,73 @@
 package com.annalogue.m2.ldap; // A changer si besoin
 
+import com.annalogue.m2.models.ModuleEntity;
 import com.annalogue.m2.models.Role;
 import com.annalogue.m2.models.UserEntity;
+import com.annalogue.m2.repositories.ModuleRepository;
 import com.annalogue.m2.repositories.UserRepository;
+import org.apache.catalina.User;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import com.annalogue.m2.models.StudyLevel;
 
 @Component
+@Profile("!test")
 public class DataInitializer implements CommandLineRunner {
+
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
+    private final ModuleRepository moduleRepository;
 
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder,
+            ModuleRepository moduleRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.moduleRepository = moduleRepository;
     }
 
+    private void createUser(String email, String username, String password, Role role) {
+        if (userRepository.existsByEmail(email)) {
+            System.out.println(">>> USER: " + email + " already exist, SKIP");
+            return;
+        }
 
+        userRepository.save(
+                new UserEntity(email, passwordEncoder.encode(password), username, role, null, null));
+
+        System.out.println(">>> USER: " + username + ", " + email + ", " + role.getValue() + ", created");
+    }
+
+    private void createModule(String name) {
+        if (moduleRepository.existsByNameIgnoreCase(name))
+            return;
+
+        moduleRepository.save(
+                new ModuleEntity(name, userRepository.findByEmail("resp@example.com").get()));
+    }
 
     @Override
     public void run(String... args) {
         System.out.println(">>> DataInitializer démarré");
 
-        long count = userRepository.count();
-        System.out.println(">>> Nombre d'utilisateurs : " + count);
+        long user_count = userRepository.count();
+        System.out.println(">>> Nombre d'utilisateurs : " + user_count);
 
-        if (count == 0) {
-            System.out.println(">>> Création des comptes de test");
+        System.out.println(">>> Création des comptes de test");
+        createUser("admin@example.com", "admin", "admin123", Role.ADMIN);
+        createUser("resp@example.com", "resp", "resp1234", Role.RESPONSABLE);
+        createUser("user1@example.com", "user1", "user1123", Role.ETUDIANT);
+        createUser("prof@example.com", "prof", "prof123", Role.PROF);
 
-            UserEntity admin = new UserEntity();
-            admin.setEmail("admin@example.com");
-            admin.setPasswordHash(passwordEncoder.encode("admin123"));
-            admin.setUsername("admin");
-            admin.setRole(Role.ADMIN);
-            admin.setYear(2024);
-            admin.setGroupName("A");
-            userRepository.save(admin);
+        UserEntity user1 = userRepository.findByEmail("user1@example.com").get();
+        user1.setYear(2024);
+        user1.setLevel(StudyLevel.L1);
+        user1.setGroupName("A");
+        userRepository.save(user1);
 
-            UserEntity user1 = new UserEntity();
-            user1.setEmail("user1@example.com");
-            user1.setPasswordHash(passwordEncoder.encode("user1123"));
-            user1.setUsername("user1");
-            user1.setRole(Role.ETUDIANT);
-            user1.setYear(2024);
-            user1.setGroupName("A");
-            userRepository.save(user1);
-
-            System.out.println(">>> Comptes créés !");
-        } else {
-            System.out.println(">>> Initialisation ignorée : la table n'est pas vide");
-        }
+        createModule("test_module");
     }
 }

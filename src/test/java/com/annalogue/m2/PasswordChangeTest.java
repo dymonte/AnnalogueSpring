@@ -2,10 +2,7 @@ package com.annalogue.m2;
 
 import com.annalogue.m2.controllers.UserController;
 import com.annalogue.m2.ldap.SecurityConfig;
-import com.annalogue.m2.services.CustomUserDetailsService;
-import com.annalogue.m2.services.HandPasswordService;
-import com.annalogue.m2.services.HandleUserService;
-import com.annalogue.m2.services.RoleService;
+import com.annalogue.m2.services.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -19,8 +16,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import com.annalogue.m2.services.NotifyService;
+
 @WebMvcTest(UserController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, NotifyService.class})
 public class PasswordChangeTest {
 
         @Autowired
@@ -38,11 +37,16 @@ public class PasswordChangeTest {
         @MockitoBean
         private CustomUserDetailsService customUserDetailsService;
 
+        @MockitoBean
+        private IUserService userService;
+
+        @MockitoBean
+        private INotificationService notificationService;
+
         @Test
         void shouldShowErrorWhenUserDoesNotExist() throws Exception {
-
                 doThrow(new org.springframework.security.core.userdetails.UsernameNotFoundException(
-                                "Utilisateur introuvable")).when(HandPasswordService).changePassword(
+                                "error.password.user.notfound")).when(HandPasswordService).changePassword(
                                                 "tintin@tin",
                                                 "Oldpass1!",
                                                 "Newpass1!",
@@ -59,7 +63,7 @@ public class PasswordChangeTest {
                                 .andExpect(view().name("change_password"))
                                 .andExpect(model().attribute(
                                                 "error",
-                                                "Utilisateur introuvable"));
+                                                "User not found."));
 
                 verify(HandPasswordService).changePassword(
                                 "tintin@tin",
@@ -89,7 +93,7 @@ public class PasswordChangeTest {
                                 .andExpect(view().name("change_password"))
                                 .andExpect(model().attribute(
                                                 "currentPasswordError",
-                                                "Mot de passe actuel incorrect "));
+                                                "The current password is incorrect."));
 
                 verify(HandPasswordService).changePassword(
                                 "tintin@tin",
@@ -119,7 +123,7 @@ public class PasswordChangeTest {
                                 .andExpect(view().name("change_password"))
                                 .andExpect(model().attribute(
                                                 "confirmPasswordError",
-                                                "Les mots de passe sont différents "));
+                                                "The two passwords do not match."));
 
                 verify(HandPasswordService).changePassword(
                                 "tintin@tin",
@@ -149,7 +153,7 @@ public class PasswordChangeTest {
                                 .andExpect(view().name("change_password"))
                                 .andExpect(model().attribute(
                                                 "newPasswordError",
-                                                "8 caractères, une lettre, un chiffre et un caractère spécial "));
+                                                "The password must contain at least 8 characters, one letter, one digit and one special character."));
 
                 verify(HandPasswordService).changePassword(
                                 "tintin@tin",
@@ -172,7 +176,7 @@ public class PasswordChangeTest {
                                 .andExpect(redirectedUrl("/home"))
                                 .andExpect(flash().attribute(
                                                 "success",
-                                                "Mot de passe modifié"));
+                                                "Your password has been changed."));
 
                 verify(HandPasswordService).changePassword(
                                 "tintin@tin",

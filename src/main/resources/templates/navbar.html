@@ -1,36 +1,180 @@
-<nav class="navbar navbar-expand-md bg-body-tertiary">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="/home">Annalogue</a>
+<nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom py-3">
+    <div class="container-fluid px-4">
+
+        <!-- Brand -->
+        <a class="navbar-brand fw-bold fs-4 text-primary me-4" th:href="@{/home}">
+            <i class="bi bi-journal-bookmark-fill me-2"></i>
+            <span th:text="#{nav.brand}">Annalogue</span>
+        </a>
+
+        <!-- Mobile toggle -->
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
             aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+
+            <!-- Navigation links -->
+            <ul class="navbar-nav me-lg-4 mb-3 mb-lg-0">
+
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="/">Home</a>
+                    <a class="nav-link px-3 fw-medium" th:href="@{/}" th:text="#{nav.home}">
+                        Home
+                    </a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="/modules">Modules</a>
-                </li>
-                <li class="nav-item">
-                    <a th:attr="class=${isAdmin == true ? 'nav-link' : 'nav-link disabled'}" href="/admin">Admin
-                        Dashboard</a>
-                </li>
-                <li class="nav-item accordion">
-                    <p class="nav-link mb-0">Welcome, <span id="email" th:text="${login}"></span>!</p>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="document.getElementById('logoutForm').submit()">Logout</a>
+
+                <li class="nav-item" th:if="${isAdmin == true}">
+                    <a class="nav-link px-3 fw-medium" th:href="@{/modules}" th:text="#{nav.modules}">
+                        Modules
+                    </a>
                 </li>
             </ul>
-            <!--                <form class="d-flex" role="search">
-                                <input class="form-control me-2" type="search" placeholder=" a module" aria-label="Search" />
-                                <button class="btn btn-outline-success" type="submit">Search</button>
-                            </form>-->
+
+            <!-- Search bar -->
+            <div th:replace="~{fragments/search-bar :: searchBar}"></div>
+
+            <!-- User dropdown -->
+            <ul class="navbar-nav ms-lg-3 mt-3 mt-lg-0">
+                <li class="nav-item dropdown">
+
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 rounded px-3" href="#"
+                        role="button" data-bs-toggle="dropdown" aria-expanded="false" id="dropdownLogout">
+
+                        <i class="bi bi-person-circle fs-4 text-primary"></i>
+
+                        <span class="fw-semibold" th:text="${username}">
+                            User
+                        </span>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2"
+                        aria-labelledby="dropdownLogout">
+
+                        <li>
+                            <h6 class="dropdown-header" th:text="#{nav.my.account}">My Account</h6>
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item py-2" th:href="@{/change-password}"
+                                th:text="#{home.change.password}">
+                                Change Password
+                            </a>
+                        </li>
+
+                        <!-- Notifications switch  -->
+                        <li th:if="${notificationsEnabled != null}">
+                            <form id="notifSwitchForm" method="post" class="px-3 py-2 mb-0"
+                                th:action="${notificationsEnabled} ? @{/notifications/disable} : @{/notifications/enable}">
+
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                                <div class="form-check form-switch d-flex align-items-center gap-2 mb-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="notif-switch"
+                                        th:checked="${notificationsEnabled}" onchange="this.form.submit();">
+                                    <label class="form-check-label" for="notif-switch" th:text="#{nav.notifications}">
+                                        Notifications
+                                    </label>
+                                </div>
+                            </form>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+
+                        <li>
+                            <a class="dropdown-item py-2 text-danger" id="logout" href="#"
+                                onclick="event.preventDefault(); document.getElementById('logoutForm').submit();"
+                                th:text="#{nav.logout}">
+                                Log Out
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- Notifications -->
+            <ul class="navbar-nav ms-lg-3 mt-3 mt-lg-0">
+                <li class="nav-item dropdown">
+
+                    <button class="btn btn-dark position-relative rounded-circle d-inline-flex align-items-center justify-content-center p-0"
+                            type="button"
+                            id="notificationDropdown"
+                            data-bs-toggle="dropdown"
+                            aria-expanded="false"
+                            style="width: 2.5rem; height: 2.5rem;"
+                            th:aria-label="#{nav.notifications}">
+
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                             width="1.125em"
+                             height="1.125em"
+                             fill="currentColor"
+                             viewBox="0 0 16 16"
+                             aria-hidden="true"
+                             focusable="false">
+                            <path d="M8 16a2 2 0 0 0 2-2H6a2 2 0 0 0 2 2zm.104-14.995a1 1 0 0 0-.208 0A1.5 1.5 0 0 0 6.5 2.5v.386c-1.744.49-3 2.093-3 4.014 0 .89-.212 1.779-.626 2.566L2.29 10.5h11.42l-.584-1.034a5.43 5.43 0 0 1-.626-2.566c0-1.921-1.256-3.524-3-4.014V2.5a1.5 1.5 0 0 0-1.396-1.495z"/>
+                        </svg>
+
+                        <!-- Nombre de notifications non lues -->
+                        <span th:if="${unseenNotifications > 0}"
+                              class="position-absolute top-0 start-100 translate-middle
+                         badge rounded-pill bg-danger"
+                              th:text="${unseenNotifications}">0
+                        </span>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2
+                   notification-menu"
+                        aria-labelledby="notificationDropdown">
+
+                        <li>
+                            <h6 class="dropdown-header" th:text="#{nav.notifications}">Notifications</h6>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <!-- Liste dynamique -->
+                        <li th:each="notification : ${notifications}">
+                            <div class="dropdown-item-text py-2"
+                                 th:classappend="${notification.seen} ? 'text-muted' : 'fw-semibold'">
+                                <div th:text="${#messages.msg(notification.type.messageKey, notification.content)}">
+                                    Notification
+                                </div>
+                                <small class="text-muted"
+                                       th:text="${#temporals.format(notification.createdAt, 'dd/MM/yyyy HH:mm')}">
+                                    Date
+                                </small>
+                            </div>
+                        </li>
+
+                        <!-- Aucune notification -->
+                        <li th:if="${#lists.isEmpty(notifications)}">
+                            <span class="dropdown-item text-muted py-3" th:text="#{notification.empty}">
+                                No notifications
+                            </span>
+                        </li>
+
+                        <li><hr class="dropdown-divider"></li>
+
+                        <li>
+                            <a class="dropdown-item text-center text-primary"
+                               th:href="@{/notifications}">
+                                <span th:text="#{notification.view.all}">View all notifications</span>
+                            </a>
+                        </li>
+
+                    </ul>
+                </li>
+            </ul>
+
+
         </div>
     </div>
-    <form id="logoutForm" action="/logout" method="post">
+
+    <!-- CSRF-protected logout form -->
+    <form id="logoutForm" th:action="@{/logout}" method="post" class="d-none">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
     </form>
 </nav>

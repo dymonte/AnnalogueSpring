@@ -3,7 +3,6 @@ package com.annalogue.m2.controllers;
 import com.annalogue.m2.exceptions.*;
 import com.annalogue.m2.services.HandleUserService;
 import com.annalogue.m2.services.RoleService;
-import com.annalogue.m2.services.UserService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -11,12 +10,27 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.annalogue.m2.services.HandPasswordService;
 
-import java.util.Optional;
+import org.springframework.mail.MailException;
+
+
+import com.annalogue.m2.dto.UsernameCheckResponse;
+import com.annalogue.m2.models.Role;
+import com.annalogue.m2.models.StudyLevel;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.time.Year;
+import java.util.List;
+import java.util.stream.IntStream;
+
+import com.annalogue.m2.exceptions.UserDeletionException;
+
+import com.annalogue.m2.services.NotifyService;
+
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class UserController {
@@ -24,27 +38,32 @@ public class UserController {
     private final RoleService roleService;
     private final HandleUserService handleUserService;
     private final HandPasswordService handPasswordService;
+    private final NotifyService notifyService;
+
 
     public UserController(
             RoleService roleService,
             HandleUserService handleUserService,
-            HandPasswordService handPasswordService) {
+            HandPasswordService handPasswordService,
+            NotifyService notifyService) {
         this.roleService = roleService;
         this.handleUserService = handleUserService;
         this.handPasswordService = handPasswordService;
+        this.notifyService = notifyService;
     }
 
     @GetMapping("/members/add")
     public String showForm(Model model) {
-        model.addAttribute("roles", roleService.getRoles());
+        addFormLists(model);
         return "admin/add_member";
     }
 
     @PostMapping("/members/add")
     public String addMember(@RequestParam(required = false) String email,
             @RequestParam(required = false) String role,
-            @RequestParam(required = false) String username,
+            @RequestParam(required = false) String enteredUsername,
             @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) String level,
             @RequestParam(required = false) String group,
             Model model,
             RedirectAttributes redirectAttributes) {
@@ -52,15 +71,15 @@ public class UserController {
         // role: required and must exist (RoleService, TFAN26-11)
         if (role == null || role.isBlank()) {
             model.addAttribute("roleErrorKey", "error.user.role.empty");
-            return showFormAgain(model, email, role, username, year, group);
+            return showFormAgain(model, email, role, enteredUsername, year, level, group);
         }
         if (!roleService.exists(role)) {
             model.addAttribute("roleErrorKey", "error.user.role.invalid");
-            return showFormAgain(model, email, role, username, year, group);
+            return showFormAgain(model, email, role, enteredUsername, year, level, group);
         }
 
         try {
-            handleUserService.addUser(email, roleService.fromString(role), username, year, group);
+            handleUserService.addUser(email, roleService.fromString(role), enteredUsername, year, level, group);
 
             redirectAttributes.addFlashAttribute("successKey", "success.member.added");
             redirectAttributes.addFlashAttribute("addedEmail", email);
@@ -74,24 +93,114 @@ public class UserController {
             model.addAttribute("emailErrorKey", "error.member.email.exists");
 
         } catch (DataAccessException e) {
+            e.printStackTrace();
             model.addAttribute("errorKey", "error.database");
+        } catch (MailException e) {
+            model.addAttribute("errorKey", "error.mail.send");
         }
 
-        return showFormAgain(model, email, role, username, year, group);
+        return showFormAgain(model, email, role, enteredUsername, year, level, group);
     }
 
     // shows the form again with what the admin typed
     private String showFormAgain(Model model, String email, String role,
-            String username, Integer year, String group) {
-        model.addAttribute("roles", roleService.getRoles());
+            String enteredUsername, Integer year, String level, String group) {
+        addFormLists(model);
         model.addAttribute("email", email);
         model.addAttribute("selectedRole", role);
-        model.addAttribute("username", username);
+        model.addAttribute("enteredUsername", enteredUsername);
         model.addAttribute("year", year);
+        model.addAttribute("selectedLevel", level);
         model.addAttribute("group", group);
         return "admin/add_member";
     }
+        // members list with a delete button (admin only, see SecurityConfig: /members/**)
 
+
+    // the user is identified by his id (the enteredUsername is not unique)
+    @PostMapping("/members/{id}/delete")
+    public String deleteMember(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        try {
+            String deletedUsername = handleUserService.deleteUser(id);
+
+            redirectAttributes.addFlashAttribute("successKey", "success.member.deleted");
+            redirectAttributes.addFlashAttribute("deletedUsername", deletedUsername);
+
+        } catch (UserDeletionException e) {
+            // unknown user, admin, or user still linked to something
+            redirectAttributes.addFlashAttribute("errorKey", e.getMessageKey());
+
+        } catch (DataAccessException e) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.delete.database");
+        }
+
+        // back to the list in both cases, with the message
+        return "redirect:/home";
+    }
+
+    // the admin switches a teacher between Teacher and Module manager (admin only, see SecurityConfig: /members/**)
+    @PostMapping("/members/{id}/role")
+    public String changeMemberRole(@PathVariable Long id,
+            @RequestParam(required = false) String role,
+            @RequestParam(required = false) String filter,
+            RedirectAttributes redirectAttributes) {
+
+        // back to the list with the same role filter
+        if (filter != null && !filter.isBlank()) {
+            redirectAttributes.addAttribute("role", filter);
+        }
+
+        if (role == null || role.isBlank()) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.empty");
+            return "redirect:/home";
+        }
+        if (!roleService.exists(role)) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.invalid");
+            return "redirect:/home";
+        }
+
+        try {
+            String changedUsername = handleUserService.changeRole(id, roleService.fromString(role));
+
+            redirectAttributes.addFlashAttribute("successKey", "success.member.role.changed");
+            redirectAttributes.addFlashAttribute("changedUsername", changedUsername);
+
+        } catch (InvalidUserDataException e) {
+            // unknown user, admin, student, or responsable who still manages modules
+            redirectAttributes.addFlashAttribute("errorKey", e.getMessageKey());
+
+        } catch (DataAccessException e) {
+            redirectAttributes.addFlashAttribute("errorKey", "error.user.role.change.database");
+        }
+
+        return "redirect:/home";
+    }
+    // lists shown in the form's dropdowns
+    private void addFormLists(Model model) {
+        model.addAttribute("roles", roleService.getAssignableRoles());
+        model.addAttribute("academicYears", academicYears());
+        model.addAttribute("levels", StudyLevel.values());
+    }
+
+    // start years offered: 5 years back to 5 years ahead
+    // (2026 is displayed as "2026-2027" in the form)
+    private List<Integer> academicYears() {
+        int currentYear = Year.now().getValue();
+        return IntStream.rangeClosed(currentYear - 5, currentYear + 5)
+                .boxed()
+                .toList();
+    }
+
+    // instant check while the admin types the enteredUsername (called by handle-user.js)
+    @GetMapping("/members/enteredUsername-check")
+    @ResponseBody
+    public UsernameCheckResponse checkUsername(@RequestParam String enteredUsername) {
+        boolean available = handleUserService.isUsernameAvailable(enteredUsername);
+        String suggestion = available ? enteredUsername.trim() : handleUserService.suggestUsername(enteredUsername);
+        return new UsernameCheckResponse(available, suggestion);
+    }
+
+    
     @GetMapping("/change-password")
     public String showChangePasswordForm(Authentication auth, Model model) {
         model.addAttribute("isAdmin", auth != null && auth.getAuthorities() != null && auth.getAuthorities().stream()
@@ -116,27 +225,22 @@ public class UserController {
 
             redirectAttributes.addFlashAttribute(
                     "success",
-                    "Mot de passe modifié");
+                    notifyService.getMessage("success.password.changed"));
 
             return "redirect:/home";
 
         } catch (UsernameNotFoundException e) {
-            model.addAttribute("error", e.getMessage());
+            // the exception messages are keys of messages.properties
+            model.addAttribute("error", notifyService.getMessage(e.getMessage()));
 
         } catch (InvalidPasswordException e) {
-            model.addAttribute(
-                    "currentPasswordError",
-                    e.getMessage());
+            model.addAttribute("currentPasswordError", notifyService.getMessage(e.getMessage()));
 
         } catch (PasswordMismatchException e) {
-            model.addAttribute(
-                    "confirmPasswordError",
-                    e.getMessage());
+            model.addAttribute("confirmPasswordError", notifyService.getMessage(e.getMessage()));
 
         } catch (WeakPasswordException e) {
-            model.addAttribute(
-                    "newPasswordError",
-                    e.getMessage());
+            model.addAttribute("newPasswordError", notifyService.getMessage(e.getMessage()));
         }
 
         return "change_password";

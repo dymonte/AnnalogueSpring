@@ -3,8 +3,9 @@ package com.annalogue.m2.models;
 public enum Role {
 
     ADMIN("admin"),
+    RESPONSABLE("responsable"),
     PROF("prof"),
-    ETUDIANT("étudiant");
+    ETUDIANT("etudiant");
 
     private final String value;
 
